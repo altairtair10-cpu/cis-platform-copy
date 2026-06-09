@@ -41,7 +41,7 @@
         <span>{{ {'ru': 'Главная', 'en': 'Dashboard', 'kz': 'Басты бет'}[current_user.language] }}</span>
       </a>
 
-      {% if current_user.can_access('briefing') %}
+      {% if current_user.is_authenticated and current_user.can_access('briefing') %}
       <a href="#" class="sb-item">
         <i class="ti ti-sunshine"></i>
         <span>{{ {'ru': 'Утренний брифинг', 'en': 'Morning briefing', 'kz': 'Таңғы брифинг'}[current_user.language] }}</span>
@@ -52,7 +52,7 @@
         {{ {'ru': 'Операции', 'en': 'Operations', 'kz': 'Операциялар'}[current_user.language] }}
       </div>
 
-      {% if current_user.can_access('equipment') or current_user.can_access('equipment_read') %}
+      {% if current_user.is_authenticated and current_user.can_access('equipment') or current_user.can_access('equipment_read') %}
       <a href="{{ url_for('equipment.index') }}"
          class="sb-item {% if 'equipment' in request.endpoint %}active{% endif %}">
         <i class="ti ti-tool"></i>
@@ -60,7 +60,7 @@
       </a>
       {% endif %}
 
-      {% if current_user.can_access('transport') %}
+      {% if current_user.is_authenticated and current_user.can_access('transport') %}
       <a href="{{ url_for('transport.index') }}"
          class="sb-item {% if 'transport' in request.endpoint %}active{% endif %}">
         <i class="ti ti-truck"></i>
@@ -68,14 +68,14 @@
       </a>
       {% endif %}
 
-      {% if current_user.can_access('jobs') or current_user.can_access('jobs_read') %}
+      {% if current_user.is_authenticated and current_user.can_access('jobs') or current_user.can_access('jobs_read') %}
       <a href="#" class="sb-item">
         <i class="ti ti-briefcase"></i>
         <span>{{ {'ru': 'Работы', 'en': 'Jobs', 'kz': 'Жұмыстар'}[current_user.language] }}</span>
       </a>
       {% endif %}
 
-      {% if current_user.can_access('inventory') or current_user.can_access('inventory_read') %}
+      {% if current_user.is_authenticated and current_user.can_access('inventory') or current_user.can_access('inventory_read') %}
       <a href="#" class="sb-item">
         <i class="ti ti-packages"></i>
         <span>{{ {'ru': 'Склад', 'en': 'Inventory', 'kz': 'Қойма'}[current_user.language] }}</span>
@@ -100,7 +100,7 @@
         <span>{{ {'ru': 'Новый документ', 'en': 'New document', 'kz': 'Жаңа құжат'}[current_user.language] }}</span>
       </a>
 
-      {% if current_user.can_access('hr') or current_user.can_access('hr_read') %}
+      {% if current_user.is_authenticated and current_user.can_access('hr') or current_user.can_access('hr_read') %}
       <div class="sb-section">
         {{ {'ru': 'Сотрудники', 'en': 'People', 'kz': 'Қызметкерлер'}[current_user.language] }}
       </div>
@@ -115,14 +115,14 @@
         {{ {'ru': 'Данные', 'en': 'Data', 'kz': 'Деректер'}[current_user.language] }}
       </div>
 
-      {% if current_user.can_access('1c_financial') or current_user.can_access('1c_inventory') %}
+      {% if current_user.is_authenticated and current_user.can_access('1c_financial') or current_user.can_access('1c_inventory') %}
       <a href="#" class="sb-item">
         <i class="ti ti-database"></i>
         <span>{{ {'ru': 'Интеграция 1С', 'en': '1С Integration', 'kz': '1С Интеграция'}[current_user.language] }}</span>
       </a>
       {% endif %}
 
-      {% if current_user.can_access('kpi') or current_user.can_access('kpi_read') %}
+      {% if current_user.is_authenticated and current_user.can_access('kpi') or current_user.can_access('kpi_read') %}
       <a href="#" class="sb-item">
         <i class="ti ti-chart-bar"></i>
         <span>{{ {'ru': 'KPI Отчёты', 'en': 'KPI Reports', 'kz': 'KPI Есептері'}[current_user.language] }}</span>
