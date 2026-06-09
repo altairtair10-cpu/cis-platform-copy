@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block page_title %}
+  {{ {'ru': 'Документы', 'en': 'Documents', 'kz': 'Құжаттар'}[current_user.language] }}
+{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <div></div>
+  <a href="{{ url_for('documents.new') }}" class="btn btn-primary">
+    <i class="ti ti-plus"></i>
+    {{ {'ru': 'Новый документ', 'en': 'New document', 'kz': 'Жаңа құжат'}[current_user.language] }}
+  </a>
+</div>
+<div class="card">
+  <div class="card-body" style="padding:0">
+    {% if docs %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ {'ru': 'Номер', 'en': 'Number', 'kz': 'Нөмір'}[current_user.language] }}</th>
+          <th>{{ {'ru': 'Тип', 'en': 'Type', 'kz': 'Түрі'}[current_user.language] }}</th>
+          <th>{{ {'ru': 'Тема', 'en': 'Subject', 'kz': 'Тақырып'}[current_user.language] }}</th>
+          <th>{{ {'ru': 'Автор', 'en': 'Author', 'kz': 'Автор'}[current_user.language] }}</th>
+          <th>{{ {'ru': 'Дата', 'en': 'Date', 'kz': 'Күні'}[current_user.language] }}</th>
+          <th>{{ {'ru': 'Статус', 'en': 'Status', 'kz': 'Мәртебесі'}[current_user.language] }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in docs %}
+        <tr style="cursor:pointer" onclick="window.location='{{ url_for('documents.view', doc_id=doc.id) }}'">
+          <td style="color:#C0392B;font-weight:500">{{ doc.doc_number or 'Draft' }}</td>
+          <td><span class="pill pill-blue">{{ doc_types.get(doc.doc_type, doc.doc_type) }}</span></td>
+          <td>{{ doc.title[:55] }}{% if doc.title|length > 55 %}…{% endif %}</td>
+          <td>{{ doc.author.full_name }}</td>
+          <td>{{ doc.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <span class="pill pill-{% if doc.status == 'approved' %}green{% elif doc.status == 'pending' %}amber{% elif doc.status == 'rejected' %}red{% else %}gray{% endif %}">
+              {{ doc.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:48px;text-align:center;color:var(--color-text-tertiary)">
+      <i class="ti ti-files" style="font-size:36px;display:block;margin-bottom:12px"></i>
+      {{ {'ru': 'Документов пока нет', 'en': 'No documents yet', 'kz': 'Құжаттар жоқ'}[current_user.language] }}
+      <br><br>
+      <a href="{{ url_for('documents.new') }}" class="btn btn-primary" style="display:inline-flex">
+        <i class="ti ti-plus"></i> Create first document
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

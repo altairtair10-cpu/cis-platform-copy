@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}404 — Not Found{% endblock %}
+{% block page_title %}Page Not Found{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:60px 20px">
+  <i class="ti ti-file-off" style="font-size:48px;color:var(--color-text-tertiary)"></i>
+  <h2 style="margin:16px 0 8px;font-weight:500">Page not found</h2>
+  <p style="color:var(--color-text-tertiary);font-size:13px">The page you're looking for doesn't exist.</p>
+  <a href="{{ url_for('dashboard.index') }}" class="btn" style="margin-top:20px;display:inline-flex">← Back to dashboard</a>
+</div>
+{% endblock %}
