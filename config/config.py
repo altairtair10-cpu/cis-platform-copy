@@ -10,12 +10,14 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    db_url = os.environ.get('DATABASE_URL', '')
+    SQLALCHEMY_DATABASE_URI = db_url.replace('postgresql://', 'postgresql+psycopg://') or \
         'sqlite:///cis_dev.db'
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    db_url = os.environ.get('DATABASE_URL', '')
+    SQLALCHEMY_DATABASE_URI = db_url.replace('postgresql://', 'postgresql+psycopg://')
 
 config = {
     'development': DevelopmentConfig,
