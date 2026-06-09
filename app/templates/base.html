@@ -54,7 +54,7 @@
 
       {% if current_user.is_authenticated and current_user.can_access('equipment') or current_user.can_access('equipment_read') %}
       <a href="{{ url_for('equipment.index') }}"
-         class="sb-item {% if 'equipment' in request.endpoint %}active{% endif %}">
+         class="sb-item {% if request.endpoint and 'equipment' in request.endpoint %}active{% endif %}">
         <i class="ti ti-tool"></i>
         <span>{{ {'ru': 'Оборудование', 'en': 'Equipment', 'kz': 'Жабдықтар'}[current_user.language] }}</span>
       </a>
@@ -62,7 +62,7 @@
 
       {% if current_user.is_authenticated and current_user.can_access('transport') %}
       <a href="{{ url_for('transport.index') }}"
-         class="sb-item {% if 'transport' in request.endpoint %}active{% endif %}">
+         class="sb-item {% if request.endpoint and 'transport' in request.endpoint %}active{% endif %}">
         <i class="ti ti-truck"></i>
         <span>{{ {'ru': 'Транспорт', 'en': 'Transport', 'kz': 'Көлік'}[current_user.language] }}</span>
       </a>
@@ -99,13 +99,22 @@
         <i class="ti ti-plus"></i>
         <span>{{ {'ru': 'Новый документ', 'en': 'New document', 'kz': 'Жаңа құжат'}[current_user.language] }}</span>
       </a>
-
+<a href="{{ url_for('documents.new_defect_act') }}"
+   class="sb-item {% if request.endpoint == 'documents.new_defect_act' %}active{% endif %}">
+  <i class="ti ti-alert-triangle"></i>
+  <span>Дефектный акт</span>
+</a>
+<a href="{{ url_for('documents.new_trebovanie') }}"
+   class="sb-item {% if request.endpoint == 'documents.new_trebovanie' %}active{% endif %}">
+  <i class="ti ti-shopping-cart"></i>
+  <span>Требование</span>
+</a>
       {% if current_user.is_authenticated and current_user.can_access('hr') or current_user.can_access('hr_read') %}
       <div class="sb-section">
         {{ {'ru': 'Сотрудники', 'en': 'People', 'kz': 'Қызметкерлер'}[current_user.language] }}
       </div>
       <a href="{{ url_for('hr.index') }}"
-         class="sb-item {% if 'hr' in request.endpoint %}active{% endif %}">
+         class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
         <i class="ti ti-users"></i>
         <span>{{ {'ru': 'HR Система', 'en': 'HR System', 'kz': 'HR Жүйесі'}[current_user.language] }}</span>
       </a>

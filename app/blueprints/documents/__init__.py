@@ -111,3 +111,12 @@ def approve(doc_id):
         flash(f'Document {action}d successfully.', 'success')
 
     return redirect(url_for('documents.view', doc_id=doc_id))
+@documents.route('/defect-act/new')
+@login_required
+def new_defect_act():
+    return render_template('documents/defect.html')
+
+@documents.route('/trebovanie/new')
+@login_required
+def new_trebovanie():
+    return render_template('documents/trebovanie.html')
