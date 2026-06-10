@@ -111,10 +111,20 @@ def approve(doc_id):
         flash(f'Document {action}d successfully.', 'success')
 
     return redirect(url_for('documents.view', doc_id=doc_id))
-@documents.route('/defect-act/new')
+@documents.route('/defect-act/new', methods=['GET', 'POST'])
 @login_required
 def new_defect_act():
-    return render_template('documents/defect.html')
+    from app.models import Equipment
+    from datetime import datetime
+    equipment = Equipment.query.order_by(Equipment.unit_id).all()
+    now = datetime.now().strftime('%d.%m.%Y %H:%M')
+    return render_template('documents/defect.html', equipment=equipment, now=now)
+
+@documents.route('/defect-act/submit', methods=['POST'])
+@login_required
+def submit_defect_act():
+    flash('Дефектный акт сохранён.', 'success')
+    return redirect(url_for('documents.index'))
 
 @documents.route('/trebovanie/new')
 @login_required
