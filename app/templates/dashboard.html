@@ -1,87 +1,126 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}
-  {{ {'ru': 'Главная', 'en': 'Dashboard', 'kz': 'Басты бет'}[current_user.language] }}
+  {{ {'ru':'Главная','en':'Dashboard','kz':'Басты бет'}[current_user.language] }}
 {% endblock %}
 
 {% block content %}
-<div class="kpi-row">
+
+<!-- ROW 1: DOCUMENT KPIS -->
+<div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-tool"></i>
-      {{ {'ru': 'Оборудование', 'en': 'Equipment', 'kz': 'Жабдықтар'}[current_user.language] }}
-    </div>
-    <div class="kpi-value">{{ stats.equipment_total }}</div>
-    <div class="kpi-sub kpi-neutral">{{ stats.equipment_deployed }} deployed · {{ stats.equipment_idle }} idle</div>
+    <div class="kpi-label"><i class="ti ti-files"></i>{{ {'ru':'Всего документов','en':'Total documents','kz':'Барлық құжаттар'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ stats.docs_total }}</div>
+    <div class="kpi-sub">{{ {'ru':'В системе','en':'In system','kz':'Жүйеде'}[current_user.language] }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-files"></i>
-      {{ {'ru': 'Открытые заявки', 'en': 'Open requests', 'kz': 'Ашық сұраныстар'}[current_user.language] }}
-    </div>
-    <div class="kpi-value {% if stats.docs_pending > 0 %}text-danger{% endif %}">{{ stats.docs_pending }}</div>
-    <div class="kpi-sub kpi-neutral">
-      {{ {'ru': 'На согласовании', 'en': 'Pending approval', 'kz': 'Келісімде'}[current_user.language] }}
-    </div>
+    <div class="kpi-label"><i class="ti ti-clock"></i>{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}</div>
+    <div class="kpi-value {% if stats.docs_pending > 0 %}danger{% endif %}">{{ stats.docs_pending }}</div>
+    <div class="kpi-sub">{{ {'ru':'Требуют действия','en':'Require action','kz':'Әрекет қажет'}[current_user.language] }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-users"></i>
-      {{ {'ru': 'Сотрудников', 'en': 'Staff', 'kz': 'Қызметкерлер'}[current_user.language] }}
-    </div>
+    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'Согласовано','en':'Approved','kz':'Келісілген'}[current_user.language] }}</div>
+    <div class="kpi-value success">{{ stats.docs_approved }}</div>
+    <div class="kpi-sub">{{ {'ru':'Завершено','en':'Completed','kz':'Аяқталды'}[current_user.language] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-users"></i>{{ {'ru':'Сотрудников','en':'Staff','kz':'Қызметкерлер'}[current_user.language] }}</div>
     <div class="kpi-value">{{ stats.staff_total }}</div>
-    <div class="kpi-sub kpi-neutral">
-      {{ {'ru': 'Активных', 'en': 'Active', 'kz': 'Белсенді'}[current_user.language] }}
-    </div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-truck"></i>
-      {{ {'ru': 'Маршрутов', 'en': 'Transport runs', 'kz': 'Маршруттар'}[current_user.language] }}
-    </div>
-    <div class="kpi-value">{{ stats.transport_today }}</div>
-    <div class="kpi-sub kpi-neutral">
-      {{ {'ru': 'Всего', 'en': 'Total', 'kz': 'Барлығы'}[current_user.language] }}
-    </div>
+    <div class="kpi-sub">{{ {'ru':'Активных','en':'Active','kz':'Белсенді'}[current_user.language] }}</div>
   </div>
 </div>
 
-<div class="card" style="margin-top:16px">
-  <div class="card-header">
-    <div class="card-title">
-      {{ {'ru': 'Последние документы', 'en': 'Recent documents', 'kz': 'Соңғы құжаттар'}[current_user.language] }}
-    </div>
-    <a href="{{ url_for('documents.index') }}" class="card-action">
-      {{ {'ru': 'Все документы', 'en': 'View all', 'kz': 'Барлығы'}[current_user.language] }} →
-    </a>
+<!-- ROW 2: EQUIPMENT KPIS -->
+<div class="kpi-grid kpi-grid-4" style="margin-bottom:18px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-tool"></i>{{ {'ru':'Всего единиц','en':'Total units','kz':'Барлық бірлік'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ stats.equipment_total }}</div>
+    <div class="kpi-sub">{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}</div>
   </div>
-  <div class="card-body" style="padding:0">
-    {% if recent_docs %}
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>{{ {'ru': 'Номер', 'en': 'Number', 'kz': 'Нөмір'}[current_user.language] }}</th>
-          <th>{{ {'ru': 'Тема', 'en': 'Subject', 'kz': 'Тақырып'}[current_user.language] }}</th>
-          <th>{{ {'ru': 'Автор', 'en': 'Author', 'kz': 'Автор'}[current_user.language] }}</th>
-          <th>{{ {'ru': 'Статус', 'en': 'Status', 'kz': 'Мәртебесі'}[current_user.language] }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for doc in recent_docs %}
-        <tr style="cursor:pointer" onclick="window.location='{{ url_for('documents.view', doc_id=doc.id) }}'">
-          <td style="color:#C0392B;font-weight:500">{{ doc.doc_number }}</td>
-          <td>{{ doc.title[:60] }}{% if doc.title|length > 60 %}…{% endif %}</td>
-          <td>{{ doc.author.full_name }}</td>
-          <td>
-            <span class="pill pill-{% if doc.status == 'approved' %}green{% elif doc.status == 'pending' %}amber{% elif doc.status == 'rejected' %}red{% else %}gray{% endif %}">
-              {{ doc.status }}
-            </span>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div style="padding:32px;text-align:center;color:var(--color-text-tertiary);font-size:13px">
-      {{ {'ru': 'Документов пока нет', 'en': 'No documents yet', 'kz': 'Құжаттар жоқ'}[current_user.language] }}
-    </div>
-    {% endif %}
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-circle-check" style="color:var(--green)"></i>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</div>
+    <div class="kpi-value success">{{ stats.equipment_deployed }}</div>
+    <div class="kpi-sub">{{ {'ru':'На объектах','en':'On site','kz':'Объектілерде'}[current_user.language] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-circle-pause"></i>{{ {'ru':'Простой','en':'Idle','kz':'Бос тұр'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ stats.equipment_idle }}</div>
+    <div class="kpi-sub">{{ {'ru':'На базе','en':'At base','kz':'Базада'}[current_user.language] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-alert-triangle" style="color:var(--amber)"></i>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</div>
+    <div class="kpi-value {% if stats.equipment_maint > 0 %}warning{% endif %}">{{ stats.equipment_maint }}</div>
+    <div class="kpi-sub">{{ {'ru':'Техобслуживание','en':'In service','kz':'Техқызмет'}[current_user.language] }}</div>
   </div>
 </div>
+
+<!-- RECENT DOCUMENTS TABLE -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-files"></i></div>
+      <div class="card-title">{{ {'ru':'Последние документы','en':'Recent documents','kz':'Соңғы құжаттар'}[current_user.language] }}</div>
+    </div>
+    <a href="{{ url_for('documents.index') }}" class="card-action">
+      {{ {'ru':'Все документы →','en':'View all →','kz':'Барлығы →'}[current_user.language] }}
+    </a>
+  </div>
+  {% if recent_docs %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Содержание','en':'Subject','kz':'Мазмұны'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in recent_docs %}
+      <tr onclick="window.location='{{ url_for('documents.view', doc_id=doc.id) }}'">
+        <td><span class="doc-number">{{ doc.doc_number }}</span></td>
+        <td>
+          <span class="pill pill-blue">
+            {% if doc.doc_type == 'defect_act' %}{{ {'ru':'Деф. акт','en':'Defect act','kz':'Ақаулық акт'}[current_user.language] }}
+            {% elif doc.doc_type == 'purchase_req' %}{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}
+            {% else %}{{ doc.doc_type }}{% endif %}
+          </span>
+        </td>
+        <td>{{ doc.title[:55] }}{% if doc.title|length > 55 %}…{% endif %}</td>
+        <td class="text-muted">{{ doc.author.full_name }}</td>
+        <td class="text-muted">{{ doc.created_at.strftime('%d.%m.%Y') }}</td>
+        <td>
+          <span class="pill
+            {% if doc.status == 'approved' %}pill-green
+            {% elif doc.status == 'pending' %}pill-amber
+            {% elif doc.status == 'rejected' %}pill-red
+            {% else %}pill-gray{% endif %}">
+            {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
+            {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
+            {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
+            {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body" style="text-align:center;padding:48px 20px">
+    <i class="ti ti-files" style="font-size:36px;color:var(--text-4);display:block;margin-bottom:12px"></i>
+    <div class="text-muted">{{ {'ru':'Документов пока нет','en':'No documents yet','kz':'Құжаттар жоқ'}[current_user.language] }}</div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+      <a href="{{ url_for('documents.new_defect_act') }}" class="btn btn-primary">
+        <i class="ti ti-plus"></i>{{ {'ru':'Дефектный акт','en':'Defect act','kz':'Ақаулық актісі'}[current_user.language] }}
+      </a>
+      <a href="{{ url_for('documents.new_trebovanie') }}" class="btn">
+        <i class="ti ti-plus"></i>{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}

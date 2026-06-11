@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Оборудование{% endblock %}
+{% block page_title %}{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}{% endblock %}
+{% block content %}
+<div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-tool"></i>{{ {'ru':'Всего','en':'Total','kz':'Барлығы'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ units|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</div>
+    <div class="kpi-value success">{{ units|selectattr('status','eq','deployed')|list|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-circle-pause"></i>{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ units|selectattr('status','eq','idle')|list|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</div>
+    <div class="kpi-value warning">{{ units|selectattr('status','eq','maintenance')|list|length }}</div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-tool"></i></div>
+      <div class="card-title">{{ {'ru':'Все единицы оборудования','en':'All equipment units','kz':'Барлық жабдық бірліктері'}[current_user.language] }}</div>
+    </div>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Единица','en':'Unit','kz':'Бірлік'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Местонахождение','en':'Location','kz':'Орналасқан жері'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Последнее ТО','en':'Last service','kz':'Соңғы ТО'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for unit in units %}
+      <tr>
+        <td style="font-weight:600;color:var(--red)">{{ unit.unit_id }}</td>
+        <td>{{ unit.name }}</td>
+        <td class="text-muted">{{ unit.location or '—' }}</td>
+        <td>
+          <span class="pill {% if unit.status == 'deployed' %}pill-green{% elif unit.status == 'maintenance' %}pill-amber{% else %}pill-gray{% endif %}">
+            {% if unit.status == 'deployed' %}{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}
+            {% elif unit.status == 'maintenance' %}{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}
+            {% else %}{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}{% endif %}
+          </span>
+        </td>
+        <td class="text-muted">{{ unit.last_service.strftime('%d.%m.%Y') if unit.last_service else '—' }}</td>
+        <td class="text-muted">{{ unit.next_service.strftime('%d.%m.%Y') if unit.next_service else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

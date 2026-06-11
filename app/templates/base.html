@@ -8,209 +8,105 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 </head>
 <body>
-
 <div class="app-shell">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-icon">
-        <svg viewBox="0 0 16 16" fill="white"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" opacity="0.9"/></svg>
+        <svg viewBox="0 0 16 16"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" opacity="0.9"/></svg>
       </div>
       <div>
-        <div class="sb-logo-text">CIS Platform</div>
+        <div class="sb-logo-name">CIS Platform</div>
         <div class="sb-logo-sub">Caspian Integrated Services</div>
       </div>
     </div>
-
     <div class="sb-user">
       <div class="sb-avatar">{{ current_user.initials }}</div>
-      <div class="sb-user-info">
+      <div>
         <div class="sb-user-name">{{ current_user.full_name }}</div>
         <div class="sb-user-role">{{ current_user.role_display }}</div>
       </div>
     </div>
-
     <nav class="sb-nav">
-      <div class="sb-section">
-        {{ {'ru': 'Главное', 'en': 'Main', 'kz': 'Басты'}[current_user.language] }}
-      </div>
-      <a href="{{ url_for('dashboard.index') }}"
-         class="sb-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
-        <i class="ti ti-layout-dashboard"></i>
-        <span>{{ {'ru': 'Главная', 'en': 'Dashboard', 'kz': 'Басты бет'}[current_user.language] }}</span>
+      <div class="sb-section">{{ {'ru':'Главное','en':'Main','kz':'Басты'}[current_user.language] }}</div>
+      <a href="{{ url_for('dashboard.index') }}" class="sb-item {% if request.endpoint and 'dashboard' in request.endpoint %}active{% endif %}">
+        <i class="ti ti-layout-dashboard"></i><span>{{ {'ru':'Главная','en':'Dashboard','kz':'Басты бет'}[current_user.language] }}</span>
       </a>
-
-      {% if current_user.is_authenticated and current_user.can_access('briefing') %}
       <a href="#" class="sb-item">
-        <i class="ti ti-sunshine"></i>
-        <span>{{ {'ru': 'Утренний брифинг', 'en': 'Morning briefing', 'kz': 'Таңғы брифинг'}[current_user.language] }}</span>
+        <i class="ti ti-sunshine"></i><span>{{ {'ru':'Утренний брифинг','en':'Morning briefing','kz':'Таңғы брифинг'}[current_user.language] }}</span>
+      </a>
+      <div class="sb-section">{{ {'ru':'Операции','en':'Operations','kz':'Операциялар'}[current_user.language] }}</div>
+      {% if current_user.is_authenticated and (current_user.can_access('equipment') or current_user.can_access('equipment_read')) %}
+      <a href="{{ url_for('equipment.index') }}" class="sb-item {% if request.endpoint and 'equipment' in request.endpoint %}active{% endif %}">
+        <i class="ti ti-tool"></i><span>{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}</span>
       </a>
       {% endif %}
-
-      <div class="sb-section">
-        {{ {'ru': 'Операции', 'en': 'Operations', 'kz': 'Операциялар'}[current_user.language] }}
-      </div>
-
-      {% if current_user.is_authenticated and current_user.can_access('equipment') or current_user.can_access('equipment_read') %}
-      <a href="{{ url_for('equipment.index') }}"
-         class="sb-item {% if request.endpoint and 'equipment' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-tool"></i>
-        <span>{{ {'ru': 'Оборудование', 'en': 'Equipment', 'kz': 'Жабдықтар'}[current_user.language] }}</span>
-      </a>
-      {% endif %}
-
       {% if current_user.is_authenticated and current_user.can_access('transport') %}
-      <a href="{{ url_for('transport.index') }}"
-         class="sb-item {% if request.endpoint and 'transport' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-truck"></i>
-        <span>{{ {'ru': 'Транспорт', 'en': 'Transport', 'kz': 'Көлік'}[current_user.language] }}</span>
+      <a href="{{ url_for('transport.index') }}" class="sb-item {% if request.endpoint and 'transport' in request.endpoint %}active{% endif %}">
+        <i class="ti ti-truck"></i><span>{{ {'ru':'Транспорт','en':'Transport','kz':'Көлік'}[current_user.language] }}</span>
       </a>
       {% endif %}
-
-      {% if current_user.is_authenticated and current_user.can_access('jobs') or current_user.can_access('jobs_read') %}
-      <a href="#" class="sb-item">
-        <i class="ti ti-briefcase"></i>
-        <span>{{ {'ru': 'Работы', 'en': 'Jobs', 'kz': 'Жұмыстар'}[current_user.language] }}</span>
+      <a href="#" class="sb-item"><i class="ti ti-briefcase"></i><span>{{ {'ru':'Работы','en':'Jobs','kz':'Жұмыстар'}[current_user.language] }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-packages"></i><span>{{ {'ru':'Склад','en':'Inventory','kz':'Қойма'}[current_user.language] }}</span></a>
+      <div class="sb-section">{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[current_user.language] }}</div>
+      <a href="{{ url_for('documents.index') }}" class="sb-item {% if request.endpoint == 'documents.index' %}active{% endif %}">
+        <i class="ti ti-files"></i><span>{{ {'ru':'Все документы','en':'All documents','kz':'Барлық құжаттар'}[current_user.language] }}</span>
       </a>
+      <a href="{{ url_for('documents.new') }}" class="sb-item {% if request.endpoint == 'documents.new' %}active{% endif %}">
+        <i class="ti ti-plus"></i><span>{{ {'ru':'Новый документ','en':'New document','kz':'Жаңа құжат'}[current_user.language] }}</span>
+      </a>
+      <a href="{{ url_for('documents.new_defect_act') }}" class="sb-item {% if request.endpoint == 'documents.new_defect_act' %}active{% endif %}">
+        <i class="ti ti-alert-triangle"></i><span>{{ {'ru':'Дефектный акт','en':'Defect act','kz':'Ақаулық актісі'}[current_user.language] }}</span>
+      </a>
+      <a href="{{ url_for('documents.new_trebovanie') }}" class="sb-item {% if request.endpoint == 'documents.new_trebovanie' %}active{% endif %}">
+        <i class="ti ti-shopping-cart"></i><span>{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}</span>
+      </a>
+      {% if current_user.is_authenticated and (current_user.can_access('hr') or current_user.can_access('hr_read')) %}
+      <div class="sb-section">{{ {'ru':'Сотрудники','en':'People','kz':'Қызметкерлер'}[current_user.language] }}</div>
+      <a href="{{ url_for('hr.index') }}" class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
+        <i class="ti ti-users"></i><span>{{ {'ru':'HR Система','en':'HR System','kz':'HR Жүйесі'}[current_user.language] }}</span>
+      </a>
+      <a href="#" class="sb-item"><i class="ti ti-calendar-off"></i><span>{{ {'ru':'Отпуска','en':'PTO & leave','kz':'Демалыс'}[current_user.language] }}</span></a>
       {% endif %}
-
-      {% if current_user.is_authenticated and current_user.can_access('inventory') or current_user.can_access('inventory_read') %}
-      <a href="#" class="sb-item">
-        <i class="ti ti-packages"></i>
-        <span>{{ {'ru': 'Склад', 'en': 'Inventory', 'kz': 'Қойма'}[current_user.language] }}</span>
-      </a>
-      {% endif %}
-
-      <div class="sb-section">
-        {{ {'ru': 'Документы', 'en': 'Documents', 'kz': 'Құжаттар'}[current_user.language] }}
-      </div>
-
-      <a href="{{ url_for('documents.index') }}"
-         class="sb-item {% if request.endpoint == 'documents.index' %}active{% endif %}">
-        <i class="ti ti-files"></i>
-        <span>{{ {'ru': 'Все документы', 'en': 'All documents', 'kz': 'Барлық құжаттар'}[current_user.language] }}</span>
-        {% set pending = pending_count | default(0) %}
-        {% if pending > 0 %}<span class="sb-badge">{{ pending }}</span>{% endif %}
-      </a>
-
-      <a href="{{ url_for('documents.new') }}"
-         class="sb-item {% if request.endpoint == 'documents.new' %}active{% endif %}">
-        <i class="ti ti-plus"></i>
-        <span>{{ {'ru': 'Новый документ', 'en': 'New document', 'kz': 'Жаңа құжат'}[current_user.language] }}</span>
-      </a>
-<a href="{{ url_for('documents.new_defect_act') }}"
-   class="sb-item {% if request.endpoint == 'documents.new_defect_act' %}active{% endif %}">
-  <i class="ti ti-alert-triangle"></i>
-  <span>Дефектный акт</span>
-</a>
-<a href="{{ url_for('documents.new_trebovanie') }}"
-   class="sb-item {% if request.endpoint == 'documents.new_trebovanie' %}active{% endif %}">
-  <i class="ti ti-shopping-cart"></i>
-  <span>Требование</span>
-</a>
-      {% if current_user.is_authenticated and current_user.can_access('hr') or current_user.can_access('hr_read') %}
-      <div class="sb-section">
-        {{ {'ru': 'Сотрудники', 'en': 'People', 'kz': 'Қызметкерлер'}[current_user.language] }}
-      </div>
-      <a href="{{ url_for('hr.index') }}"
-         class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-users"></i>
-        <span>{{ {'ru': 'HR Система', 'en': 'HR System', 'kz': 'HR Жүйесі'}[current_user.language] }}</span>
-      </a>
-      {% endif %}
-
-      <div class="sb-section">
-        {{ {'ru': 'Данные', 'en': 'Data', 'kz': 'Деректер'}[current_user.language] }}
-      </div>
-
-      {% if current_user.is_authenticated and current_user.can_access('1c_financial') or current_user.can_access('1c_inventory') %}
-      <a href="#" class="sb-item">
-        <i class="ti ti-database"></i>
-        <span>{{ {'ru': 'Интеграция 1С', 'en': '1С Integration', 'kz': '1С Интеграция'}[current_user.language] }}</span>
-      </a>
-      {% endif %}
-
-      {% if current_user.is_authenticated and current_user.can_access('kpi') or current_user.can_access('kpi_read') %}
-      <a href="#" class="sb-item">
-        <i class="ti ti-chart-bar"></i>
-        <span>{{ {'ru': 'KPI Отчёты', 'en': 'KPI Reports', 'kz': 'KPI Есептері'}[current_user.language] }}</span>
-      </a>
-      {% endif %}
-
-      <a href="#" class="sb-item">
-        <i class="ti ti-robot"></i>
-        <span>{{ {'ru': 'ИИ Ассистент', 'en': 'AI Assistant', 'kz': 'ЖИ Көмекші'}[current_user.language] }}</span>
-      </a>
-
-      {% if current_user.role == 'it_admin' %}
-      <div class="sb-section">
-        {{ {'ru': 'Система', 'en': 'System', 'kz': 'Жүйе'}[current_user.language] }}
-      </div>
-      <a href="#" class="sb-item">
-        <i class="ti ti-users-cog"></i>
-        <span>{{ {'ru': 'Пользователи', 'en': 'User management', 'kz': 'Пайдаланушылар'}[current_user.language] }}</span>
-      </a>
-      <a href="#" class="sb-item">
-        <i class="ti ti-settings"></i>
-        <span>{{ {'ru': 'Настройки', 'en': 'Settings', 'kz': 'Параметрлер'}[current_user.language] }}</span>
-      </a>
+      <div class="sb-section">{{ {'ru':'Данные','en':'Data','kz':'Деректер'}[current_user.language] }}</div>
+      <a href="#" class="sb-item"><i class="ti ti-database"></i><span>{{ {'ru':'Интеграция 1С','en':'1С integration','kz':'1С интеграция'}[current_user.language] }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-chart-bar"></i><span>{{ {'ru':'KPI Отчёты','en':'KPI reports','kz':'KPI есептері'}[current_user.language] }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ Ассистент','en':'AI assistant','kz':'ЖИ көмекші'}[current_user.language] }}</span></a>
+      {% if current_user.is_authenticated and current_user.role == 'it_admin' %}
+      <div class="sb-section">{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}</div>
+      <a href="#" class="sb-item"><i class="ti ti-users-cog"></i><span>{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-settings"></i><span>{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[current_user.language] }}</span></a>
       {% endif %}
     </nav>
-
     <div class="sb-bottom">
       <a href="{{ url_for('auth.logout') }}" class="sb-bottom-item">
-        <i class="ti ti-logout"></i>
-        <span>{{ {'ru': 'Выйти', 'en': 'Log out', 'kz': 'Шығу'}[current_user.language] }}</span>
+        <i class="ti ti-logout"></i><span>{{ {'ru':'Выйти','en':'Log out','kz':'Шығу'}[current_user.language] }}</span>
       </a>
     </div>
   </aside>
-
-  <!-- MAIN CONTENT -->
   <div class="main-area">
-
-    <!-- TOPBAR -->
     <header class="topbar">
       <div class="topbar-title">{% block page_title %}{% endblock %}</div>
-
       <div class="topbar-right">
-        <!-- Language switcher -->
         <div class="lang-switcher">
-          <a href="{{ url_for('auth.set_language', lang='ru') }}"
-             class="lang-btn {% if current_user.language == 'ru' %}active{% endif %}">RU</a>
-          <a href="{{ url_for('auth.set_language', lang='en') }}"
-             class="lang-btn {% if current_user.language == 'en' %}active{% endif %}">EN</a>
-          <a href="{{ url_for('auth.set_language', lang='kz') }}"
-             class="lang-btn {% if current_user.language == 'kz' %}active{% endif %}">KZ</a>
+          <a href="{{ url_for('auth.set_language', lang='ru') }}" class="lang-btn {% if current_user.language == 'ru' %}active{% endif %}">RU</a>
+          <a href="{{ url_for('auth.set_language', lang='en') }}" class="lang-btn {% if current_user.language == 'en' %}active{% endif %}">EN</a>
+          <a href="{{ url_for('auth.set_language', lang='kz') }}" class="lang-btn {% if current_user.language == 'kz' %}active{% endif %}">KZ</a>
         </div>
-
-        <button class="tb-btn" aria-label="Notifications">
-          <i class="ti ti-bell"></i>
-        </button>
-        <button class="tb-btn" aria-label="Profile">
-          <i class="ti ti-user"></i>
-        </button>
+        <div class="tb-btn"><i class="ti ti-bell"></i><div class="tb-notif-dot"></div></div>
+        <div class="tb-btn"><i class="ti ti-user"></i></div>
       </div>
     </header>
-
-    <!-- FLASH MESSAGES -->
     <div class="flash-container">
       {% for category, message in get_flashed_messages(with_categories=true) %}
       <div class="flash flash-{{ category }}">
-        <i class="ti ti-{% if category == 'success' %}check{% elif category == 'danger' %}alert-circle{% else %}info-circle{% endif %}"></i>
+        <i class="ti ti-{% if category == 'success' %}circle-check{% elif category == 'danger' %}alert-circle{% else %}info-circle{% endif %}"></i>
         {{ message }}
       </div>
       {% endfor %}
     </div>
-
-    <!-- PAGE CONTENT -->
-    <main class="content">
-      {% block content %}{% endblock %}
-    </main>
-
+    <main class="content">{% block content %}{% endblock %}</main>
   </div>
 </div>
-
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
