@@ -5,231 +5,65 @@
 {% block content %}
 <div style="max-width:960px">
 
-  <!-- DOCUMENT HEADER -->
-  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 24px;margin-bottom:14px">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">
-          {% if doc.doc_type == 'defect_act' %}
-            {{ {'ru':'Дефектный акт','en':'Defect Act','kz':'Ақаулық актісі'}[current_user.language] }}
-          {% elif doc.doc_type == 'purchase_req' %}
-            {{ {'ru':'Требование на приобретение материалов','en':'Material Purchase Requisition','kz':'Материалдарды сатып алуға талаптама'}[current_user.language] }}
-          {% else %}
-            {{ doc.doc_type }}
-          {% endif %}
+  <!-- HEADER CARD -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:18px;font-weight:500;color:var(--text-1)">
+            {% if doc.doc_type == 'defect_act' %}{{ {'ru':'Дефектный акт','en':'Defect Act','kz':'Ақаулық актісі'}[current_user.language] }}
+            {% elif doc.doc_type == 'purchase_req' %}{{ {'ru':'Требование на приобретение','en':'Purchase Requisition','kz':'Сатып алу талаптамасы'}[current_user.language] }}
+            {% else %}{{ doc.doc_type }}{% endif %}
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px">
+            <span class="doc-number">{{ doc.doc_number }}</span> · {{ doc.author.full_name }} · {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
+          </div>
         </div>
-        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">
-          <span style="color:#C0392B;font-weight:500">{{ doc.doc_number }}</span> ·
-          {{ doc.author.full_name }} ·
-          {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;
-          {% if doc.status == 'approved' %}background:#eaf3de;color:#3b6d11
-          {% elif doc.status == 'pending' %}background:#faeeda;color:#854f0b
-          {% elif doc.status == 'rejected' %}background:#fcebeb;color:#a32d2d
-          {% else %}background:var(--color-background-secondary);color:var(--color-text-secondary){% endif %}">
+        <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% else %}pill-gray{% endif %}">
           {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
-          {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending approval','kz':'Келісімде'}[current_user.language] }}
+          {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
           {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
           {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
         </span>
       </div>
-    </div>
 
-    <!-- WORKFLOW STEPPER -->
-    <div style="display:flex;align-items:center;margin-bottom:18px">
-      {% set steps_ru = ['Создание','Согласование','Подпись','На исполнении','Исполнен'] %}
-      {% set steps_en = ['Created','Approval','Signature','In progress','Completed'] %}
-      {% set steps_kz = ['Жасалды','Келісім','Қол қою','Орындауда','Орындалды'] %}
-      {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
-      {% set current_step = 2 if doc.status == 'pending' else (3 if doc.status == 'approved' else 1) %}
-      {% for step in steps %}
-      <div style="display:flex;flex-direction:column;align-items:center;flex:1">
-        <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;
-          {% if loop.index < current_step %}background:#27ae60;color:#fff;
-          {% elif loop.index == current_step %}background:#C0392B;color:#fff;
-          {% else %}background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-secondary);{% endif %}">
-          {% if loop.index < current_step %}<i class="ti ti-check" style="font-size:12px"></i>
-          {% else %}{{ loop.index }}{% endif %}
-        </div>
-        <div style="font-size:9px;margin-top:4px;text-align:center;color:
-          {% if loop.index < current_step %}#27ae60
-          {% elif loop.index == current_step %}#C0392B
-          {% else %}var(--color-text-tertiary){% endif %}">{{ step }}</div>
-      </div>
-      {% if not loop.last %}
-      <div style="flex:1;height:1px;margin-top:-16px;background:{% if loop.index < current_step %}#27ae60{% else %}var(--color-border-tertiary){% endif %}"></div>
-      {% endif %}
-      {% endfor %}
-    </div>
-
-    <!-- ACTION BUTTONS -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a href="{{ url_for('documents.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);text-decoration:none">
-        <i class="ti ti-arrow-left" style="font-size:13px"></i>
-        {{ {'ru':'К реестру','en':'Back to registry','kz':'Тізілімге'}[current_user.language] }}
-      </a>
-      <button onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);cursor:pointer;font-family:inherit">
-        <i class="ti ti-printer" style="font-size:13px"></i>
-        {{ {'ru':'Печать','en':'Print','kz':'Басып шығару'}[current_user.language] }}
-      </button>
-      {% if doc.status == 'pending' and (current_user.role in ['it_admin','dept_head','director']) %}
-      <div style="margin-left:auto;display:flex;gap:8px">
-        <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
-          <input type="hidden" name="action" value="reject">
-          <input type="hidden" name="comment" value="">
-          <button type="submit" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;background:#fcebeb;color:#a32d2d;border:0.5px solid #f09595;cursor:pointer;font-family:inherit">
-            <i class="ti ti-x" style="font-size:13px"></i>
-            {{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}
-          </button>
-        </form>
-        <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
-          <input type="hidden" name="action" value="approve">
-          <input type="hidden" name="comment" value="">
-          <button type="submit" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;background:#C0392B;color:#fff;border:0.5px solid #96281B;cursor:pointer;font-family:inherit">
-            <i class="ti ti-check" style="font-size:13px"></i>
-            {{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}
-          </button>
-        </form>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- DOCUMENT DETAILS + APPROVAL SIDE BY SIDE -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-
-    <!-- LEFT: DOCUMENT DETAILS -->
-    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">
-      <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
-        <i class="ti ti-file-description" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Детали документа','en':'Document details','kz':'Құжат мәліметтері'}[current_user.language] }}</div>
-      </div>
-      <div style="padding:16px 18px">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);width:45%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td>
-            <td style="padding:6px 0;font-weight:500;color:#C0392B">{{ doc.doc_number }}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary)">
-              {% if doc.doc_type == 'defect_act' %}Дефектный акт
-              {% elif doc.doc_type == 'purchase_req' %}Требование на приобретение
-              {% else %}{{ doc.doc_type }}{% endif %}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary)">{{ doc.author.full_name }}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary)">{{ doc.department or '—' }}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary)">
-              <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;{% if doc.urgency == 'critical' %}background:#fcebeb;color:#a32d2d{% elif doc.urgency == 'urgent' %}background:#faeeda;color:#854f0b{% else %}background:#eaf3de;color:#3b6d11{% endif %}">
-                {% if doc.urgency == 'critical' %}{{ {'ru':'Критический','en':'Critical','kz':'Өте шұғыл'}[current_user.language] }}
-                {% elif doc.urgency == 'urgent' %}{{ {'ru':'Срочный','en':'Urgent','kz':'Шұғыл'}[current_user.language] }}
-                {% else %}{{ {'ru':'Стандарт','en':'Standard','kz':'Стандарт'}[current_user.language] }}{% endif %}
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Дата создания','en':'Created','kz':'Жасалған күні'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary)">{{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-          </tr>
-          {% if doc.needed_by %}
-          <tr>
-            <td style="padding:6px 0;color:var(--color-text-tertiary);font-size:11px;border-top:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Срок исполнения','en':'Required by','kz':'Орындау мерзімі'}[current_user.language] }}</td>
-            <td style="padding:6px 0;border-top:0.5px solid var(--color-border-tertiary);color:#C0392B;font-weight:500">{{ doc.needed_by.strftime('%d.%m.%Y') }}</td>
-          </tr>
-          {% endif %}
-        </table>
-        {% if doc.purpose %}
-        <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary)">
-          <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Описание / Содержание','en':'Description / Summary','kz':'Сипаттама / Мазмұн'}[current_user.language] }}</div>
-          <div style="font-size:12px;color:var(--color-text-primary);line-height:1.6">{{ doc.purpose }}</div>
-        </div>
-        {% endif %}
-        {% if doc.justification %}
-        <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary)">
-          <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Причина / Обоснование','en':'Cause / Justification','kz':'Себеп / Негіздеме'}[current_user.language] }}</div>
-          <div style="font-size:12px;color:var(--color-text-primary);line-height:1.6">{{ doc.justification }}</div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- RIGHT: APPROVAL STATUS -->
-    <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">
-      <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
-        <i class="ti ti-git-branch" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Статус согласования','en':'Approval status','kz':'Келісу мәртебесі'}[current_user.language] }}</div>
-      </div>
-      <div style="padding:14px 18px">
-        <!-- Author -->
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
-          <div style="width:30px;height:30px;border-radius:50%;background:#eaf3de;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#3b6d11;flex-shrink:0">{{ doc.author.initials }}</div>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ doc.author.full_name }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</div>
+      <!-- STEPPER -->
+      <div class="stepper" style="margin-bottom:18px">
+        {% set steps_ru = ['Создание','Согласование','Подпись','На исполнении','Исполнен'] %}
+        {% set steps_en = ['Created','Approval','Signature','In progress','Completed'] %}
+        {% set steps_kz = ['Жасалды','Келісім','Қол қою','Орындауда','Орындалды'] %}
+        {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
+        {% set cur = 2 if doc.status == 'pending' else (3 if doc.status == 'approved' else 1) %}
+        {% for step in steps %}
+        <div class="stepper-step">
+          <div class="stepper-dot {% if loop.index < cur %}done{% elif loop.index == cur %}active{% else %}pending{% endif %}">
+            {% if loop.index < cur %}<i class="ti ti-check" style="font-size:11px"></i>{% else %}{{ loop.index }}{% endif %}
           </div>
-          <div style="text-align:right">
-            <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#eaf3de;color:#3b6d11">{{ {'ru':'Создан','en':'Submitted','kz':'Жасалды'}[current_user.language] }}</span>
-            <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px">{{ doc.created_at.strftime('%d.%m %H:%M') }}</div>
-          </div>
+          <div class="stepper-label {% if loop.index == cur %}active{% elif loop.index < cur %}done{% endif %}">{{ step }}</div>
         </div>
-        <!-- Dept head -->
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
-          <div style="width:30px;height:30px;border-radius:50%;{% if doc.status == 'approved' %}background:#eaf3de{% elif doc.status == 'pending' %}background:#fcebeb{% else %}background:var(--color-background-secondary){% endif %};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;{% if doc.status == 'approved' %}color:#3b6d11{% elif doc.status == 'pending' %}color:#a32d2d{% else %}color:var(--color-text-tertiary){% endif %};flex-shrink:0;border:0.5px solid var(--color-border-tertiary)">НО</div>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Начальник отдела','en':'Department head','kz':'Бөлім басшысы'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Согласующий · Шаг 1','en':'Approver · Step 1','kz':'Келісуші · 1-қадам'}[current_user.language] }}</div>
-          </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;{% if doc.status == 'approved' %}background:#eaf3de;color:#3b6d11{% elif doc.status == 'pending' %}background:#faeeda;color:#854f0b{% else %}background:var(--color-background-secondary);color:var(--color-text-secondary){% endif %}">
-            {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
-            {% elif doc.status == 'pending' %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
-            {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
-          </span>
-        </div>
-        <!-- Finance -->
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
-          <div style="width:30px;height:30px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--color-text-tertiary);flex-shrink:0;border:0.5px solid var(--color-border-tertiary)">ФО</div>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Финансовый отдел','en':'Finance dept.','kz':'Қаржы бөлімі'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Шаг 2','en':'Step 2','kz':'2-қадам'}[current_user.language] }}</div>
-          </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
-        </div>
-        <!-- Procurement -->
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-          <div style="width:30px;height:30px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--color-text-tertiary);flex-shrink:0;border:0.5px solid var(--color-border-tertiary)">СН</div>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Снабжение · ЗП в 1С','en':'Procurement · PO in 1С','kz':'Жабдықтау · ТТ 1С-те'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Шаг 3','en':'Step 3','kz':'3-қадам'}[current_user.language] }}</div>
-          </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
-        </div>
+        {% if not loop.last %}<div class="stepper-line {% if loop.index < cur %}done{% endif %}"></div>{% endif %}
+        {% endfor %}
+      </div>
 
-        <!-- APPROVE/REJECT WITH COMMENT -->
-        {% if doc.status == 'pending' and (current_user.role in ['it_admin','dept_head','director']) %}
-        <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--color-border-tertiary)">
-          <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}">
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:5px">{{ {'ru':'Комментарий к решению','en':'Decision comment','kz':'Шешімге түсініктеме'}[current_user.language] }}</label>
-            <textarea name="comment" rows="2" placeholder="{{ {'ru':'Оставьте комментарий...','en':'Leave a comment...','kz':'Түсініктеме қалдырыңыз...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 9px;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;margin-bottom:8px"></textarea>
-            <div style="display:flex;gap:6px">
-              <button type="submit" name="action" value="reject" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px;border-radius:var(--border-radius-md);font-size:11px;font-weight:500;background:#fcebeb;color:#a32d2d;border:0.5px solid #f09595;cursor:pointer;font-family:inherit">
-                <i class="ti ti-x" style="font-size:11px"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}
-              </button>
-              <button type="submit" name="action" value="approve" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px;border-radius:var(--border-radius-md);font-size:11px;font-weight:500;background:#C0392B;color:#fff;border:0.5px solid #96281B;cursor:pointer;font-family:inherit">
-                <i class="ti ti-check" style="font-size:11px"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}
-              </button>
-            </div>
+      <!-- BUTTONS -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="{{ url_for('documents.index') }}" class="btn btn-sm">
+          <i class="ti ti-arrow-left"></i>{{ {'ru':'К реестру','en':'Back','kz':'Тізілімге'}[current_user.language] }}
+        </a>
+        <button onclick="window.print()" class="btn btn-sm">
+          <i class="ti ti-printer"></i>{{ {'ru':'Печать','en':'Print','kz':'Басып шығару'}[current_user.language] }}
+        </button>
+        {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
+            <input type="hidden" name="action" value="reject">
+            <input type="hidden" name="comment" value="">
+            <button type="submit" class="btn btn-sm btn-danger"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
+            <input type="hidden" name="action" value="approve">
+            <input type="hidden" name="comment" value="">
+            <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
           </form>
         </div>
         {% endif %}
@@ -237,70 +71,139 @@
     </div>
   </div>
 
-  <!-- ITEMS TABLE -->
-  {% if items %}
-  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
-    <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
-      <i class="ti ti-list-check" style="font-size:15px;color:#C0392B"></i>
-      <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">
-        {{ {'ru':'Позиции / Запчасти','en':'Items / Parts','kz':'Позициялар / Бөлшектер'}[current_user.language] }}
-        <span style="font-weight:400;color:var(--color-text-tertiary)">({{ items|length }})</span>
+  <!-- DETAILS + APPROVAL -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-icon"><i class="ti ti-file-description"></i></div>
+          <div class="card-title">{{ {'ru':'Детали','en':'Details','kz':'Мәліметтер'}[current_user.language] }}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type == 'purchase_req' %}Требование{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>
+          <td style="padding:5px 0;border-top:1px solid var(--border)"><span class="pill {% if doc.urgency == 'critical' %}pill-red{% elif doc.urgency == 'urgent' %}pill-amber{% else %}pill-green{% endif %}">{{ doc.urgency or '—' }}</span></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
+        </table>
+        {% if doc.purpose %}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</div>
+          <div style="font-size:12px;color:var(--text-1);line-height:1.6">{{ doc.purpose }}</div>
+        </div>
+        {% endif %}
       </div>
     </div>
-    <div style="padding:0">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:35px">№</th>
-            <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ {'ru':'Наименование','en':'Name','kz':'Атауы'}[current_user.language] }}</th>
-            <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ {'ru':'Характеристика','en':'Specification','kz':'Сипаттама'}[current_user.language] }}</th>
-            <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:70px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }}</th>
-            <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:55px">{{ {'ru':'Ед.','en':'Unit','kz':'Өлш.'}[current_user.language] }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr>
-            <td style="padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);font-weight:500">{{ loop.index }}</td>
-            <td style="padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);font-weight:500;color:var(--color-text-primary)">{{ item.name }}</td>
-            <td style="padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)">{{ item.note or '—' }}</td>
-            <td style="padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary)">{{ item.quantity or '—' }}</td>
-            <td style="padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)">{{ item.unit or '—' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <div class="card" style="margin-bottom:0">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-icon"><i class="ti ti-git-branch"></i></div>
+          <div class="card-title">{{ {'ru':'Согласование','en':'Approval','kz':'Келісу'}[current_user.language] }}</div>
+        </div>
+      </div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="approver-row">
+          <div class="approver-av done">{{ doc.author.initials }}</div>
+          <div style="flex:1"><div class="approver-name">{{ doc.author.full_name }}</div><div class="approver-role">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</div></div>
+          <span class="pill pill-green">{{ {'ru':'Создан','en':'Submitted','kz':'Жасалды'}[current_user.language] }}</span>
+        </div>
+        <div class="approver-row">
+          <div class="approver-av {% if doc.status == 'approved' %}done{% elif doc.status == 'pending' %}active{% else %}pending{% endif %}">НО</div>
+          <div style="flex:1"><div class="approver-name">{{ {'ru':'Начальник отдела','en':'Dept head','kz':'Бөлім басшысы'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'Шаг 1','en':'Step 1','kz':'1-қадам'}[current_user.language] }}</div></div>
+          <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% else %}pill-gray{% endif %}">
+            {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
+            {% elif doc.status == 'pending' %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
+            {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
+          </span>
+        </div>
+        <div class="approver-row">
+          <div class="approver-av pending">ФО</div>
+          <div style="flex:1"><div class="approver-name">{{ {'ru':'Финансовый отдел','en':'Finance','kz':'Қаржы'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'Шаг 2','en':'Step 2','kz':'2-қадам'}[current_user.language] }}</div></div>
+          <span class="pill pill-gray">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
+        </div>
+        <div class="approver-row" style="border-bottom:none">
+          <div class="approver-av pending">СН</div>
+          <div style="flex:1"><div class="approver-name">{{ {'ru':'Снабжение','en':'Procurement','kz':'Жабдықтау'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'ЗП в 1С','en':'PO in 1С','kz':'ТТ 1С-те'}[current_user.language] }}</div></div>
+          <span class="pill pill-gray">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
+        </div>
+
+        {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
+        <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ {'ru':'Комментарий...','en':'Comment...','kz':'Түсініктеме...'}[current_user.language] }}" style="margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:6px">
+            <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;justify-content:center"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
+            <button type="submit" name="action" value="approve" class="btn btn-success" style="flex:1;justify-content:center"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
     </div>
+  </div>
+
+  <!-- ITEMS TABLE -->
+  {% if items %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-list-check"></i></div>
+        <div class="card-title">{{ {'ru':'Позиции','en':'Items','kz':'Позициялар'}[current_user.language] }} ({{ items|length }})</div>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:35px">№</th>
+          <th>{{ {'ru':'Наименование','en':'Name','kz':'Атауы'}[current_user.language] }}</th>
+          <th>{{ {'ru':'Характеристика','en':'Spec','kz':'Сипаттама'}[current_user.language] }}</th>
+          <th style="width:70px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }}</th>
+          <th style="width:55px">{{ {'ru':'Ед.','en':'Unit','kz':'Өлш.'}[current_user.language] }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td style="font-weight:500">{{ item.name }}</td>
+          <td class="text-muted">{{ item.note or '—' }}</td>
+          <td>{{ item.quantity or '—' }}</td>
+          <td class="text-muted">{{ item.unit or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
   {% endif %}
 
   <!-- COMMENT HISTORY -->
-  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
-    <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
-      <i class="ti ti-message-circle" style="font-size:15px;color:#C0392B"></i>
-      <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'История документа','en':'Document history','kz':'Құжат тарихы'}[current_user.language] }}</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-message-circle"></i></div>
+        <div class="card-title">{{ {'ru':'История','en':'History','kz':'Тарих'}[current_user.language] }}</div>
+      </div>
     </div>
-    <div style="padding:14px 18px">
+    <div class="card-body">
       {% for comment in comments %}
-      <div style="background:{% if comment.is_system %}var(--color-background-secondary){% else %}var(--color-background-primary){% endif %};border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px;{% if comment.is_system %}border-left:2px solid #185fa5{% else %}border-left:2px solid #C0392B{% endif %}">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-          <div style="width:20px;height:20px;border-radius:50%;background:{% if comment.is_system %}#185fa5{% else %}#C0392B{% endif %};display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:600;flex-shrink:0">
+      <div class="comment {% if comment.is_system %}system{% else %}user{% endif %}" style="margin-bottom:8px">
+        <div class="comment-header">
+          <div class="comment-av" style="background:{% if comment.is_system %}var(--blue){% else %}var(--red){% endif %}">
             {% if comment.is_system %}ИИ{% else %}{{ comment.author.initials }}{% endif %}
           </div>
-          <span style="font-size:11px;font-weight:500;color:var(--color-text-primary)">{% if comment.is_system %}{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}{% else %}{{ comment.author.full_name }}{% endif %}</span>
-          <span style="font-size:10px;color:var(--color-text-tertiary);margin-left:auto">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+          <span class="comment-name">{% if comment.is_system %}{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}{% else %}{{ comment.author.full_name }}{% endif %}</span>
+          <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
         </div>
-        <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.5">{{ comment.text }}</div>
+        <div class="comment-text">{{ comment.text }}</div>
       </div>
       {% endfor %}
-
-      <!-- ADD COMMENT -->
-      <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="margin-top:10px;display:flex;gap:8px">
+      <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:flex;gap:8px;margin-top:10px">
         <input type="hidden" name="action" value="comment">
-        <input name="comment" type="text" placeholder="{{ {'ru':'Добавить комментарий...','en':'Add a comment...','kz':'Түсініктеме қосу...'}[current_user.language] }}" style="flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-        <button type="submit" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;background:#C0392B;color:#fff;border:0.5px solid #96281B;cursor:pointer;font-family:inherit">
-          <i class="ti ti-send" style="font-size:12px"></i>
-        </button>
+        <input name="comment" type="text" class="form-input" placeholder="{{ {'ru':'Добавить комментарий...','en':'Add comment...','kz':'Түсініктеме қосу...'}[current_user.language] }}" style="flex:1">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-send"></i></button>
       </form>
     </div>
   </div>
