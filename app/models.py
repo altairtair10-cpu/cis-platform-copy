@@ -149,6 +149,8 @@ class Document(db.Model):
     def generate_number(self):
         prefix_map = {
             'purchase_req': 'ТМЦ',
+            'defect_act':   'ДА',
+            'defect_act': 'ДА',
             'memo':         'СЗ',
             'order':        'ПР',
             'act':          'АКТ',

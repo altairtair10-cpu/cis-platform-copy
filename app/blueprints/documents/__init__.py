@@ -85,31 +85,38 @@ def view(doc_id):
     if not current_user.can_access('documents') and doc.author_id != current_user.id:
         abort(403)
     items    = doc.items.all()
-    approvals = doc.approvals.order_by('step').all()
-    comments  = doc.comments.order_by('created_at').all()
-    return render_template('documents/view.html', doc=doc, items=items,
-                           approvals=approvals, comments=comments,
-                           doc_types=DOC_TYPES, statuses=DOC_STATUSES)
-
+    comments = doc.comments.order_by('created_at').all()
+    return render_template('documents/view.html', doc=doc, items=items, comments=comments)
 @documents.route('/<int:doc_id>/approve', methods=['POST'])
 @login_required
 def approve(doc_id):
     doc = Document.query.get_or_404(doc_id)
-    action  = request.form.get('action')
-    comment_text = request.form.get('comment', '')
+    action = request.form.get('action')
+    comment_text = request.form.get('comment', '').strip()
 
     if action in ['approve', 'reject']:
         doc.status = 'approved' if action == 'approve' else 'rejected'
+        text = comment_text or f'Документ {"согласован" if action == "approve" else "отклонён"} пользователем {current_user.full_name}.'
         comment = DocumentComment(
-            document_id = doc.id,
-            author_id   = current_user.id,
-            text        = comment_text or f'Document {action}d by {current_user.full_name}.',
-            is_system   = False,
+            document_id=doc.id,
+            author_id=current_user.id,
+            text=text,
+            is_system=False,
         )
         db.session.add(comment)
         db.session.commit()
-        flash(f'Document {action}d successfully.', 'success')
+        flash(f'Документ {"согласован" if action == "approve" else "отклонён"}.', 'success')
+    elif action == 'comment' and comment_text:
+        comment = DocumentComment(
+            document_id=doc.id,
+            author_id=current_user.id,
+            text=comment_text,
+            is_system=False,
+        )
+        db.session.add(comment)
+        db.session.commit()
 
+    return redirect(url_for('documents.view', doc_id=doc_id))
     return redirect(url_for('documents.view', doc_id=doc_id))
 @documents.route('/defect-act/new', methods=['GET', 'POST'])
 @login_required
@@ -123,10 +130,109 @@ def new_defect_act():
 @documents.route('/defect-act/submit', methods=['POST'])
 @login_required
 def submit_defect_act():
-    flash('Дефектный акт сохранён.', 'success')
-    return redirect(url_for('documents.index'))
+    from datetime import datetime
+    action = request.form.get('action', 'draft')
 
-@documents.route('/trebovanie/new')
+    doc = Document(
+        doc_type      = 'defect_act',
+        title         = request.form.get('description', 'Дефектный акт')[:100],
+        department    = request.form.get('department', current_user.department),
+        urgency       = request.form.get('urgency', 'critical'),
+        purpose       = request.form.get('description'),
+        justification = request.form.get('cause'),
+        author_id     = current_user.id,
+        status        = 'pending' if action == 'submit' else 'draft',
+    )
+
+    db.session.add(doc)
+    db.session.flush()
+    doc.generate_number()
+
+    # Save parts list
+    names     = request.form.getlist('part_name[]')
+    specs     = request.form.getlist('part_spec[]')
+    qtys      = request.form.getlist('part_qty[]')
+    units     = request.form.getlist('part_unit[]')
+    costs     = request.form.getlist('part_cost[]')
+
+    for i, name in enumerate(names):
+        if name.strip():
+            item = DocumentItem(
+                document_id = doc.id,
+                name        = name.strip(),
+                unit        = units[i] if i < len(units) else 'шт',
+                quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note        = specs[i] if i < len(specs) else '',
+            )
+            db.session.add(item)
+
+    # System comment
+    system_comment = DocumentComment(
+        document_id = doc.id,
+        author_id   = current_user.id,
+        text        = f'Дефектный акт {"отправлен на согласование" if action == "submit" else "сохранён как черновик"} пользователем {current_user.full_name}.',
+        is_system   = True,
+    )
+    db.session.add(system_comment)
+    db.session.commit()
+
+    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+@documents.route('/trebovanie/new', methods=['GET', 'POST'])
 @login_required
 def new_trebovanie():
-    return render_template('documents/trebovanie.html')
+    from datetime import datetime
+    now = datetime.now().strftime('%d.%m.%Y %H:%M')
+    linked_defect = request.args.get('from_defect', None)
+    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect)
+
+@documents.route('/trebovanie/submit', methods=['POST'])
+@login_required
+def submit_trebovanie():
+    from datetime import datetime
+    action = request.form.get('action', 'draft')
+
+    doc = Document(
+        doc_type      = 'purchase_req',
+        title         = request.form.get('summary', 'Требование на приобретение')[:100],
+        department    = request.form.get('department', current_user.department),
+        urgency       = request.form.get('urgency', 'standard'),
+        purpose       = request.form.get('summary'),
+        justification = request.form.get('note'),
+        author_id     = current_user.id,
+        status        = 'pending' if action == 'submit' else 'draft',
+    )
+
+    db.session.add(doc)
+    db.session.flush()
+    doc.generate_number()
+
+    # Save items
+    names     = request.form.getlist('item_name[]')
+    specs     = request.form.getlist('item_spec[]')
+    qtys      = request.form.getlist('item_qty[]')
+    units     = request.form.getlist('item_unit[]')
+    costs     = request.form.getlist('item_cost[]')
+
+    for i, name in enumerate(names):
+        if name.strip():
+            item = DocumentItem(
+                document_id = doc.id,
+                name        = name.strip(),
+                unit        = units[i] if i < len(units) else 'шт',
+                quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note        = specs[i] if i < len(specs) else '',
+            )
+            db.session.add(item)
+
+    system_comment = DocumentComment(
+        document_id = doc.id,
+        author_id   = current_user.id,
+        text        = f'Требование {"отправлено на согласование" if action == "submit" else "сохранено как черновик"} пользователем {current_user.full_name}.',
+        is_system   = True,
+    )
+    db.session.add(system_comment)
+    db.session.commit()
+
+    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
