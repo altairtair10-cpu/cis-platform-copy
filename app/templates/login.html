@@ -9,15 +9,13 @@
 </head>
 <body class="login-page">
   <div class="login-shell">
-    <div class="login-brand">
-      <div class="login-logo-icon">
-        <svg viewBox="0 0 16 16" fill="white" width="28" height="28">
-          <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" opacity="0.9"/>
-        </svg>
-      </div>
-      <div class="login-brand-name">CIS Platform</div>
-      <div class="login-brand-sub">Caspian Integrated Services LLP · Атырау</div>
-    </div>
+  <div class="login-brand">
+  <img src="{{ url_for('static', filename='img/cis-logo.svg') }}" 
+       alt="CIS Platform" 
+       style="height:60px;filter:brightness(0) invert(1);opacity:0.9;margin-bottom:14px">
+  <div class="login-brand-name">CIS Platform</div>
+  <div class="login-brand-sub">Caspian Integrated Services LLP · Атырау</div>
+</div>
     <div class="login-card">
       <div class="login-title">Войти в систему</div>
       {% for category, message in get_flashed_messages(with_categories=true) %}

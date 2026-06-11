@@ -10,15 +10,11 @@
 <body>
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="sb-logo">
-      <div class="sb-logo-icon">
-        <svg viewBox="0 0 16 16"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" opacity="0.9"/></svg>
-      </div>
-      <div>
-        <div class="sb-logo-name">CIS Platform</div>
-        <div class="sb-logo-sub">Caspian Integrated Services</div>
-      </div>
-    </div>
+   <div class="sb-logo">
+  <img src="{{ url_for('static', filename='img/cis-logo.svg') }}" 
+       alt="CIS" 
+       style="height:36px;filter:brightness(0) invert(1);opacity:0.9">
+</div>
     <div class="sb-user">
       <div class="sb-avatar">{{ current_user.initials }}</div>
       <div>
