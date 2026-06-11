@@ -150,6 +150,7 @@ class Document(db.Model):
         prefix_map = {
             'purchase_req': 'ТМЦ',
             'defect_act':   'ДА',
+            'defect_act':   'ДА',
             'defect_act': 'ДА',
             'memo':         'СЗ',
             'order':        'ПР',

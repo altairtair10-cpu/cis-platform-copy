@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}New document{% endblock %}
+{% block page_title %}New document{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+  <a href="{{ url_for('documents.new_defect_act') }}" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px;text-decoration:none;cursor:pointer">
+    <i class="ti ti-alert-triangle" style="font-size:24px;color:#C0392B;display:block;margin-bottom:8px"></i>
+    <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Дефектный акт</div>
+    <div style="font-size:11px;color:var(--color-text-tertiary)">Defect Act</div>
+  </a>
+  <a href="{{ url_for('documents.new_trebovanie') }}" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px;text-decoration:none;cursor:pointer">
+    <i class="ti ti-shopping-cart" style="font-size:24px;color:#C0392B;display:block;margin-bottom:8px"></i>
+    <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Требование на приобретение</div>
+    <div style="font-size:11px;color:var(--color-text-tertiary)">Purchase Requisition</div>
+  </a>
+</div>
+{% endblock %}

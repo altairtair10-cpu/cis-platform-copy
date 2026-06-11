@@ -17,7 +17,7 @@
     <div class="kpi-label"><i class="ti ti-files"></i>
       {{ {'ru': 'Открытые заявки', 'en': 'Open requests', 'kz': 'Ашық сұраныстар'}[current_user.language] }}
     </div>
-    <div class="kpi-value {% if stats.open_requests > 0 %}text-danger{% endif %}">{{ stats.open_requests }}</div>
+    <div class="kpi-value {% if stats.docs_pending > 0 %}text-danger{% endif %}">{{ stats.docs_pending }}</div>
     <div class="kpi-sub kpi-neutral">
       {{ {'ru': 'На согласовании', 'en': 'Pending approval', 'kz': 'Келісімде'}[current_user.language] }}
     </div>
