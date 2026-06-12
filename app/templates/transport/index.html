@@ -1,9 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Transport{% endblock %}
-{% block page_title %}Transport{% endblock %}
+{% block title %}Транспорт{% endblock %}
+{% block page_title %}{{ {'ru':'Транспорт','en':'Transport','kz':'Көлік'}[current_user.language] }}{% endblock %}
+
 {% block content %}
-<div style="padding:40px;text-align:center;color:var(--color-text-tertiary)">
-  <i class="ti ti-truck" style="font-size:36px;display:block;margin-bottom:12px"></i>
-  <div style="font-size:13px">Transport module — coming soon</div>
+<div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-truck"></i>{{ {'ru':'Всего рейсов','en':'Total runs','kz':'Барлық сапар'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ runs|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-route"></i>{{ {'ru':'Активных маршрутов','en':'Active routes','kz':'Белсенді маршрут'}[current_user.language] }}</div>
+    <div class="kpi-value success">{{ runs|map(attribute='route')|unique|list|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-car"></i>{{ {'ru':'Транспортных средств','en':'Vehicles','kz':'Көліктер'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ runs|map(attribute='vehicle')|unique|list|length }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-truck"></i></div>
+      <div class="card-title">{{ {'ru':'Журнал транспортных рейсов','en':'Transport log','kz':'Көлік журналы'}[current_user.language] }}</div>
+    </div>
+  </div>
+
+  {% if runs %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Маршрут','en':'Route','kz':'Маршрут'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Транспорт','en':'Vehicle','kz':'Көлік'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Водитель','en':'Driver','kz':'Жүргізуші'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Назначение','en':'Purpose','kz':'Мақсат'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td class="text-muted">{{ run.scheduled.strftime('%d.%m.%Y') if run.scheduled else 'no date' }}</td>
+        <td style="font-weight:500">{{ run.route or 'no route' }}</td>
+        <td>{{ run.vehicle or 'no vehicle' }}</td>
+        <td>{{ run.driver or 'no driver' }}</td>
+        <td class="text-muted">{{ run.purpose or 'no purpose' }}</td>
+        <td>
+          <span class="pill {% if run.status == 'completed' %}pill-green{% elif run.status == 'in_progress' %}pill-amber{% else %}pill-gray{% endif %}">
+            {{ run.status or 'logged' }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body" style="text-align:center;padding:60px 20px">
+    <i class="ti ti-truck" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
+    <div style="font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:4px">{{ {'ru':'Рейсов пока нет','en':'No transport runs yet','kz':'Сапарлар жоқ'}[current_user.language] }}</div>
+    <div class="text-muted text-small">{{ {'ru':'Данные появятся из Transport Bot','en':'Data will appear from Transport Bot','kz':'Деректер Transport Bot арқылы пайда болады'}[current_user.language] }}</div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
