@@ -1,9 +1,95 @@
 {% extends "base.html" %}
 {% block title %}HR{% endblock %}
-{% block page_title %}HR System{% endblock %}
+{% block page_title %}{{ {'ru':'HR Система','en':'HR System','kz':'HR Жүйесі'}[current_user.language] }}{% endblock %}
+
 {% block content %}
-<div style="padding:40px;text-align:center;color:var(--color-text-tertiary)">
-  <i class="ti ti-users" style="font-size:36px;display:block;margin-bottom:12px"></i>
-  <div style="font-size:13px">HR module — coming soon</div>
+<div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-users"></i>{{ {'ru':'Сотрудников','en':'Staff','kz':'Қызметкерлер'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ staff|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-calendar-off"></i>{{ {'ru':'Заявки на отпуск','en':'PTO requests','kz':'Демалыс өтінімдері'}[current_user.language] }}</div>
+    <div class="kpi-value {% if pto|length > 0 %}warning{% endif %}">{{ pto|length }}</div>
+    <div class="kpi-sub">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-building"></i>{{ {'ru':'Подразделений','en':'Departments','kz':'Бөлімдер'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ staff|map(attribute='department')|unique|list|length }}</div>
+  </div>
+</div>
+
+<!-- PTO REQUESTS -->
+{% if pto %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-calendar-off"></i></div>
+      <div class="card-title">{{ {'ru':'Заявки на отпуск','en':'PTO Requests','kz':'Демалыс өтінімдері'}[current_user.language] }}</div>
+    </div>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Сотрудник','en':'Employee','kz':'Қызметкер'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Начало','en':'Start','kz':'Басы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Окончание','en':'End','kz':'Соңы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in pto %}
+      <tr>
+        <td style="font-weight:500">{{ req.user.full_name if req.user else '—' }}</td>
+        <td class="text-muted">{{ req.start_date.strftime('%d.%m.%Y') if req.start_date else '—' }}</td>
+        <td class="text-muted">{{ req.end_date.strftime('%d.%m.%Y') if req.end_date else '—' }}</td>
+        <td><span class="pill pill-amber">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- STAFF DIRECTORY -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-users"></i></div>
+      <div class="card-title">{{ {'ru':'Справочник сотрудников','en':'Staff Directory','kz':'Қызметкерлер анықтамалығы'}[current_user.language] }}</div>
+    </div>
+  </div>
+  {% if staff %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'ФИО','en':'Name','kz':'Аты-жөні'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Email','en':'Email','kz':'Email'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Роль','en':'Role','kz':'Рөл'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for person in staff %}
+      <tr>
+        <td style="font-weight:500">{{ person.full_name }}</td>
+        <td class="text-muted">{{ person.email }}</td>
+        <td>{{ person.department or '—' }}</td>
+        <td><span class="pill pill-blue">{{ person.role_display }}</span></td>
+        <td><span class="pill {% if person.is_active %}pill-green{% else %}pill-gray{% endif %}">
+          {% if person.is_active %}{{ {'ru':'Активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
+          {% else %}{{ {'ru':'Неактивен','en':'Inactive','kz':'Белсенді емес'}[current_user.language] }}{% endif %}
+        </span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body" style="text-align:center;padding:60px 20px">
+    <i class="ti ti-users" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
+    <div class="text-muted">{{ {'ru':'Сотрудников пока нет','en':'No staff yet','kz':'Қызметкерлер жоқ'}[current_user.language] }}</div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
