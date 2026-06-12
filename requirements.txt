@@ -8,4 +8,5 @@ psycopg[binary]==3.2.9
 werkzeug==3.1.8
 wtforms==3.1.2
 email-validator==2.2.0
-gunicorn==23.0.0anthropic==0.109.1
+gunicorn==23.0.0
+anthropic==0.109.1
