@@ -27,7 +27,8 @@ def create_app(config_name='default'):
     from app.blueprints.transport import transport as transport_bp
     from app.blueprints.hr import hr as hr_bp
     from app.blueprints.errors import errors as errors_bp
-
+    from app.blueprints.contracts import contracts as contracts_bp
+    app.register_blueprint(contracts_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(documents_bp)
