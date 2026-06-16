@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
 from app.models import Document, Equipment, User
 
@@ -109,3 +109,52 @@ Write a concise professional morning briefing in English. 4-6 bullet points. Sta
             'staff_total':     staff_total,
         }
     )
+@dashboard.route('/assistant', methods=['GET', 'POST'])
+@login_required
+def assistant():
+    import anthropic
+    import os
+
+    answer = None
+    question = None
+
+    if request.method == 'POST':
+        question = request.form.get('question', '').strip()
+        if question:
+            # Gather context
+            equipment_total = Equipment.query.count()
+            equipment_list = Equipment.query.all()
+            docs_pending = Document.query.filter_by(status='pending').count()
+            staff = User.query.filter_by(is_active=True).all()
+
+            equip_lines = [f"- {e.unit_id}: {e.name}, статус: {e.status}, локация: {e.location}" for e in equipment_list]
+            staff_lines = [f"- {u.full_name} ({u.role_display}, {u.department})" for u in staff]
+
+            system_prompt = f"""Ты — ИИ-ассистент компании Caspian Integrated Services (CIS), нефтесервисная компания в Атырау, Казахстан.
+Отвечай на вопросы сотрудников на языке вопроса (русский, английский или казахский).
+
+Данные компании:
+
+Оборудование ({equipment_total} единиц):
+{chr(10).join(equip_lines)}
+
+Документов на согласовании: {docs_pending}
+
+Сотрудники:
+{chr(10).join(staff_lines)}
+
+Отвечай кратко, профессионально, по делу. Если не знаешь ответ — скажи честно."""
+
+            try:
+                client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+                message = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=600,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": question}]
+                )
+                answer = message.content[0].text
+            except Exception as e:
+                answer = f"Ошибка: {str(e)}"
+
+    return render_template('dashboard/assistant.html', answer=answer, question=question)

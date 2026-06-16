@@ -66,7 +66,7 @@
       <div class="sb-section">{{ {'ru':'Данные','en':'Data','kz':'Деректер'}[current_user.language] }}</div>
       <a href="#" class="sb-item"><i class="ti ti-database"></i><span>{{ {'ru':'Интеграция 1С','en':'1С integration','kz':'1С интеграция'}[current_user.language] }}</span></a>
       <a href="#" class="sb-item"><i class="ti ti-chart-bar"></i><span>{{ {'ru':'KPI Отчёты','en':'KPI reports','kz':'KPI есептері'}[current_user.language] }}</span></a>
-      <a href="#" class="sb-item"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ Ассистент','en':'AI assistant','kz':'ЖИ көмекші'}[current_user.language] }}</span></a>
+      <a href="{{ url_for('dashboard.assistant') }}" class="sb-item"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ Ассистент','en':'AI assistant','kz':'ЖИ көмекші'}[current_user.language] }}</span></a>
       {% if current_user.is_authenticated and current_user.role == 'it_admin' %}
       <div class="sb-section">{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}</div>
       <a href="#" class="sb-item"><i class="ti ti-users-cog"></i><span>{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}</span></a>
