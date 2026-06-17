@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Управление пользователями','en':'User management','kz':'Пайдаланушыларды басқару'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+  <a href="{{ url_for('auth.new_user') }}" class="btn btn-primary">
+    <i class="ti ti-user-plus"></i>{{ {'ru':'Добавить пользователя','en':'Add user','kz':'Пайдаланушы қосу'}[current_user.language] }}
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-users"></i></div>
+      <div class="card-title">{{ {'ru':'Все пользователи','en':'All users','kz':'Барлық пайдаланушылар'}[current_user.language] }}</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-3)">{{ users|length }} {{ {'ru':'пользователей','en':'users','kz':'пайдаланушы'}[current_user.language] }}</div>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'ФИО','en':'Name','kz':'Аты-жөні'}[current_user.language] }}</th>
+        <th>Email</th>
+        <th>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Роль','en':'Role','kz':'Рөл'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Язык','en':'Language','kz':'Тіл'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#FDECEA;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#A32D2D;flex-shrink:0">{{ user.initials }}</div>
+            <span style="font-weight:500">{{ user.full_name }}</span>
+          </div>
+        </td>
+        <td class="text-muted">{{ user.email }}</td>
+        <td>{{ user.department or '—' }}</td>
+        <td><span class="pill pill-blue">{{ user.role_display }}</span></td>
+        <td class="text-muted">{{ user.language.upper() }}</td>
+        <td>
+          <span class="pill {% if user.is_active %}pill-green{% else %}pill-gray{% endif %}">
+            {% if user.is_active %}{{ {'ru':'Активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
+            {% else %}{{ {'ru':'Неактивен','en':'Inactive','kz':'Белсенді емес'}[current_user.language] }}{% endif %}
+          </span>
+        </td>
+        <td style="text-align:right">
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-sm">
+              <i class="ti ti-edit"></i>{{ {'ru':'Ред.','en':'Edit','kz':'Өзг.'}[current_user.language] }}
+            </a>
+            <form method="POST" action="{{ url_for('auth.deactivate_user', user_id=user.id) }}" style="display:inline">
+              <button type="submit" class="btn btn-sm {% if user.is_active %}btn-danger{% endif %}"
+                onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.full_name }}?')">
+                <i class="ti ti-{% if user.is_active %}user-off{% else %}user-check{% endif %}"></i>
+                {% if user.is_active %}{{ {'ru':'Откл.','en':'Deactivate','kz':'Өшіру'}[current_user.language] }}
+                {% else %}{{ {'ru':'Вкл.','en':'Activate','kz':'Қосу'}[current_user.language] }}{% endif %}
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

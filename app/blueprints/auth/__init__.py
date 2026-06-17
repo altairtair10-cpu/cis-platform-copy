@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User
 from wtforms import StringField, PasswordField, SelectField, BooleanField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, Optional
 from flask_wtf import FlaskForm
 
 auth = Blueprint('auth', __name__, url_prefix='/auth',
@@ -14,11 +14,30 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember me')
 
+class UserForm(FlaskForm):
+    full_name  = StringField('Full name', validators=[DataRequired(), Length(max=120)])
+    email      = StringField('Email', validators=[DataRequired(), Email()])
+    password   = PasswordField('Password', validators=[Optional(), Length(min=6)])
+    role       = SelectField('Role', choices=[
+        ('employee',    'Employee'),
+        ('mechanic',    'Mechanic'),
+        ('driver',      'Driver'),
+        ('dispatcher',  'Dispatcher'),
+        ('dept_head',   'Department Head'),
+        ('hr',          'HR'),
+        ('accountant',  'Accountant'),
+        ('procurement', 'Procurement'),
+        ('director',    'Director'),
+        ('it_admin',    'IT Admin'),
+    ])
+    department = StringField('Department', validators=[Optional(), Length(max=100)])
+    language   = SelectField('Language', choices=[('ru','Русский'),('en','English'),('kz','Қазақша')])
+    is_active  = BooleanField('Active')
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
-
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.lower()).first()
@@ -30,7 +49,6 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard.index'))
         flash('Invalid email or password.', 'danger')
-
     return render_template('login.html', form=form)
 
 @auth.route('/logout')
@@ -46,3 +64,77 @@ def set_language(lang):
         current_user.language = lang
         db.session.commit()
     return redirect(request.referrer or url_for('dashboard.index'))
+
+@auth.route('/users')
+@login_required
+def users():
+    if current_user.role != 'it_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard.index'))
+    all_users = User.query.order_by(User.id).all()
+    return render_template('auth/users.html', users=all_users)
+
+@auth.route('/users/new', methods=['GET', 'POST'])
+@login_required
+def new_user():
+    if current_user.role != 'it_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard.index'))
+    form = UserForm()
+    form.is_active.data = True
+    if form.validate_on_submit():
+        if User.query.filter_by(email=form.email.data.lower()).first():
+            flash('Email already exists.', 'danger')
+            return render_template('auth/user_form.html', form=form, title='New user')
+        user = User(
+            full_name  = form.full_name.data,
+            email      = form.email.data.lower(),
+            role       = form.role.data,
+            department = form.department.data,
+            language   = form.language.data,
+            is_active  = form.is_active.data,
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash(f'User {user.full_name} created.', 'success')
+        return redirect(url_for('auth.users'))
+    return render_template('auth/user_form.html', form=form, title='New user')
+
+@auth.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    if current_user.role != 'it_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard.index'))
+    user = User.query.get_or_404(user_id)
+    form = UserForm(obj=user)
+    if form.validate_on_submit():
+        user.full_name  = form.full_name.data
+        user.email      = form.email.data.lower()
+        user.role       = form.role.data
+        user.department = form.department.data
+        user.language   = form.language.data
+        user.is_active  = form.is_active.data
+        if form.password.data:
+            user.set_password(form.password.data)
+        db.session.commit()
+        flash(f'User {user.full_name} updated.', 'success')
+        return redirect(url_for('auth.users'))
+    return render_template('auth/user_form.html', form=form, title='Edit user', user=user)
+
+@auth.route('/users/<int:user_id>/deactivate', methods=['POST'])
+@login_required
+def deactivate_user(user_id):
+    if current_user.role != 'it_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard.index'))
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('Cannot deactivate yourself.', 'danger')
+        return redirect(url_for('auth.users'))
+    user.is_active = not user.is_active
+    db.session.commit()
+    status = 'activated' if user.is_active else 'deactivated'
+    flash(f'User {user.full_name} {status}.', 'success')
+    return redirect(url_for('auth.users'))
