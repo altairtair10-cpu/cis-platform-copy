@@ -91,7 +91,31 @@
           <a href="{{ url_for('auth.set_language', lang='en') }}" class="lang-btn {% if current_user.language == 'en' %}active{% endif %}">EN</a>
           <a href="{{ url_for('auth.set_language', lang='kz') }}" class="lang-btn {% if current_user.language == 'kz' %}active{% endif %}">KZ</a>
         </div>
-        <div class="tb-btn"><i class="ti ti-bell"></i><div class="tb-notif-dot"></div></div>
+        <div class="tb-btn" style="position:relative" onclick="toggleNotifDropdown()">
+  <i class="ti ti-bell"></i>
+  {% set notif_count = unread_count if unread_count is defined else 0 %}
+  {% if notif_count > 0 %}
+  <div class="tb-notif-badge" style="position:absolute;top:4px;right:4px;width:16px;height:16px;background:var(--red);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">{{ notif_count }}</div>
+  {% else %}
+  <div class="tb-notif-dot"></div>
+  {% endif %}
+</div>
+
+<div id="notif-dropdown" style="display:none;position:absolute;top:52px;right:60px;width:320px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100">
+  <div style="padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;color:var(--text-1);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Уведомления','en':'Notifications','kz':'Хабарламалар'}[current_user.language] }}</div>
+  {% if notifications %}
+  {% for n in notifications %}
+  <a href="{{ n.link or '#' }}" style="display:block;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);text-decoration:none;background:{% if not n.is_read %}#fdf8f8{% else %}var(--color-background-primary){% endif %}">
+    <div style="font-size:12px;font-weight:500;color:var(--text-1)">{{ n.title }}</div>
+    {% if n.body %}<div style="font-size:11px;color:var(--text-3);margin-top:2px">{{ n.body }}</div>{% endif %}
+    <div style="font-size:10px;color:var(--text-4);margin-top:3px">{{ n.created_at.strftime('%d.%m %H:%M') }}</div>
+  </a>
+  {% endfor %}
+  {% else %}
+  <div style="padding:20px;text-align:center;font-size:12px;color:var(--text-3)">{{ {'ru':'Нет уведомлений','en':'No notifications','kz':'Хабарламалар жоқ'}[current_user.language] }}</div>
+  {% endif %}
+</div>
+
         <div class="tb-btn"><i class="ti ti-user"></i></div>
       </div>
     </header>
@@ -108,5 +132,22 @@
 </div>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block scripts %}{% endblock %}
+<script>
+function toggleNotifDropdown(){
+  const d = document.getElementById('notif-dropdown');
+  const isHidden = d.style.display === 'none';
+  d.style.display = isHidden ? 'block' : 'none';
+  if(isHidden && {{ unread_count }} > 0){
+    fetch('/auth/notifications/read', {method:'POST'});
+    document.querySelectorAll('.tb-notif-badge').forEach(el => el.remove());
+  }
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.tb-btn')) {
+    const d = document.getElementById('notif-dropdown');
+    if(d) d.style.display='none';
+  }
+});
+</script>
 </body>
 </html>

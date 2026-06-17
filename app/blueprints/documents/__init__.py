@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import Document, DocumentItem, DocumentComment, DOC_TYPES, DOC_STATUSES
+from app.models import Document, DocumentItem, DocumentComment, DOC_TYPES, DOC_STATUSES, User
 from app.decorators import requires_permission
 from datetime import datetime
 
@@ -174,9 +174,24 @@ def submit_defect_act():
         is_system   = True,
     )
     db.session.add(system_comment)
+    # Notify all dept_heads and directors
+    from app.models import Notification
+    approvers = User.query.filter(
+        User.role.in_(['dept_head', 'director', 'it_admin']),
+        User.is_active == True
+    ).all()
+    for approver in approvers:
+        notif = Notification(
+            user_id = approver.id,
+            title   = f'Новый документ на согласовании: {doc.doc_number}',
+            body    = doc.title[:100],
+            link    = f'/documents/{doc.id}',
+            is_read = False,
+        )
+        db.session.add(notif)
     db.session.commit()
-
     flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
     return redirect(url_for('documents.view', doc_id=doc.id))
 @documents.route('/trebovanie/new', methods=['GET', 'POST'])
 @login_required
@@ -232,6 +247,21 @@ def submit_trebovanie():
         is_system   = True,
     )
     db.session.add(system_comment)
+    # Notify all dept_heads and directors
+    from app.models import Notification
+    approvers = User.query.filter(
+        User.role.in_(['dept_head', 'director', 'it_admin']),
+        User.is_active == True
+    ).all()
+    for approver in approvers:
+        notif = Notification(
+            user_id = approver.id,
+            title   = f'Новый документ на согласовании: {doc.doc_number}',
+            body    = doc.title[:100],
+            link    = f'/documents/{doc.id}',
+            is_read = False,
+        )
+        db.session.add(notif)
     db.session.commit()
 
     flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
