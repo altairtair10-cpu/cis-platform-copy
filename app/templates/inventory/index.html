@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ {'ru':'Склад','en':'Inventory','kz':'Қойма'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <i class="ti ti-packages" style="font-size:24px; color:var(--accent)"></i>
+    <h1 style="margin:0;">{{ {'ru':'Остатки по базам','en':'Stock by Base','kz':'Базалар бойынша қалдықтар'}[current_user.language] }}</h1>
+  </div>
+
+  <!-- Search -->
+  <form method="get" action="{{ url_for('inventory.index') }}" style="display:flex;gap:8px;margin-bottom:20px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="{{ {'ru':'Поиск материала...','en':'Search material...','kz':'Материал іздеу...'}[current_user.language] }}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);">
+    <button type="submit" class="btn btn-primary">{{ {'ru':'Найти','en':'Search','kz':'Іздеу'}[current_user.language] }}</button>
+    {% if query %}<a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">✕</a>{% endif %}
+  </form>
+
+  <!-- Table -->
+  {% if rows %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          {% for header in rows[0].keys() %}
+          <th>{{ header }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for value in row.values() %}
+          <td>{{ value }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="text-align:center;color:var(--text-2);padding:40px;">
+    {{ {'ru':'Ничего не найдено','en':'No results found','kz':'Ештеңе табылмады'}[current_user.language] }}
+  </p>
+  {% endif %}
+</div>
+
+<!-- Chat -->
+<div class="card" style="margin-top:20px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <i class="ti ti-robot" style="font-size:24px;color:var(--accent)"></i>
+    <h2 style="margin:0;font-size:18px;">{{ {'ru':'Спросить об инвентаре','en':'Ask about inventory','kz':'Қойма туралы сұрау'}[current_user.language] }}</h2>
+  </div>
+
+  <div id="chat-messages" style="min-height:80px;max-height:400px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;"></div>
+
+  <div style="display:flex;gap:8px;">
+    <input id="chat-input" type="text"
+      placeholder="{{ {'ru':'Например: какие материалы заканчиваются?','en':'E.g. which materials are running low?','kz':'Мысалы: қандай материалдар таусылып барады?'}[current_user.language] }}"
+      style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);"
+      onkeydown="if(event.key==='Enter') sendChat()">
+    <button onclick="sendChat()" class="btn btn-primary" id="chat-btn">
+      {{ {'ru':'Отправить','en':'Send','kz':'Жіберу'}[current_user.language] }}
+    </button>
+  </div>
+</div>
+
+<script>
+    function formatReply(text) {
+  return text
+    .replace(/### (.+)/g, '<strong style="font-size:15px;">$1</strong>')
+    .replace(/## (.+)/g, '<strong style="font-size:16px;">$1</strong>')
+    .replace(/# (.+)/g, '<strong style="font-size:17px;">$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('chat-messages');
+  const btn = document.getElementById('chat-btn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Show user message
+  messages.innerHTML += `<div style="align-self:flex-end;background:var(--accent);color:#fff;padding:8px 14px;border-radius:12px 12px 2px 12px;max-width:80%;">${text}</div>`;
+  input.value = '';
+  btn.disabled = true;
+
+  // Show loading
+  const loadingId = 'loading-' + Date.now();
+  messages.innerHTML += `<div id="${loadingId}" style="align-self:flex-start;background:var(--bg-2);padding:8px 14px;border-radius:12px 12px 12px 2px;max-width:80%;color:var(--text-2);">...</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await fetch('{{ url_for("inventory.chat") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    const data = await res.json();
+    document.getElementById(loadingId).remove();
+    messages.innerHTML += `<div style="align-self:flex-start;background:var(--bg-2);padding:8px 14px;border-radius:12px 12px 12px 2px;max-width:80%;">${formatReply(data.reply)}</div>`;
+  } catch(e) {
+    document.getElementById(loadingId).remove();
+    messages.innerHTML += `<div style="align-self:flex-start;color:red;padding:8px;">Error. Please try again.</div>`;
+  }
+
+  btn.disabled = false;
+  messages.scrollTop = messages.scrollHeight;
+}
+</script>
+{% endblock %}

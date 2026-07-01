@@ -28,6 +28,7 @@ def create_app(config_name='default'):
     from app.blueprints.hr import hr as hr_bp
     from app.blueprints.errors import errors as errors_bp
     from app.blueprints.contracts import contracts as contracts_bp
+    from app.blueprints.inventory import inventory as inventory_bp
     app.register_blueprint(contracts_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -35,6 +36,7 @@ def create_app(config_name='default'):
     app.register_blueprint(equipment_bp)
     app.register_blueprint(transport_bp)
     app.register_blueprint(hr_bp)
+    app.register_blueprint(inventory_bp)
     app.register_blueprint(errors_bp)
     @app.context_processor
     def inject_notifications():
