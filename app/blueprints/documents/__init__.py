@@ -1,3 +1,5 @@
+from pydoc import doc
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
@@ -199,11 +201,16 @@ def new_trebovanie():
     from datetime import datetime
     now = datetime.now().strftime('%d.%m.%Y %H:%M')
     linked_defect = request.args.get('from_defect', None)
-    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect)
+    executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
+    approvers = User.query.filter(User.is_active==True, User.role.in_(['dept_head', 'director', 'it_admin'])).order_by(User.first_name, User.last_name).all()
+    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect, executors=executors, approvers=approvers)
+
+
 
 @documents.route('/trebovanie/submit', methods=['POST'])
 @login_required
 def submit_trebovanie():
+    executor_id = request.form.get('executor_id', type=int) or current_user.id
     from datetime import datetime
     action = request.form.get('action', 'draft')
 
@@ -215,6 +222,7 @@ def submit_trebovanie():
         purpose       = request.form.get('summary'),
         justification = request.form.get('note'),
         author_id     = current_user.id,
+        executor_id = executor_id,
         status        = 'pending' if action == 'submit' else 'draft',
     )
 
@@ -264,5 +272,85 @@ def submit_trebovanie():
         db.session.add(notif)
     db.session.commit()
 
+    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/trebovanie-new/new', methods=['GET'])
+@login_required
+def new_trebovanie_new():
+    from datetime import datetime
+    now = datetime.now().strftime('%d.%m.%Y %H:%M')
+    executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
+    approvers = User.query.filter(User.is_active==True, User.role.in_(['dept_head', 'director', 'it_admin'])).order_by(User.first_name, User.last_name).all()
+    return render_template('documents/trebovanie_new.html', now=now, executors=executors, approvers=approvers)
+
+@documents.route('/trebovanie-new/submit', methods=['POST'])
+@login_required
+def submit_trebovanie_new():
+    from datetime import datetime
+    action = request.form.get('action', 'draft')
+    executor_id = request.form.get('executor_id', type=int) or current_user.id
+
+    doc = Document(
+        doc_type      = 'trebovanie',
+        title         = request.form.get('summary', 'Требование на приобретение материалов')[:100],
+        purpose       = request.form.get('summary'),
+        justification = request.form.get('linked_to'),
+        author_id     = current_user.id,
+        executor_id   = executor_id,
+        status        = 'pending' if action == 'submit' else 'draft',
+    )
+
+    needed_by = request.form.get('needed_by')
+    if needed_by:
+        doc.needed_by = datetime.strptime(needed_by, '%Y-%m-%d').date()
+
+    db.session.add(doc)
+    db.session.flush()
+    doc.generate_number()
+
+    names = request.form.getlist('item_name[]')
+    specs = request.form.getlist('item_spec[]')
+    qtys  = request.form.getlist('item_qty[]')
+    units = request.form.getlist('item_unit[]')
+    dates = request.form.getlist('item_date[]')
+    notes = request.form.getlist('item_note[]')
+
+    for i, name in enumerate(names):
+        if name.strip():
+            item = DocumentItem(
+                document_id = doc.id,
+                name        = name.strip(),
+                unit        = units[i] if i < len(units) else 'шт',
+                quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note        = notes[i] if i < len(notes) else '',
+            )
+            db.session.add(item)
+
+    system_comment = DocumentComment(
+        document_id = doc.id,
+        author_id   = current_user.id,
+        text        = f'Требование {"отправлено на согласование" if action == "submit" else "сохранено как черновик"} пользователем {current_user.full_name}.',
+        is_system   = True,
+    )
+    db.session.add(system_comment)
+
+    from app.models import Notification
+    notif_users = User.query.filter(
+        User.role.in_(['dept_head', 'director', 'it_admin']),
+        User.is_active == True
+    ).all()
+    for u in notif_users:
+        notif = Notification(
+            user_id = u.id,
+            title   = f'Новый документ на согласовании: {doc.doc_number}',
+            body    = doc.title[:100],
+            link    = f'/documents/{doc.id}',
+            is_read = False,
+        )
+        db.session.add(notif)
+
+    db.session.commit()
     flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
     return redirect(url_for('documents.view', doc_id=doc.id))

@@ -60,7 +60,7 @@
       <a href="{{ url_for('hr.index') }}" class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
         <i class="ti ti-users"></i><span>{{ {'ru':'HR Система','en':'HR System','kz':'HR Жүйесі'}[current_user.language] }}</span>
       </a>
-      <a href="#" class="sb-item"><i class="ti ti-calendar-off"></i><span>{{ {'ru':'Отпуска','en':'PTO & leave','kz':'Демалыс'}[current_user.language] }}</span></a>
+     <a href="{{ url_for('hr.pto') }}" class="sb-item"><i class="ti ti-calendar-off"></i><span>{{ {'ru':'Отпуска','en':'PTO & leave','kz':'Демалыс'}[current_user.language] }}</span></a>
       {% endif %}
       <div class="sb-section">{{ {'ru':'Данные','en':'Data','kz':'Деректер'}[current_user.language] }}</div>
       <a href="{{ url_for('contracts.index') }}" class="sb-item {% if request.endpoint and 'contracts' in request.endpoint %}active{% endif %}">

@@ -5,6 +5,7 @@ from app.models import User
 from wtforms import StringField, PasswordField, SelectField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, Optional
 from flask_wtf import FlaskForm
+from werkzeug.security import generate_password_hash
 
 auth = Blueprint('auth', __name__, url_prefix='/auth',
                  template_folder='../../app/templates/auth')
@@ -34,6 +35,10 @@ class UserForm(FlaskForm):
     language   = SelectField('Language', choices=[('ru','Русский'),('en','English'),('kz','Қазақша')])
     is_active  = BooleanField('Active')
 
+class SignupForm(FlaskForm):
+    full_name = StringField('Full name', validators=[DataRequired()])
+    email     = StringField('Email', validators=[DataRequired(), Email()])
+    password  = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -57,6 +62,32 @@ def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
+@auth.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    form = SignupForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        if not email.endswith('@cis.kz'):
+            flash('Please use your @cis.kz work email.', 'danger')
+            return render_template('signup.html', form=form)
+        if User.query.filter_by(email=email).first():
+            flash('An account with this email already exists.', 'danger')
+            return render_template('signup.html', form=form)
+        user = User(
+            first_name=form.full_name.data.split(' ')[0],
+            last_name=' '.join(form.full_name.data.split(' ')[1:]) or '',
+            email=email,
+            role='pending',
+            is_active=False,
+        )
+        user.password_hash = generate_password_hash(form.password.data, method='pbkdf2:sha256')
+        db.session.add(user)
+        db.session.commit()
+        flash('Account created. An admin will review and activate your account soon.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('signup.html', form=form)
 @auth.route('/set-language/<lang>')
 @login_required
 def set_language(lang):

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}PTO & Leave{% endblock %}
+{% block page_title %}{{ {'ru':'Мои заявки на отпуск','en':'My Leave Requests','kz':'Менің демалыс өтінімдерім'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-calendar-off"></i></div>
+      <div class="card-title">{{ {'ru':'Мои заявки','en':'My Requests','kz':'Менің өтінімдерім'}[current_user.language] }}</div>
+    </div>
+    <div class="card-header-right">
+      <a href="{{ url_for('hr.pto_new') }}" class="btn btn-primary">
+        + {{ {'ru':'Новая заявка','en':'New Request','kz':'Жаңа өтінім'}[current_user.language] }}
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div style="padding:10px 16px;margin:0 0 12px;background:#d1fae5;border-radius:6px;color:#065f46;">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if my_requests %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Начало','en':'Start','kz':'Басы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Окончание','en':'End','kz':'Соңы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Причина','en':'Reason','kz':'Себеп'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in my_requests %}
+      <tr>
+        <td>{{ req.leave_type or '—' }}</td>
+        <td class="text-muted">{{ req.start_date.strftime('%d.%m.%Y') if req.start_date else '—' }}</td>
+        <td class="text-muted">{{ req.end_date.strftime('%d.%m.%Y') if req.end_date else '—' }}</td>
+        <td class="text-muted">{{ req.reason or '—' }}</td>
+        <td>
+          {% if req.status == 'pending' %}
+            <span class="pill pill-amber">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</span>
+          {% elif req.status == 'approved' %}
+            <span class="pill pill-green">{{ {'ru':'Одобрено','en':'Approved','kz':'Мақұлданды'}[current_user.language] }}</span>
+          {% else %}
+            <span class="pill pill-red">{{ {'ru':'Отклонено','en':'Denied','kz':'Қабылданбады'}[current_user.language] }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center;padding:60px 20px;color:var(--text-3);">
+    <i class="ti ti-calendar-off" style="font-size:40px;display:block;margin-bottom:14px"></i>
+    {{ {'ru':'Заявок пока нет','en':'No requests yet','kz':'Өтінімдер жоқ'}[current_user.language] }}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

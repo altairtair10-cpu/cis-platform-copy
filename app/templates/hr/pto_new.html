@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}New Leave Request{% endblock %}
+{% block page_title %}{{ {'ru':'Новая заявка на отпуск','en':'New Leave Request','kz':'Жаңа демалыс өтінімі'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-calendar-plus"></i></div>
+      <div class="card-title">{{ {'ru':'Заявка на отпуск','en':'Leave Request','kz':'Демалыс өтінімі'}[current_user.language] }}</div>
+    </div>
+  </div>
+
+  <div style="padding:20px;">
+    <form method="post" action="{{ url_for('hr.pto_new') }}">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;margin-bottom:6px;font-weight:500;color:var(--text-1);">
+          {{ {'ru':'Тип отпуска','en':'Leave Type','kz':'Демалыс түрі'}[current_user.language] }}
+        </label>
+        <select name="leave_type" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);">
+          <option value="annual">{{ {'ru':'Ежегодный','en':'Annual','kz':'Жылдық'}[current_user.language] }}</option>
+          <option value="sick">{{ {'ru':'Больничный','en':'Sick Leave','kz':'Науқастық'}[current_user.language] }}</option>
+          <option value="unpaid">{{ {'ru':'За свой счёт','en':'Unpaid','kz':'Ақысыз'}[current_user.language] }}</option>
+          <option value="other">{{ {'ru':'Другое','en':'Other','kz':'Басқа'}[current_user.language] }}</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;margin-bottom:6px;font-weight:500;color:var(--text-1);">
+            {{ {'ru':'Дата начала','en':'Start Date','kz':'Басталу күні'}[current_user.language] }}
+          </label>
+          <input type="date" name="start_date" required
+            style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:6px;font-weight:500;color:var(--text-1);">
+            {{ {'ru':'Дата окончания','en':'End Date','kz':'Аяқталу күні'}[current_user.language] }}
+          </label>
+          <input type="date" name="end_date" required
+            style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);">
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label style="display:block;margin-bottom:6px;font-weight:500;color:var(--text-1);">
+          {{ {'ru':'Причина','en':'Reason','kz':'Себеп'}[current_user.language] }}
+        </label>
+        <textarea name="reason" rows="3"
+          placeholder="{{ {'ru':'Укажите причину...','en':'Enter reason...','kz':'Себепті көрсетіңіз...'}[current_user.language] }}"
+          style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text-1);resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:12px;">
+        <button type="submit" class="btn btn-primary">
+          {{ {'ru':'Отправить','en':'Submit','kz':'Жіберу'}[current_user.language] }}
+        </button>
+        <a href="{{ url_for('hr.pto') }}" class="btn btn-secondary">
+          {{ {'ru':'Отмена','en':'Cancel','kz':'Болдырмау'}[current_user.language] }}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

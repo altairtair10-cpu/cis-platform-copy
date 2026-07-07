@@ -32,18 +32,31 @@
     <thead>
       <tr>
         <th>{{ {'ru':'Сотрудник','en':'Employee','kz':'Қызметкер'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
         <th>{{ {'ru':'Начало','en':'Start','kz':'Басы'}[current_user.language] }}</th>
         <th>{{ {'ru':'Окончание','en':'End','kz':'Соңы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Причина','en':'Reason','kz':'Себеп'}[current_user.language] }}</th>
         <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Действия','en':'Actions','kz':'Әрекеттер'}[current_user.language] }}</th>
       </tr>
     </thead>
     <tbody>
       {% for req in pto %}
       <tr>
-        <td style="font-weight:500">{{ req.user.full_name if req.user else '—' }}</td>
+        <td style="font-weight:500">{{ req.employee.full_name if req.employee else '—' }}</td>
+        <td>{{ req.leave_type or '—' }}</td>
         <td class="text-muted">{{ req.start_date.strftime('%d.%m.%Y') if req.start_date else '—' }}</td>
         <td class="text-muted">{{ req.end_date.strftime('%d.%m.%Y') if req.end_date else '—' }}</td>
+        <td class="text-muted">{{ req.reason or '—' }}</td>
         <td><span class="pill pill-amber">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</span></td>
+        <td>
+          <form method="post" action="{{ url_for('hr.pto_approve', req_id=req.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:12px;">✓</button>
+          </form>
+          <form method="post" action="{{ url_for('hr.pto_deny', req_id=req.id) }}" style="display:inline;margin-left:4px">
+            <button type="submit" class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">✕</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

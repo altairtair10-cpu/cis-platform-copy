@@ -135,6 +135,7 @@ class Document(db.Model):
     status        = db.Column(db.String(32), default='draft')
     current_step  = db.Column(db.Integer, default=0)
     author_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    executor_id   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -222,7 +223,21 @@ class Equipment(db.Model):
     notes        = db.Column(db.Text, nullable=True)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
+class EquipmentMovement(db.Model):
+    __tablename__ = 'equipment_movements'
 
+    id            = db.Column(db.Integer, primary_key=True)
+    equipment_id  = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=False)
+    from_location = db.Column(db.String(128), nullable=True)
+    to_location   = db.Column(db.String(128), nullable=False)
+    status        = db.Column(db.String(32), default='in_transit')
+    eta_note      = db.Column(db.String(256), nullable=True)
+    notes         = db.Column(db.Text, nullable=True)
+    reported_by   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    equipment = db.relationship('Equipment', backref='movements')
+    reporter  = db.relationship('User', foreign_keys=[reported_by])
 class MaintenanceLog(db.Model):
     __tablename__ = 'maintenance_logs'
 

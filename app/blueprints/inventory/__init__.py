@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 import gspread
@@ -34,7 +35,8 @@ def get_sheet_rows(sheet_name):
     if not rows:
         return []
     headers = rows[0]
-    return [dict(zip(headers, row)) for row in rows[1:]]
+    result = [dict(zip(headers, row)) for row in rows[1:]]
+    return [row for row in result if any(v.strip() for v in row.values())]
 
 @inventory.route('/')
 @login_required
@@ -43,7 +45,9 @@ def index():
     rows = get_inventory_rows()
     if query:
         rows = [r for r in rows if query in str(r).lower()]
-    return render_template('inventory/index.html', rows=rows, query=query)
+
+    low_stock = [str(row.get('Материал', '')) for row in rows if 'Низкий остаток' in str(row.get('Предупреждени е', ''))]
+    return render_template('inventory/index.html', rows=rows, query=query, low_stock=low_stock)
 
 @inventory.route('/chat', methods=['POST'])
 @login_required
@@ -53,8 +57,8 @@ def chat():
         return jsonify({'error': 'No message'}), 400
 
     lang = getattr(current_user, 'language', 'ru')
+    today = datetime.now().strftime('%d.%m.%y')
 
-    # Load all relevant sheet data
     stock_rows = get_inventory_rows()
     receipts = get_sheet_rows('Поступления')
     usage = get_sheet_rows('Использование')
@@ -67,17 +71,20 @@ def chat():
 
     system_prompt = f"""You are an inventory assistant for CIS Platform, a chemical inventory management system.
 {lang_instruction}
+    Today's date: {today}
 
 You have access to the following data:
 
-CURRENT STOCK (Остатки по базам):
-{json.dumps(stock_rows[:100], ensure_ascii=False)}
+CURRENT STOCK (Остатки по базам) - shows quantity per location, calculated automatically:
+        {json.dumps(stock_rows[:100], ensure_ascii=False)}
 
-RESTOCKING HISTORY (Поступления) - last 100 entries:
-{json.dumps(receipts[-100:], ensure_ascii=False)}
+        RESTOCKING HISTORY (Поступления) - materials RECEIVED into stock. Columns: Дата, База, Материал, Кол-во. Last 100 entries:
+        {json.dumps(receipts[-100:], ensure_ascii=False)}
 
-USAGE HISTORY (Использование) - last 100 entries:
-{json.dumps(usage[-100:], ensure_ascii=False)}
+        USAGE HISTORY (Использование) - materials CONSUMED/USED at wells. Columns: Дата ГРП, Скважина, Материал, База-источник, По дизайну, По факту. Last 100 entries:
+        {json.dumps(usage[-100:], ensure_ascii=False)}
+
+        IMPORTANT: Never call USAGE HISTORY data "restocking" or vice versa. If a question asks what was "used" or "consumed", answer only from USAGE HISTORY. If asked what was "received" or "restocked", answer only from RESTOCKING HISTORY.
 
 Answer questions about stock levels, which materials are running low, usage history, restocking dates, and trends.
 Be concise and helpful. Use the actual data to give specific answers."""

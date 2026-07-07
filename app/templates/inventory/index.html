@@ -3,6 +3,16 @@
 {% block title %}{{ {'ru':'Склад','en':'Inventory','kz':'Қойма'}[current_user.language] }}{% endblock %}
 
 {% block content %}
+
+{% if low_stock %}
+<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;">
+  <span style="font-size:20px;">⚠️</span>
+  <div>
+    <strong>{{ {'ru':'Низкий запас','en':'Low Stock','kz':'Қор аз'}[current_user.language] }}:</strong>
+    {{ low_stock | join(', ') }}
+  </div>
+</div>
+{% endif %}
 <div class="card">
   <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
     <i class="ti ti-packages" style="font-size:24px; color:var(--accent)"></i>
