@@ -9,6 +9,12 @@ from datetime import datetime
 
 documents = Blueprint('documents', __name__, url_prefix='/documents',
                       template_folder='../../app/templates/documents')
+def _to_float(value):
+    """Safely parse a form value to a number, or None if blank/invalid."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 @documents.route('/')
 @login_required
@@ -39,6 +45,7 @@ def new_purchase_req():
             justification = request.form.get('justification'),
             author_id     = current_user.id,
             status        = 'draft',
+            costs = request.form.getlist('item_cost[]')
         )
         needed_by = request.form.get('needed_by')
         if needed_by:
@@ -60,6 +67,7 @@ def new_purchase_req():
                     unit        = units[i] if i < len(units) else '',
                     quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
                     note        = notes[i] if i < len(notes) else '',
+                    price       = _to_float(costs[i]) if i < len(costs) else None,
                 )
                 db.session.add(item)
 
@@ -185,6 +193,7 @@ def submit_defect_act():
                 unit        = units[i] if i < len(units) else 'шт',
                 quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
                 note        = specs[i] if i < len(specs) else '',
+                price       = _to_float(costs[i]) if i < len(costs) else None,
             )
             db.session.add(item)
 
@@ -265,6 +274,7 @@ def submit_trebovanie():
                 unit        = units[i] if i < len(units) else 'шт',
                 quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
                 note        = specs[i] if i < len(specs) else '',
+                price       = _to_float(costs[i]) if i < len(costs) else None,
             )
             db.session.add(item)
 
@@ -320,6 +330,7 @@ def submit_trebovanie_new():
         author_id     = current_user.id,
         executor_id   = executor_id,
         status        = 'pending' if action == 'submit' else 'draft',
+        costs = request.form.getlist('item_cost[]')
     )
 
     needed_by = request.form.get('needed_by')
@@ -345,6 +356,7 @@ def submit_trebovanie_new():
                 unit        = units[i] if i < len(units) else 'шт',
                 quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
                 note        = notes[i] if i < len(notes) else '',
+                price       = _to_float(costs[i]) if i < len(costs) else None,
             )
             db.session.add(item)
 

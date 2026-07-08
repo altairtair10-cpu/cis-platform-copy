@@ -163,6 +163,10 @@ class Document(db.Model):
         year   = datetime.utcnow().year
         count  = Document.query.filter_by(doc_type=self.doc_type).count()
         self.doc_number = f'{prefix}-{year}-{count+1:03d}'
+    @property
+    def total_cost(self):
+        """Sum of all item line totals on this document."""
+        return sum((it.line_total or 0) for it in self.items)
 
     def __repr__(self):
         return f'<Document {self.doc_number} [{self.status}]>'
@@ -177,6 +181,16 @@ class DocumentItem(db.Model):
     unit        = db.Column(db.String(32), nullable=True)
     quantity    = db.Column(db.Float, nullable=True)
     note        = db.Column(db.String(256), nullable=True)
+    quantity    = db.Column(db.Float, nullable=True)
+    note        = db.Column(db.String(256), nullable=True)
+    price       = db.Column(db.Float, nullable=True)   # unit price
+
+    @property
+    def line_total(self):
+        """quantity × unit price, or None if either is missing."""
+        if self.quantity is not None and self.price is not None:
+            return self.quantity * self.price
+        return None
 
 
 class DocumentApproval(db.Model):
