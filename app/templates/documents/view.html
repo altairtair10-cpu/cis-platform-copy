@@ -146,7 +146,7 @@
   </div>
 
   <!-- ITEMS TABLE -->
-  {% if items %}
+ {% if items %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-header">
       <div class="card-header-left">
@@ -162,6 +162,8 @@
           <th>{{ {'ru':'Характеристика','en':'Spec','kz':'Сипаттама'}[current_user.language] }}</th>
           <th style="width:70px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }}</th>
           <th style="width:55px">{{ {'ru':'Ед.','en':'Unit','kz':'Өлш.'}[current_user.language] }}</th>
+          <th style="width:90px">{{ {'ru':'Цена','en':'Price','kz':'Бағасы'}[current_user.language] }}</th>
+          <th style="width:100px">{{ {'ru':'Сумма','en':'Sum','kz':'Сомасы'}[current_user.language] }}</th>
         </tr>
       </thead>
       <tbody>
@@ -172,13 +174,20 @@
           <td class="text-muted">{{ item.note or '—' }}</td>
           <td>{{ item.quantity or '—' }}</td>
           <td class="text-muted">{{ item.unit or '—' }}</td>
+          <td>{{ '%.2f'|format(item.price) if item.price is not none else '—' }}</td>
+          <td>{{ '%.2f'|format(item.line_total) if item.line_total is not none else '—' }}</td>
         </tr>
         {% endfor %}
+        {% if doc.total_cost %}
+        <tr>
+          <td colspan="6" style="text-align:right;font-weight:600;border-top:2px solid var(--border)">{{ {'ru':'Итого','en':'Total','kz':'Барлығы'}[current_user.language] }}</td>
+          <td style="font-weight:600;border-top:2px solid var(--border)">{{ '%.2f'|format(doc.total_cost) }}</td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
   {% endif %}
-
   <!-- COMMENT HISTORY -->
   <div class="card">
     <div class="card-header">
