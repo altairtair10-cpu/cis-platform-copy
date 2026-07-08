@@ -115,7 +115,7 @@
     <div style="margin-bottom:24px">
       <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Таблица','en':'Table','kz':'Кесте'}[current_user.language] }} <span style="color:#C0392B">*</span></div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px" id="items-table">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:880px" id="items-table">
           <thead>
             <tr style="background:var(--color-background-secondary)">
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:30px">№</th>
@@ -123,7 +123,8 @@
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Характеристика','en':'Specification','kz':'Сипаттама'}[current_user.language] }}</th>
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:60px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:60px">{{ {'ru':'Ед. изм.','en':'Unit','kz':'Өлш.'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:110px">{{ {'ru':'Сумма без НДС, ₸','en':'Amount excl. VAT, ₸','kz':'НДС-сіз сома, ₸'}[current_user.language] }}</th>
+              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:100px">{{ {'ru':'Цена за ед., ₸','en':'Unit price, ₸','kz':'Бірлік бағасы, ₸'}[current_user.language] }}</th>
+              <th style="padding:8px 6px;text-align:right;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:110px">{{ {'ru':'Сумма, ₸','en':'Sum, ₸','kz':'Сома, ₸'}[current_user.language] }}</th>
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:100px">{{ {'ru':'Срок поставки','en':'Delivery date','kz':'Жеткізу мерзімі'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
               <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Примечание','en':'Note','kz':'Ескертпе'}[current_user.language] }}</th>
               <th style="border:0.5px solid var(--color-border-tertiary);width:24px"></th>
@@ -134,14 +135,22 @@
               <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);text-align:center">1</td>
               <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;outline:none"></textarea></td>
               <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_spec[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;outline:none"></textarea></td>
-              <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="0" value="1" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
+              <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
               <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
-              <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_amount[]" type="number" min="0" step="0.01" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
+              <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
+              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right"><span class="row-sum" style="font-size:11px;color:var(--color-text-primary)">0.00</span></td>
               <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_date[]" type="date" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
               <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_note[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;outline:none"></textarea></td>
               <td style="border:0.5px solid var(--color-border-tertiary);text-align:center"></td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr style="background:var(--color-background-secondary);font-weight:600">
+              <td colspan="6" style="padding:8px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right">{{ {'ru':'Итого, ₸','en':'Total, ₸','kz':'Барлығы, ₸'}[current_user.language] }}</td>
+              <td style="padding:8px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right"><span id="grand-total">0.00</span></td>
+              <td colspan="3" style="border:0.5px solid var(--color-border-tertiary)"></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       <button type="button" onclick="addRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ {{ {'ru':'Добавить строку','en':'Add row','kz':'Жол қосу'}[current_user.language] }}</button>
@@ -372,14 +381,33 @@ function addRow() {
     <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);text-align:center">${n}</td>
     <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_name[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;outline:none"></textarea></td>
     <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_spec[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;resize:none;outline:none"></textarea></td>
-    <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="0" value="1" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
+    <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
     <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
-    <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_amount[]" type="number" min="0" step="0.01" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
+    <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
+    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right"><span class="row-sum" style="font-size:11px;color:var(--color-text-primary)">0.00</span></td>
     <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><input name="item_date[]" type="date" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
     <td style="padding:2px 4px;border:0.5px solid var(--color-border-tertiary)"><textarea name="item_note[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;resize:none;outline:none"></textarea></td>
-    <td style="border:0.5px solid var(--color-border-tertiary);text-align:center"><button type="button" onclick="this.closest('tr').remove()" style="background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;font-size:13px">✕</button></td>
+    <td style="border:0.5px solid var(--color-border-tertiary);text-align:center"><button type="button" onclick="this.closest('tr').remove(); recalc()" style="background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;font-size:13px">✕</button></td>
   `;
   tbody.appendChild(tr);
 }
+
+function recalc() {
+  let grand = 0;
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const qtyEl = tr.querySelector('input[name="item_qty[]"]');
+    const priceEl = tr.querySelector('input[name="item_cost[]"]');
+    const qty = parseFloat(qtyEl && qtyEl.value) || 0;
+    const price = parseFloat(priceEl && priceEl.value) || 0;
+    const sum = qty * price;
+    const cell = tr.querySelector('.row-sum');
+    if (cell) cell.textContent = sum.toFixed(2);
+    grand += sum;
+  });
+  const gt = document.getElementById('grand-total');
+  if (gt) gt.textContent = grand.toFixed(2);
+}
+
+window.addEventListener('load', recalc);
 </script>
 {% endblock %}
