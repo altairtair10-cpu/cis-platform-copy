@@ -1,4 +1,4 @@
-from pydoc import doc
+
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
@@ -97,28 +97,48 @@ def approve(doc_id):
     comment_text = request.form.get('comment', '').strip()
 
     if action in ['approve', 'reject']:
+        # SECURITY: only approvers (dept_head / director / it_admin) may decide.
+        if not current_user.can_access('documents'):
+            abort(403)
+        # Guard: only a document that's actually awaiting approval can be decided.
+        if doc.status != 'pending':
+            flash('Этот документ не находится на согласовании.', 'warning')
+            return redirect(url_for('documents.view', doc_id=doc_id))
+
         doc.status = 'approved' if action == 'approve' else 'rejected'
         text = comment_text or f'Документ {"согласован" if action == "approve" else "отклонён"} пользователем {current_user.full_name}.'
-        comment = DocumentComment(
+        db.session.add(DocumentComment(
             document_id=doc.id,
             author_id=current_user.id,
             text=text,
             is_system=False,
-        )
-        db.session.add(comment)
+        ))
+
+        # Tell the author the outcome.
+        from app.models import Notification
+        db.session.add(Notification(
+            user_id=doc.author_id,
+            title=f'Документ {doc.doc_number}: {"согласован" if action == "approve" else "отклонён"}',
+            body=doc.title[:100],
+            link=f'/documents/{doc.id}',
+            is_read=False,
+        ))
+
         db.session.commit()
         flash(f'Документ {"согласован" if action == "approve" else "отклонён"}.', 'success')
+
     elif action == 'comment' and comment_text:
-        comment = DocumentComment(
+        # The author or any approver may leave a comment.
+        if doc.author_id != current_user.id and not current_user.can_access('documents'):
+            abort(403)
+        db.session.add(DocumentComment(
             document_id=doc.id,
             author_id=current_user.id,
             text=comment_text,
             is_system=False,
-        )
-        db.session.add(comment)
+        ))
         db.session.commit()
 
-    return redirect(url_for('documents.view', doc_id=doc_id))
     return redirect(url_for('documents.view', doc_id=doc_id))
 @documents.route('/defect-act/new', methods=['GET', 'POST'])
 @login_required
