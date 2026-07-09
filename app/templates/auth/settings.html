@@ -62,6 +62,7 @@
   <!-- PROFILE -->
   <div class="st-panel active" id="tab-profile">
     <form class="st-card" method="POST" action="{{ url_for('auth.settings_profile') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <h3>{{ {'ru':'Личные данные','en':'Personal information','kz':'Жеке деректер'}[lang] }}</h3>
       <p class="sub">{{ {'ru':'Обновите ваше имя и должность.','en':'Update your name and job details.','kz':'Атыңыз бен лауазымыңызды жаңартыңыз.'}[lang] }}</p>
       <div class="st-row">
@@ -98,6 +99,7 @@
   <!-- SECURITY -->
   <div class="st-panel" id="tab-security">
     <form class="st-card" method="POST" action="{{ url_for('auth.settings_password') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <h3>{{ {'ru':'Смена пароля','en':'Change password','kz':'Құпиясөзді өзгерту'}[lang] }}</h3>
       <p class="sub">{{ {'ru':'Минимум 8 символов.','en':'At least 8 characters.','kz':'Кемінде 8 таңба.'}[lang] }}</p>
       <div class="st-field">
@@ -121,6 +123,7 @@
   <!-- PREFERENCES -->
   <div class="st-panel" id="tab-prefs">
     <form class="st-card" method="POST" action="{{ url_for('auth.settings_preferences') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <h3>{{ {'ru':'Язык интерфейса','en':'Interface language','kz':'Интерфейс тілі'}[lang] }}</h3>
       <p class="sub">{{ {'ru':'Выберите язык.','en':'Choose your language.','kz':'Тілді таңдаңыз.'}[lang] }}</p>
       <div class="st-lang">

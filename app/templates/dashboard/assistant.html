@@ -14,6 +14,7 @@
     </div>
     <div class="card-body">
       <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <textarea name="question" rows="3" class="form-textarea" placeholder="{{ {'ru':'Например: Сколько оборудования сейчас на ТО? Кто работает в механическом отделе?','en':'E.g: How much equipment is in maintenance? Who works in the mechanical department?','kz':'Мысалы: Қазір қанша жабдық ТО-да? Механикалық бөлімде кім жұмыс істейді?'}[current_user.language] }}">{{ question or '' }}</textarea>
         <div style="margin-top:8px;display:flex;justify-content:flex-end">
           <button type="submit" class="btn btn-primary">

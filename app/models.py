@@ -60,6 +60,7 @@ class User(UserMixin, db.Model):
     department    = db.Column(db.String(32), nullable=True)
     language      = db.Column(db.String(4), default='ru')
     is_active     = db.Column(db.Boolean, default=True)
+    must_change_password = db.Column(db.Boolean, default=False, nullable=False)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     last_login    = db.Column(db.DateTime, nullable=True)
 
@@ -166,8 +167,8 @@ class Document(db.Model):
         }
         prefix = prefix_map.get(self.doc_type, 'ДОК')
         year   = datetime.utcnow().year
-        count  = Document.query.filter_by(doc_type=self.doc_type).count()
-        self.doc_number = f'{prefix}-{year}-{count+1:03d}'
+        seq    = DocumentSequence.next_value(self.doc_type, year)
+        self.doc_number = f'{prefix}-{year}-{seq:03d}'
 
     @property
     def total_cost(self):
@@ -187,13 +188,13 @@ class DocumentItem(db.Model):
     unit        = db.Column(db.String(32), nullable=True)
     quantity    = db.Column(db.Float, nullable=True)
     note        = db.Column(db.String(256), nullable=True)
-    price       = db.Column(db.Float, nullable=True)   # unit price
+    price       = db.Column(db.Numeric(14, 2), nullable=True)   # unit price
 
     @property
     def line_total(self):
         """quantity × unit price, or None if either is missing."""
         if self.quantity is not None and self.price is not None:
-            return self.quantity * self.price
+            return float(self.quantity) * float(self.price)
         return None
 
 
@@ -267,7 +268,7 @@ class MaintenanceLog(db.Model):
     logged_by    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     description  = db.Column(db.Text, nullable=False)
     parts_used   = db.Column(db.Text, nullable=True)
-    cost         = db.Column(db.Float, nullable=True)
+    cost         = db.Column(db.Numeric(14, 2), nullable=True)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
     equipment    = db.relationship('Equipment', backref='maintenance_logs')
@@ -339,3 +340,53 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user       = db.relationship('User', foreign_keys=[user_id])
+
+# ── AUDIT TRAIL ───────────────────────────────────────────────────────────────
+
+class AuditLog(db.Model):
+    """Who did what, when — written via app.audit.log_action()."""
+    __tablename__ = 'audit_logs'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    user_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    action      = db.Column(db.String(64), nullable=False, index=True)
+    entity_type = db.Column(db.String(64), nullable=True)
+    entity_id   = db.Column(db.Integer, nullable=True)
+    details     = db.Column(db.Text, nullable=True)
+    ip          = db.Column(db.String(64), nullable=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user        = db.relationship('User', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f'<AuditLog {self.action} by user {self.user_id}>'
+
+
+# ── DOCUMENT NUMBERING ────────────────────────────────────────────────────────
+
+class DocumentSequence(db.Model):
+    """Race-safe per-type, per-year document number counter."""
+    __tablename__ = 'document_sequences'
+
+    id       = db.Column(db.Integer, primary_key=True)
+    doc_type = db.Column(db.String(32), nullable=False)
+    year     = db.Column(db.Integer, nullable=False)
+    counter  = db.Column(db.Integer, nullable=False, default=0)
+
+    __table_args__ = (
+        db.UniqueConstraint('doc_type', 'year', name='uq_docseq_type_year'),
+    )
+
+    @classmethod
+    def next_value(cls, doc_type, year):
+        """Increment and return the counter under a row lock (SELECT ... FOR UPDATE)."""
+        row = cls.query.filter_by(doc_type=doc_type, year=year)\
+                       .with_for_update().first()
+        if row is None:
+            row = cls(doc_type=doc_type, year=year, counter=0)
+            db.session.add(row)
+            db.session.flush()
+            row = cls.query.filter_by(doc_type=doc_type, year=year)\
+                           .with_for_update().first()
+        row.counter += 1
+        return row.counter

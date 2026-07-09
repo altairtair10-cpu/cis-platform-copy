@@ -51,9 +51,11 @@
         <td><span class="pill pill-amber">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</span></td>
         <td>
           <form method="post" action="{{ url_for('hr.pto_approve', req_id=req.id) }}" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:12px;">✓</button>
           </form>
           <form method="post" action="{{ url_for('hr.pto_deny', req_id=req.id) }}" style="display:inline;margin-left:4px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">✕</button>
           </form>
         </td>
