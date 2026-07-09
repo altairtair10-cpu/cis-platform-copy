@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Редактирование {{ doc.doc_number }}{% endblock %}
+{% block page_title %}Редактирование · {{ doc.doc_number }}{% endblock %}
+{% block content %}
+
+<form method="POST" action="{{ url_for('documents.update_defect_act', doc_id=doc.id) }}">
+
+<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
+  <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Сохранить и отправить</button>
+  <button type="submit" name="action" value="save" class="btn"><i class="ti ti-device-floppy"></i> Сохранить черновик</button>
+  <a href="{{ url_for('documents.view', doc_id=doc.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">{{ doc.doc_number }} · Доработка</div>
+</div>
+
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-alert-triangle"></i><span class="form-section-title">Описание дефекта</span></div>
+  <div class="form-section-body">
+    <div class="form-group">
+      <label class="form-label">Краткое содержание — описание неисправности<span class="req">*</span></label>
+      <textarea name="description" class="form-textarea" required style="min-height:70px">{{ doc.purpose or '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Возможная причина дефекта</label>
+      <textarea name="cause" class="form-textarea" style="min-height:50px">{{ doc.justification or '' }}</textarea>
+    </div>
+    <div class="form-group" style="max-width:280px">
+      <label class="form-label">Степень срочности</label>
+      <select name="urgency" class="form-select">
+        <option value="planned" {% if doc.urgency == 'planned' %}selected{% endif %}>Плановый</option>
+        <option value="urgent" {% if doc.urgency == 'urgent' %}selected{% endif %}>Срочный</option>
+        <option value="critical" {% if doc.urgency == 'critical' %}selected{% endif %}>Критический</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-list-check"></i><span class="form-section-title">Список запчастей</span></div>
+  <div class="form-section-body" style="padding:0">
+    <div style="overflow-x:auto">
+      <table class="data-table" id="items-table">
+        <thead>
+          <tr>
+            <th style="width:30px">№</th>
+            <th>Наименование запчасти<span class="req">*</span></th>
+            <th style="width:140px">Характеристика / Арт.</th>
+            <th style="width:70px">Кол-во</th>
+            <th style="width:70px">Ед.</th>
+            <th style="width:100px">Сумма, ₸</th>
+            <th style="width:100px;text-align:right">Итого, ₸</th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          {% for it in items %}
+          <tr>
+            <td style="text-align:center;color:var(--text-3)">{{ loop.index }}</td>
+            <td><input name="part_name[]" type="text" required value="{{ it.name }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+            <td><input name="part_spec[]" type="text" value="{{ it.note or '' }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+            <td><input name="part_qty[]" type="number" min="0" value="{{ it.quantity if it.quantity is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
+            <td><input name="part_unit[]" type="text" value="{{ it.unit or '' }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+            <td><input name="part_cost[]" type="number" min="0" step="0.01" value="{{ it.price if it.price is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
+            <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
+            <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0">✕</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align:right;font-weight:600">Итого, ₸</td>
+            <td style="text-align:right;font-weight:600"><span id="grand-total">0.00</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border)">
+      <button type="button" onclick="addRow()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить запчасть</button>
+    </div>
+  </div>
+</div>
+
+</form>
+
+<script>
+function addRow() {
+  const tb = document.getElementById('items-body');
+  const n = tb.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;color:var(--text-3)">${n}</td>
+    <td><input name="part_name[]" type="text" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+    <td><input name="part_spec[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+    <td><input name="part_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
+    <td><input name="part_unit[]" type="text" value="шт" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+    <td><input name="part_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
+    <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
+    <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0">✕</button></td>
+  `;
+  tb.appendChild(tr);
+}
+function recalc() {
+  let g = 0;
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const q = parseFloat(tr.querySelector('input[name="part_qty[]"]')?.value) || 0;
+    const p = parseFloat(tr.querySelector('input[name="part_cost[]"]')?.value) || 0;
+    const s = q * p;
+    tr.querySelector('.row-sum').textContent = s.toFixed(2);
+    g += s;
+  });
+  document.getElementById('grand-total').textContent = g.toFixed(2);
+}
+window.addEventListener('load', recalc);
+</script>
+{% endblock %}

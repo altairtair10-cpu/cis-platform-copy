@@ -32,7 +32,6 @@
         </span>
       </div>
 
-      <!-- STEPPER -->
       <div class="stepper" style="margin-bottom:18px">
         {% set steps_ru = ['Создание','Согласование','Подпись','На исполнении','Исполнен'] %}
         {% set steps_en = ['Created','Approval','Signature','In progress','Completed'] %}
@@ -50,7 +49,6 @@
         {% endfor %}
       </div>
 
-      <!-- BUTTONS -->
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a href="{{ url_for('documents.index') }}" class="btn btn-sm">
           <i class="ti ti-arrow-left"></i>{{ {'ru':'К реестру','en':'Back','kz':'Тізілімге'}[current_user.language] }}
@@ -96,6 +94,10 @@
           <div style="display:flex;gap:8px">
             {% if doc.doc_type == 'po_services' %}
             <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            {% elif doc.doc_type == 'trebovanie' %}
+            <a href="{{ url_for('documents.edit_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            {% elif doc.doc_type == 'defect_act' %}
+            <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
             {% endif %}
             <form method="POST" action="{{ url_for('documents.resubmit', doc_id=doc.id) }}" style="display:inline">
               <button type="submit" class="btn btn-sm"><i class="ti ti-send"></i>{{ {'ru':'Отправить без изменений','en':'Resubmit as-is','kz':'Өзгеріссіз жіберу'}[current_user.language] }}</button>
@@ -181,7 +183,6 @@
     </div>
   </div>
 
-  <!-- ITEMS TABLE -->
   {% if items %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-header">
@@ -225,7 +226,6 @@
   </div>
   {% endif %}
 
-  <!-- COMMENT HISTORY -->
   <div class="card">
     <div class="card-header">
       <div class="card-header-left">

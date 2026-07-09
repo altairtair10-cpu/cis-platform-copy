@@ -16,6 +16,30 @@ def _to_float(value):
         return None
 
 
+def _unpack_extras(justification):
+    """Parse the packed 'Label: Value' lines back into form-field names."""
+    label_to_field = {
+        'Заказано': 'ordered_by',
+        'Плательщик НДС': 'vat_payer',
+        'Валюта': 'currency',
+        'Дата оплаты': 'payment_date',
+        'Основание': 'basis',
+        'Контрагент': 'counterparty',
+        'Условия оплаты': 'payment_terms',
+        'Условия оказания услуг': 'service_terms',
+        'Срок оказания услуг': 'service_date',
+        'Статья бюджета': 'budget_line',
+    }
+    out = {}
+    for line in (justification or '').split('\n'):
+        if ': ' in line:
+            label, val = line.split(': ', 1)
+            field = label_to_field.get(label.strip())
+            if field:
+                out[field] = val.strip()
+    return out
+
+
 def _panel_docs():
     if current_user.can_access('documents_own'):
         return Document.query.filter_by(author_id=current_user.id)\
@@ -181,8 +205,6 @@ def approve(doc_id):
             status='pending'
         ).first()
 
-        # Admin override: IT Admin can act on any document at the current step,
-        # even if they are not the specifically assigned approver.
         if not approval and current_user.role == 'it_admin':
             approval = DocumentApproval.query.filter_by(
                 document_id=doc_id,
@@ -194,12 +216,11 @@ def approve(doc_id):
             flash('Вы не можете выполнить это действие для данного документа.', 'warning')
             return redirect(url_for('documents.view', doc_id=doc_id))
 
-        # ── RETURN FOR REVISION ──────────────────────────────────────────────
         if action == 'return':
             if not comment_text:
                 flash('Укажите причину возврата документа.', 'warning')
                 return redirect(url_for('documents.view', doc_id=doc_id))
-            doc.status = 'returned'   # approval stays 'pending' — supervisor reviews again after resubmit
+            doc.status = 'returned'
             db.session.add(DocumentComment(
                 document_id=doc.id,
                 author_id=current_user.id,
@@ -217,7 +238,6 @@ def approve(doc_id):
             flash('Документ возвращён автору на доработку.', 'success')
             return redirect(url_for('documents.view', doc_id=doc_id))
 
-        # ── APPROVE / REJECT ─────────────────────────────────────────────────
         approval.status = 'approved' if action == 'approve' else 'rejected'
         approval.decided_at = datetime.utcnow()
         if comment_text:
@@ -323,6 +343,7 @@ def submit_defect_act():
         justification = request.form.get('cause'),
         author_id     = current_user.id,
         status        = 'pending' if action == 'submit' else 'draft',
+        current_step  = 0,
     )
 
     db.session.add(doc)
@@ -346,6 +367,14 @@ def submit_defect_act():
                 price       = _to_float(costs[i]) if i < len(costs) else None,
             ))
 
+    # Auto-assign the approving signatory: department head, else director, else IT admin
+    signatory = (User.query.filter_by(role='dept_head', is_active=True).first()
+                 or User.query.filter_by(role='director', is_active=True).first()
+                 or User.query.filter_by(role='it_admin', is_active=True).first())
+
+    if action == 'submit' and signatory:
+        db.session.add(DocumentApproval(document_id=doc.id, approver_id=signatory.id, step=0, status='pending'))
+
     db.session.add(DocumentComment(
         document_id = doc.id,
         author_id   = current_user.id,
@@ -353,20 +382,18 @@ def submit_defect_act():
         is_system   = True,
     ))
 
-    approvers = User.query.filter(
-        User.role.in_(['dept_head', 'director', 'it_admin']),
-        User.is_active == True
-    ).all()
-    for approver in approvers:
+    db.session.commit()
+
+    if action == 'submit' and signatory:
         db.session.add(Notification(
-            user_id = approver.id,
-            title   = f'Новый документ на согласовании: {doc.doc_number}',
+            user_id = signatory.id,
+            title   = f'Документ на согласование: {doc.doc_number}',
             body    = doc.title[:100],
             link    = f'/documents/{doc.id}',
             is_read = False,
         ))
+        db.session.commit()
 
-    db.session.commit()
     flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
     return redirect(url_for('documents.view', doc_id=doc.id))
 
@@ -531,7 +558,6 @@ def submit_po_services():
     action = request.form.get('action', 'draft')
     signatory_id = request.form.get('signatory_id', type=int)
 
-    # Pack the extra service-PO fields into justification as readable text
     extras = {
         'Заказано': request.form.get('ordered_by'),
         'Плательщик НДС': request.form.get('vat_payer'),
@@ -601,38 +627,6 @@ def submit_po_services():
     db.session.commit()
     flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
     return redirect(url_for('documents.view', doc_id=doc.id))
-
-
-@documents.route('/<int:doc_id>/print')
-@login_required
-def print_doc(doc_id):
-    doc = Document.query.get_or_404(doc_id)
-    if not current_user.can_access('documents') and doc.author_id != current_user.id:
-        abort(403)
-    items = doc.items.all()
-    return render_template('documents/print.html', doc=doc, items=items)
-def _unpack_extras(justification):
-    """Parse the packed 'Label: Value' lines back into form-field names."""
-    label_to_field = {
-        'Заказано': 'ordered_by',
-        'Плательщик НДС': 'vat_payer',
-        'Валюта': 'currency',
-        'Дата оплаты': 'payment_date',
-        'Основание': 'basis',
-        'Контрагент': 'counterparty',
-        'Условия оплаты': 'payment_terms',
-        'Условия оказания услуг': 'service_terms',
-        'Срок оказания услуг': 'service_date',
-        'Статья бюджета': 'budget_line',
-    }
-    out = {}
-    for line in (justification or '').split('\n'):
-        if ': ' in line:
-            label, val = line.split(': ', 1)
-            field = label_to_field.get(label.strip())
-            if field:
-                out[field] = val.strip()
-    return out
 
 
 @documents.route('/po-services/<int:doc_id>/edit', methods=['GET'])
@@ -722,3 +716,157 @@ def update_po_services(doc_id):
     db.session.commit()
     flash(msg, 'success')
     return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/trebovanie/<int:doc_id>/edit', methods=['GET'])
+@login_required
+def edit_trebovanie(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'trebovanie' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    items = doc.items.all()
+    return render_template('documents/trebovanie_edit.html', doc=doc, items=items)
+
+
+@documents.route('/trebovanie/<int:doc_id>/update', methods=['POST'])
+@login_required
+def update_trebovanie(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'trebovanie' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+
+    doc.title   = request.form.get('summary', doc.title)[:100]
+    doc.purpose = request.form.get('summary')
+    doc.justification = request.form.get('linked_to')
+
+    needed_by = request.form.get('needed_by')
+    if needed_by:
+        try:
+            doc.needed_by = datetime.strptime(needed_by, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
+    for it in doc.items.all():
+        db.session.delete(it)
+    names = request.form.getlist('item_name[]')
+    units = request.form.getlist('item_unit[]')
+    qtys  = request.form.getlist('item_qty[]')
+    notes = request.form.getlist('item_note[]')
+    costs = request.form.getlist('item_cost[]')
+    for i, name in enumerate(names):
+        if name.strip():
+            db.session.add(DocumentItem(
+                document_id=doc.id,
+                name=name.strip(),
+                unit=units[i] if i < len(units) else 'шт',
+                quantity=float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note=notes[i] if i < len(notes) else '',
+                price=_to_float(costs[i]) if i < len(costs) else None,
+            ))
+
+    action = request.form.get('action', 'save')
+    if action == 'submit':
+        doc.status = 'pending'
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ отредактирован и повторно отправлен на согласование пользователем {current_user.full_name}.',
+            is_system=True,
+        ))
+        _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+        msg = 'Документ отредактирован и отправлен на согласование.'
+    else:
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ обновлён пользователем {current_user.full_name} (черновик доработки).',
+            is_system=True,
+        ))
+        msg = 'Изменения сохранены. Документ всё ещё на доработке.'
+
+    db.session.commit()
+    flash(msg, 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/defect-act/<int:doc_id>/edit', methods=['GET'])
+@login_required
+def edit_defect_act(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'defect_act' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    items = doc.items.all()
+    return render_template('documents/defect_edit.html', doc=doc, items=items)
+
+
+@documents.route('/defect-act/<int:doc_id>/update', methods=['POST'])
+@login_required
+def update_defect_act(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'defect_act' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+
+    doc.title         = request.form.get('description', doc.title)[:100]
+    doc.purpose       = request.form.get('description')
+    doc.justification = request.form.get('cause')
+    doc.urgency       = request.form.get('urgency', doc.urgency)
+
+    for it in doc.items.all():
+        db.session.delete(it)
+    names = request.form.getlist('part_name[]')
+    specs = request.form.getlist('part_spec[]')
+    qtys  = request.form.getlist('part_qty[]')
+    units = request.form.getlist('part_unit[]')
+    costs = request.form.getlist('part_cost[]')
+    for i, name in enumerate(names):
+        if name.strip():
+            db.session.add(DocumentItem(
+                document_id=doc.id,
+                name=name.strip(),
+                unit=units[i] if i < len(units) else 'шт',
+                quantity=float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note=specs[i] if i < len(specs) else '',
+                price=_to_float(costs[i]) if i < len(costs) else None,
+            ))
+
+    action = request.form.get('action', 'save')
+    if action == 'submit':
+        doc.status = 'pending'
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ отредактирован и повторно отправлен на согласование пользователем {current_user.full_name}.',
+            is_system=True,
+        ))
+        _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+        msg = 'Документ отредактирован и отправлен на согласование.'
+    else:
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ обновлён пользователем {current_user.full_name} (черновик доработки).',
+            is_system=True,
+        ))
+        msg = 'Изменения сохранены. Документ всё ещё на доработке.'
+
+    db.session.commit()
+    flash(msg, 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/<int:doc_id>/print')
+@login_required
+def print_doc(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+        abort(403)
+    items = doc.items.all()
+    return render_template('documents/print.html', doc=doc, items=items)

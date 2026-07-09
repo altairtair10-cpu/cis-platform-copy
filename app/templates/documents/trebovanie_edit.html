@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Редактирование {{ doc.doc_number }}{% endblock %}
+{% block page_title %}Редактирование · {{ doc.doc_number }}{% endblock %}
+{% block content %}
+
+<form method="POST" action="{{ url_for('documents.update_trebovanie', doc_id=doc.id) }}">
+
+<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
+  <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Сохранить и отправить</button>
+  <button type="submit" name="action" value="save" class="btn"><i class="ti ti-device-floppy"></i> Сохранить черновик</button>
+  <a href="{{ url_for('documents.view', doc_id=doc.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">{{ doc.doc_number }} · Доработка</div>
+</div>
+
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-file-description"></i><span class="form-section-title">Краткое содержание</span></div>
+  <div class="form-section-body">
+    <div class="form-group">
+      <label class="form-label">Краткое содержание<span class="req">*</span></label>
+      <textarea name="summary" class="form-textarea" required>{{ doc.purpose or '' }}</textarea>
+    </div>
+    <div class="form-grid-2" style="gap:16px">
+      <div class="form-group"><label class="form-label">Имеет ссылку с</label><input name="linked_to" type="text" class="form-input" value="{{ doc.justification or '' }}"></div>
+      <div class="form-group"><label class="form-label">Срок исполнения</label><input name="needed_by" type="date" class="form-input" value="{{ doc.needed_by.strftime('%Y-%m-%d') if doc.needed_by else '' }}"></div>
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-table"></i><span class="form-section-title">Таблица</span></div>
+  <div class="form-section-body" style="padding:0">
+    <div style="overflow-x:auto">
+      <table class="data-table" id="items-table">
+        <thead>
+          <tr>
+            <th style="width:30px">№</th>
+            <th>Наименование<span class="req">*</span></th>
+            <th style="width:130px">Примечание</th>
+            <th style="width:70px">Кол-во</th>
+            <th style="width:70px">Ед.</th>
+            <th style="width:100px">Цена, ₸</th>
+            <th style="width:100px;text-align:right">Сумма, ₸</th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          {% for it in items %}
+          <tr>
+            <td style="text-align:center;color:var(--text-3)">{{ loop.index }}</td>
+            <td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none">{{ it.name }}</textarea></td>
+            <td><textarea name="item_note[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none">{{ it.note or '' }}</textarea></td>
+            <td><input name="item_qty[]" type="number" min="0" value="{{ it.quantity if it.quantity is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
+            <td><input name="item_unit[]" type="text" value="{{ it.unit or '' }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+            <td><input name="item_cost[]" type="number" min="0" step="0.01" value="{{ it.price if it.price is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
+            <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
+            <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0">✕</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align:right;font-weight:600">Итого, ₸</td>
+            <td style="text-align:right;font-weight:600"><span id="grand-total">0.00</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border)">
+      <button type="button" onclick="addRow()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить строку</button>
+    </div>
+  </div>
+</div>
+
+</form>
+
+<script>
+function addRow() {
+  const tb = document.getElementById('items-body');
+  const n = tb.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;color:var(--text-3)">${n}</td>
+    <td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
+    <td><textarea name="item_note[]" rows="2" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
+    <td><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
+    <td><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+    <td><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
+    <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
+    <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0">✕</button></td>
+  `;
+  tb.appendChild(tr);
+}
+function recalc() {
+  let g = 0;
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const q = parseFloat(tr.querySelector('input[name="item_qty[]"]')?.value) || 0;
+    const p = parseFloat(tr.querySelector('input[name="item_cost[]"]')?.value) || 0;
+    const s = q * p;
+    tr.querySelector('.row-sum').textContent = s.toFixed(2);
+    g += s;
+  });
+  document.getElementById('grand-total').textContent = g.toFixed(2);
+}
+window.addEventListener('load', recalc);
+</script>
+{% endblock %}
