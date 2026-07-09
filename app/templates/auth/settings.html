@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% set lang = current_user.language %}
+{% block title %}{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[lang] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[lang] }}{% endblock %}
+
+{% block content %}
+<style>
+  .st-wrap{max-width:820px}
+  .st-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border,#e5e2dc);margin-bottom:22px;flex-wrap:wrap}
+  .st-tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-3,#8a857c);
+          background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}
+  .st-tab:hover{color:var(--text-1,#2b2925)}
+  .st-tab.active{color:var(--red,#c0392b);border-bottom-color:var(--red,#c0392b)}
+  .st-panel{display:none}
+  .st-panel.active{display:block}
+  .st-card{background:var(--bg-card,#fff);border:1px solid var(--border,#e5e2dc);
+           border-radius:var(--radius-lg,12px);padding:22px;margin-bottom:18px}
+  .st-card h3{font-size:15px;font-weight:700;color:var(--text-1,#2b2925);margin:0 0 4px}
+  .st-card p.sub{font-size:12px;color:var(--text-3,#8a857c);margin:0 0 18px}
+  .st-field{margin-bottom:14px}
+  .st-field label{display:block;font-size:12px;font-weight:600;color:var(--text-2,#54504a);margin-bottom:6px}
+  .st-field input,.st-field select{width:100%;padding:9px 11px;font-size:13px;
+           border:1px solid var(--border-mid,#d6d2ca);border-radius:var(--radius-md,8px);
+           background:var(--bg-input,#fff);color:var(--text-1,#2b2925);box-sizing:border-box}
+  .st-field input:focus,.st-field select:focus{outline:none;border-color:var(--red,#c0392b)}
+  .st-field input[readonly]{background:var(--bg-main,#f7f5f1);color:var(--text-3,#8a857c);cursor:not-allowed}
+  .st-row{display:flex;gap:14px}
+  .st-row .st-field{flex:1}
+  .st-btn{padding:9px 18px;font-size:13px;font-weight:600;border:none;border-radius:var(--radius-md,8px);
+          background:var(--red,#c0392b);color:#fff;cursor:pointer}
+  .st-btn:hover{filter:brightness(0.94)}
+  .st-lang{display:flex;gap:8px}
+  .st-lang label{flex:1;text-align:center;padding:10px;border:1px solid var(--border-mid,#d6d2ca);
+          border-radius:var(--radius-md,8px);cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2,#54504a)}
+  .st-lang input{display:none}
+  .st-lang input:checked + span{color:var(--red,#c0392b)}
+  .st-lang label:has(input:checked){border-color:var(--red,#c0392b);background:#fdf3f1}
+  .st-toggle{display:flex;align-items:center;justify-content:space-between;
+          padding:12px 0;border-bottom:1px solid var(--border,#eee)}
+  .st-toggle:last-child{border-bottom:none}
+  .st-toggle .lbl{font-size:13px;font-weight:600;color:var(--text-1,#2b2925)}
+  .st-toggle .desc{font-size:11px;color:var(--text-3,#8a857c);margin-top:2px}
+  .st-stats{display:flex;gap:14px;flex-wrap:wrap}
+  .st-stat{flex:1;min-width:120px;background:var(--bg-main,#f7f5f1);border-radius:var(--radius-md,8px);padding:16px}
+  .st-stat .n{font-size:24px;font-weight:800;color:var(--text-1,#2b2925)}
+  .st-stat .l{font-size:11px;color:var(--text-3,#8a857c);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+  .st-adminbtn{display:inline-block;margin-top:8px;padding:9px 16px;font-size:13px;font-weight:600;
+          text-decoration:none;border:1px solid var(--border-mid,#d6d2ca);border-radius:var(--radius-md,8px);
+          color:var(--text-1,#2b2925);background:var(--bg-card,#fff)}
+</style>
+
+<div class="st-wrap">
+  <div class="st-tabs">
+    <button class="st-tab active" data-tab="profile" onclick="stTab(this)">{{ {'ru':'Профиль','en':'Profile','kz':'Профиль'}[lang] }}</button>
+    <button class="st-tab" data-tab="security" onclick="stTab(this)">{{ {'ru':'Безопасность','en':'Security','kz':'Қауіпсіздік'}[lang] }}</button>
+    <button class="st-tab" data-tab="prefs" onclick="stTab(this)">{{ {'ru':'Настройки','en':'Preferences','kz':'Баптаулар'}[lang] }}</button>
+    {% if stats %}
+    <button class="st-tab" data-tab="admin" onclick="stTab(this)">{{ {'ru':'Администрирование','en':'Admin','kz':'Әкімшілік'}[lang] }}</button>
+    {% endif %}
+  </div>
+
+  <!-- PROFILE -->
+  <div class="st-panel active" id="tab-profile">
+    <form class="st-card" method="POST" action="{{ url_for('auth.settings_profile') }}">
+      <h3>{{ {'ru':'Личные данные','en':'Personal information','kz':'Жеке деректер'}[lang] }}</h3>
+      <p class="sub">{{ {'ru':'Обновите ваше имя и должность.','en':'Update your name and job details.','kz':'Атыңыз бен лауазымыңызды жаңартыңыз.'}[lang] }}</p>
+      <div class="st-row">
+        <div class="st-field">
+          <label>{{ {'ru':'Имя','en':'First name','kz':'Аты'}[lang] }}</label>
+          <input type="text" name="first_name" value="{{ current_user.first_name }}" required>
+        </div>
+        <div class="st-field">
+          <label>{{ {'ru':'Фамилия','en':'Last name','kz':'Тегі'}[lang] }}</label>
+          <input type="text" name="last_name" value="{{ current_user.last_name }}" required>
+        </div>
+      </div>
+      <div class="st-field">
+        <label>{{ {'ru':'Должность','en':'Job title','kz':'Лауазымы'}[lang] }}</label>
+        <input type="text" name="position" value="{{ current_user.position or '' }}" placeholder="{{ {'ru':'напр. Инженер','en':'e.g. Engineer','kz':'мыс. Инженер'}[lang] }}">
+      </div>
+      <div class="st-field">
+        <label>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[lang] }}</label>
+        <select name="department">
+          <option value="">—</option>
+          {% for d in departments %}
+          <option value="{{ d }}" {% if current_user.department == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="st-field">
+        <label>{{ {'ru':'Email','en':'Email','kz':'Email'}[lang] }}</label>
+        <input type="email" value="{{ current_user.email }}" readonly>
+      </div>
+      <button class="st-btn" type="submit">{{ {'ru':'Сохранить','en':'Save changes','kz':'Сақтау'}[lang] }}</button>
+    </form>
+  </div>
+
+  <!-- SECURITY -->
+  <div class="st-panel" id="tab-security">
+    <form class="st-card" method="POST" action="{{ url_for('auth.settings_password') }}">
+      <h3>{{ {'ru':'Смена пароля','en':'Change password','kz':'Құпиясөзді өзгерту'}[lang] }}</h3>
+      <p class="sub">{{ {'ru':'Минимум 8 символов.','en':'At least 8 characters.','kz':'Кемінде 8 таңба.'}[lang] }}</p>
+      <div class="st-field">
+        <label>{{ {'ru':'Текущий пароль','en':'Current password','kz':'Ағымдағы құпиясөз'}[lang] }}</label>
+        <input type="password" name="current_password" required>
+      </div>
+      <div class="st-row">
+        <div class="st-field">
+          <label>{{ {'ru':'Новый пароль','en':'New password','kz':'Жаңа құпиясөз'}[lang] }}</label>
+          <input type="password" name="new_password" required>
+        </div>
+        <div class="st-field">
+          <label>{{ {'ru':'Повторите пароль','en':'Confirm password','kz':'Құпиясөзді қайталаңыз'}[lang] }}</label>
+          <input type="password" name="confirm_password" required>
+        </div>
+      </div>
+      <button class="st-btn" type="submit">{{ {'ru':'Изменить пароль','en':'Update password','kz':'Құпиясөзді өзгерту'}[lang] }}</button>
+    </form>
+  </div>
+
+  <!-- PREFERENCES -->
+  <div class="st-panel" id="tab-prefs">
+    <form class="st-card" method="POST" action="{{ url_for('auth.settings_preferences') }}">
+      <h3>{{ {'ru':'Язык интерфейса','en':'Interface language','kz':'Интерфейс тілі'}[lang] }}</h3>
+      <p class="sub">{{ {'ru':'Выберите язык.','en':'Choose your language.','kz':'Тілді таңдаңыз.'}[lang] }}</p>
+      <div class="st-lang">
+        <label><input type="radio" name="language" value="ru" {% if lang=='ru' %}checked{% endif %}><span>Русский</span></label>
+        <label><input type="radio" name="language" value="en" {% if lang=='en' %}checked{% endif %}><span>English</span></label>
+        <label><input type="radio" name="language" value="kz" {% if lang=='kz' %}checked{% endif %}><span>Қазақша</span></label>
+      </div>
+      <div style="margin-top:22px">
+        <h3>{{ {'ru':'Уведомления','en':'Notifications','kz':'Хабарламалар'}[lang] }}</h3>
+        <div class="st-toggle">
+          <div>
+            <div class="lbl">{{ {'ru':'Уведомления в системе','en':'In-app notifications','kz':'Жүйедегі хабарламалар'}[lang] }}</div>
+            <div class="desc">{{ {'ru':'Показывать колокольчик с новыми документами.','en':'Show the bell with new documents.','kz':'Жаңа құжаттармен қоңырауды көрсету.'}[lang] }}</div>
+          </div>
+          <input type="checkbox" name="inapp_notifications" {% if session.get('inapp_notifications', True) %}checked{% endif %}>
+        </div>
+        <div class="st-toggle">
+          <div>
+            <div class="lbl">{{ {'ru':'Email-уведомления','en':'Email notifications','kz':'Email хабарламалары'}[lang] }}</div>
+            <div class="desc">{{ {'ru':'Присылать письма о согласованиях.','en':'Email me about approvals.','kz':'Келісімдер туралы хат жіберу.'}[lang] }}</div>
+          </div>
+          <input type="checkbox" name="email_notifications" {% if session.get('email_notifications', True) %}checked{% endif %}>
+        </div>
+      </div>
+      <button class="st-btn" type="submit" style="margin-top:18px">{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[lang] }}</button>
+    </form>
+  </div>
+
+  <!-- ADMIN -->
+  {% if stats %}
+  <div class="st-panel" id="tab-admin">
+    <div class="st-card">
+      <h3>{{ {'ru':'Обзор системы','en':'System overview','kz':'Жүйеге шолу'}[lang] }}</h3>
+      <p class="sub">{{ {'ru':'Только для администраторов.','en':'Visible to administrators only.','kz':'Тек әкімшілерге көрінеді.'}[lang] }}</p>
+      <div class="st-stats">
+        <div class="st-stat"><div class="n">{{ stats.users }}</div><div class="l">{{ {'ru':'Пользователи','en':'Users','kz':'Пайдаланушылар'}[lang] }}</div></div>
+        <div class="st-stat"><div class="n">{{ stats.active_users }}</div><div class="l">{{ {'ru':'Активные','en':'Active','kz':'Белсенді'}[lang] }}</div></div>
+        <div class="st-stat"><div class="n">{{ stats.documents }}</div><div class="l">{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[lang] }}</div></div>
+      </div>
+    </div>
+    {% if current_user.role == 'it_admin' %}
+    <div class="st-card">
+      <h3>{{ {'ru':'Управление пользователями','en':'User management','kz':'Пайдаланушыларды басқару'}[lang] }}</h3>
+      <p class="sub">{{ {'ru':'Создание, редактирование и деактивация учётных записей.','en':'Create, edit, and deactivate accounts.','kz':'Тіркелгілерді құру, өңдеу және өшіру.'}[lang] }}</p>
+      <a class="st-adminbtn" href="{{ url_for('auth.users') }}">{{ {'ru':'Открыть управление','en':'Open user management','kz':'Басқаруды ашу'}[lang] }}</a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function stTab(btn){
+  document.querySelectorAll('.st-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.st-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+}
+</script>
+{% endblock %}

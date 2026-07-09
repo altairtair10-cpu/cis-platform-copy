@@ -1,11 +1,20 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User
+from app.models import User, DEPARTMENTS, Document
 from wtforms import StringField, PasswordField, SelectField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, Optional
 from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash
+
+
+def _split_name(full):
+    """Split a 'First Last' string into (first, last)."""
+    parts = (full or '').strip().split(' ', 1)
+    first = parts[0] if parts else ''
+    last  = parts[1] if len(parts) > 1 else ''
+    return first, last
+
 
 auth = Blueprint('auth', __name__, url_prefix='/auth',
                  template_folder='../../app/templates/auth')
@@ -20,10 +29,10 @@ class UserForm(FlaskForm):
     email      = StringField('Email', validators=[DataRequired(), Email()])
     password   = PasswordField('Password', validators=[Optional(), Length(min=6)])
     role       = SelectField('Role', choices=[
-        ('employee',    'Employee'),
+        ('field',       'Field Worker'),
         ('mechanic',    'Mechanic'),
-        ('driver',      'Driver'),
-        ('dispatcher',  'Dispatcher'),
+        ('transport',   'Transport'),
+        ('hse',         'HSE'),
         ('dept_head',   'Department Head'),
         ('hr',          'HR'),
         ('accountant',  'Accountant'),
@@ -39,6 +48,7 @@ class SignupForm(FlaskForm):
     full_name = StringField('Full name', validators=[DataRequired()])
     email     = StringField('Email', validators=[DataRequired(), Email()])
     password  = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -75,11 +85,12 @@ def signup():
         if User.query.filter_by(email=email).first():
             flash('An account with this email already exists.', 'danger')
             return render_template('signup.html', form=form)
+        first, last = _split_name(form.full_name.data)
         user = User(
-            first_name=form.full_name.data.split(' ')[0],
-            last_name=' '.join(form.full_name.data.split(' ')[1:]) or '',
+            first_name=first,
+            last_name=last,
             email=email,
-            role='pending',
+            role='field',
             is_active=False,
         )
         user.password_hash = generate_password_hash(form.password.data, method='pbkdf2:sha256')
@@ -88,6 +99,7 @@ def signup():
         flash('Account created. An admin will review and activate your account soon.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('signup.html', form=form)
+
 @auth.route('/set-language/<lang>')
 @login_required
 def set_language(lang):
@@ -95,6 +107,68 @@ def set_language(lang):
         current_user.language = lang
         db.session.commit()
     return redirect(request.referrer or url_for('dashboard.index'))
+
+# ── SETTINGS ──────────────────────────────────────────────────────────────────
+
+@auth.route('/settings')
+@login_required
+def settings():
+    stats = None
+    if current_user.role in ('it_admin', 'director'):
+        stats = {
+            'users':        User.query.count(),
+            'active_users': User.query.filter_by(is_active=True).count(),
+            'documents':    Document.query.count(),
+        }
+    return render_template('auth/settings.html', departments=DEPARTMENTS, stats=stats)
+
+@auth.route('/settings/profile', methods=['POST'])
+@login_required
+def settings_profile():
+    first = (request.form.get('first_name') or '').strip()
+    last  = (request.form.get('last_name') or '').strip()
+    if not first or not last:
+        flash('First and last name are required.', 'danger')
+        return redirect(url_for('auth.settings'))
+    current_user.first_name = first
+    current_user.last_name  = last
+    current_user.position   = (request.form.get('position') or '').strip() or None
+    current_user.department = (request.form.get('department') or '').strip() or None
+    db.session.commit()
+    flash('Profile updated.', 'success')
+    return redirect(url_for('auth.settings'))
+
+@auth.route('/settings/password', methods=['POST'])
+@login_required
+def settings_password():
+    current = request.form.get('current_password') or ''
+    new     = request.form.get('new_password') or ''
+    confirm = request.form.get('confirm_password') or ''
+    if not current_user.check_password(current):
+        flash('Current password is incorrect.', 'danger')
+        return redirect(url_for('auth.settings'))
+    if len(new) < 8:
+        flash('New password must be at least 8 characters.', 'danger')
+        return redirect(url_for('auth.settings'))
+    if new != confirm:
+        flash('New passwords do not match.', 'danger')
+        return redirect(url_for('auth.settings'))
+    current_user.set_password(new)
+    db.session.commit()
+    flash('Password changed successfully.', 'success')
+    return redirect(url_for('auth.settings'))
+
+@auth.route('/settings/preferences', methods=['POST'])
+@login_required
+def settings_preferences():
+    lang = request.form.get('language')
+    if lang in ('ru', 'en', 'kz'):
+        current_user.language = lang
+    session['email_notifications'] = bool(request.form.get('email_notifications'))
+    session['inapp_notifications'] = bool(request.form.get('inapp_notifications'))
+    db.session.commit()
+    flash('Preferences saved.', 'success')
+    return redirect(url_for('auth.settings'))
 
 @auth.route('/users')
 @login_required
@@ -112,20 +186,23 @@ def new_user():
         flash('Access denied.', 'danger')
         return redirect(url_for('dashboard.index'))
     form = UserForm()
-    form.is_active.data = True
+    if request.method == 'GET':
+        form.is_active.data = True
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data.lower()).first():
             flash('Email already exists.', 'danger')
             return render_template('auth/user_form.html', form=form, title='New user')
+        first, last = _split_name(form.full_name.data)
         user = User(
-            full_name  = form.full_name.data,
+            first_name = first,
+            last_name  = last,
             email      = form.email.data.lower(),
             role       = form.role.data,
             department = form.department.data,
             language   = form.language.data,
             is_active  = form.is_active.data,
         )
-        user.set_password(form.password.data)
+        user.set_password(form.password.data or 'changeme123')
         db.session.add(user)
         db.session.commit()
         flash(f'User {user.full_name} created.', 'success')
@@ -140,8 +217,12 @@ def edit_user(user_id):
         return redirect(url_for('dashboard.index'))
     user = User.query.get_or_404(user_id)
     form = UserForm(obj=user)
+    if request.method == 'GET':
+        form.full_name.data = user.full_name
     if form.validate_on_submit():
-        user.full_name  = form.full_name.data
+        first, last = _split_name(form.full_name.data)
+        user.first_name = first
+        user.last_name  = last
         user.email      = form.email.data.lower()
         user.role       = form.role.data
         user.department = form.department.data

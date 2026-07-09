@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ doc.doc_number }}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Times New Roman', Georgia, serif; color:#000; background:#fff; margin:0; font-size:12pt; }
+  .toolbar { background:#f0f0f0; padding:10px 16px; text-align:center; }
+  .toolbar button { background:#2563eb; color:#fff; border:none; border-radius:4px; padding:9px 22px; font-size:14px; cursor:pointer; }
+  .page { max-width:800px; margin:0 auto; padding:40px; }
+  .letterhead { text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:20px; }
+  .letterhead .company { font-size:16pt; font-weight:bold; letter-spacing:1px; }
+  .letterhead .sub { font-size:10pt; color:#333; }
+  h1 { font-size:14pt; text-align:center; margin:20px 0 4px; text-transform:uppercase; }
+  .docnum { text-align:center; font-size:11pt; margin-bottom:20px; }
+  table.meta { width:100%; font-size:11pt; margin-bottom:16px; }
+  table.meta td { padding:3px 0; vertical-align:top; }
+  table.meta .label { color:#333; width:200px; }
+  .section-title { font-weight:bold; margin:16px 0 6px; font-size:11pt; }
+  table.items { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:20px; }
+  table.items th, table.items td { border:1px solid #000; padding:5px 6px; text-align:left; }
+  table.items th { background:#eee; }
+  table.items td.money { text-align:right; }
+  .total-row td { font-weight:bold; }
+  .signatures { margin-top:50px; display:flex; justify-content:space-between; gap:40px; }
+  .sig { flex:1; }
+  .sig .line { border-top:1px solid #000; margin-top:36px; padding-top:4px; font-size:10pt; text-align:center; }
+  @media print {
+    .toolbar { display:none; }
+    .page { margin:0; padding:0; max-width:100%; }
+    @page { margin:2cm; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="window.print()">🖨 Печать / Сохранить в PDF</button>
+  </div>
+  <div class="page">
+    <div class="letterhead">
+      <div class="company">CASPIAN INTEGRATED SERVICES</div>
+      <div class="sub">ТОО «Caspian Integrated Services»</div>
+    </div>
+
+    <h1>
+      {% if doc.doc_type == 'defect_act' %}Дефектный акт
+      {% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование на приобретение материалов
+      {% else %}{{ doc.title }}{% endif %}
+    </h1>
+    <div class="docnum">№ {{ doc.doc_number }} от {{ doc.created_at.strftime('%d.%m.%Y') }}</div>
+
+    <table class="meta">
+      <tr><td class="label">Автор:</td><td>{{ doc.author.full_name }}</td></tr>
+      <tr><td class="label">Подразделение:</td><td>{{ doc.department or '—' }}</td></tr>
+      <tr><td class="label">Срочность:</td><td>{{ doc.urgency or '—' }}</td></tr>
+      {% if doc.needed_by %}<tr><td class="label">Срок поставки:</td><td>{{ doc.needed_by.strftime('%d.%m.%Y') }}</td></tr>{% endif %}
+      <tr><td class="label">Статус:</td><td>{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% else %}Черновик{% endif %}</td></tr>
+    </table>
+
+    {% if doc.purpose %}
+    <div class="section-title">Краткое содержание:</div>
+    <div>{{ doc.purpose }}</div>
+    {% endif %}
+
+    {% if items %}
+    <div class="section-title">Таблица товаров:</div>
+    <table class="items">
+      <thead>
+        <tr>
+          <th style="width:30px">№</th>
+          <th>Наименование</th>
+          <th>Характеристика</th>
+          <th style="width:50px">Кол-во</th>
+          <th style="width:45px">Ед.</th>
+          <th style="width:90px">Цена, ₸</th>
+          <th style="width:100px">Сумма, ₸</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.note or '' }}</td>
+          <td>{{ item.quantity or '' }}</td>
+          <td>{{ item.unit or '' }}</td>
+          <td class="money">{{ '%.2f'|format(item.price) if item.price is not none else '' }}</td>
+          <td class="money">{{ '%.2f'|format(item.line_total) if item.line_total is not none else '' }}</td>
+        </tr>
+        {% endfor %}
+        {% if doc.total_cost %}
+        <tr class="total-row">
+          <td colspan="6" style="text-align:right">Итого, ₸:</td>
+          <td class="money">{{ '%.2f'|format(doc.total_cost) }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <div class="signatures">
+      <div class="sig"><div class="line">{{ doc.author.full_name }}<br>(Автор / составил)</div></div>
+      <div class="sig"><div class="line">_______________________<br>(Согласовано / подпись)</div></div>
+    </div>
+  </div>
+</body>
+</html>

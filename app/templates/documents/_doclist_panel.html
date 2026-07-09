@@ -1,0 +1,66 @@
+<!-- SHARED LEFT DOCUMENT PANEL (Documentolog-style) -->
+<aside style="width:210px;flex-shrink:0;position:sticky;top:70px;align-self:flex-start">
+  <div class="card" style="margin-bottom:0">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;font-weight:600;color:var(--text-1)">Требования</span>
+    </div>
+    <div style="padding:6px 0">
+      <a href="{{ url_for('documents.index') }}" class="dl-item {% if not request.args.get('status') %}active{% endif %}">
+        <span>Все</span><span class="dl-count">{{ panel_docs|length }}</span>
+      </a>
+
+      <div class="dl-section">По статусу</div>
+      <a href="{{ url_for('documents.index', status='approved') }}" class="dl-item {% if request.args.get('status')=='approved' %}active{% endif %}">
+        <span>Согласован</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','approved')|list|length }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', status='pending') }}" class="dl-item {% if request.args.get('status')=='pending' %}active{% endif %}">
+        <span>На согласовании</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','pending')|list|length }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', status='rejected') }}" class="dl-item {% if request.args.get('status')=='rejected' %}active{% endif %}">
+        <span>Отклонён</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','rejected')|list|length }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', status='draft') }}" class="dl-item {% if request.args.get('status')=='draft' %}active{% endif %}">
+        <span>Создание</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','draft')|list|length }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', status='archived') }}" class="dl-item {% if request.args.get('status')=='archived' %}active{% endif %}">
+        <span>Архив</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','archived')|list|length }}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- RECENT DOC LIST -->
+  <div class="card" style="margin-top:12px;margin-bottom:0">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em">Документы</div>
+    <div style="max-height:400px;overflow-y:auto">
+      {% for d in panel_docs[:40] %}
+      <a href="{{ url_for('documents.view', doc_id=d.id) }}" class="dl-doc {% if doc is defined and doc.id == d.id %}active{% endif %}">
+        <div class="dl-doc-num">{{ d.doc_number or 'Черновик' }}</div>
+        <div class="dl-doc-title">{{ d.title[:34] }}{% if d.title|length > 34 %}…{% endif %}</div>
+        <div class="dl-doc-meta">
+          <span class="pill {% if d.status=='approved' %}pill-green{% elif d.status=='pending' %}pill-amber{% elif d.status=='rejected' %}pill-red{% else %}pill-gray{% endif %}" style="font-size:9px;padding:2px 7px">
+            {% if d.status=='approved' %}Согласован{% elif d.status=='pending' %}На согл.{% elif d.status=='rejected' %}Отклонён{% else %}Черновик{% endif %}
+          </span>
+          <span style="font-size:9px;color:var(--text-4)">{{ d.created_at.strftime('%d.%m') }}</span>
+        </div>
+      </a>
+      {% else %}
+      <div style="padding:20px;text-align:center;font-size:11px;color:var(--text-3)">Нет документов</div>
+      {% endfor %}
+    </div>
+  </div>
+</aside>
+
+<style>
+.dl-item { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; font-size:12px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; }
+.dl-item:hover { background:#FAF8F4; color:var(--text-1); }
+.dl-item.active { background:#FDECEA; border-left-color:var(--red); color:var(--red); font-weight:600; }
+.dl-count { font-size:11px; font-weight:600; color:var(--text-3); background:var(--bg-input); padding:1px 8px; border-radius:10px; min-width:22px; text-align:center; }
+.dl-item.active .dl-count { background:#fff; color:var(--red); }
+.dl-section { font-size:9px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.08em; padding:12px 14px 4px; }
+.dl-doc { display:block; padding:10px 14px; border-bottom:1px solid var(--border); text-decoration:none; }
+.dl-doc:hover { background:#FAF8F4; }
+.dl-doc.active { background:#FDECEA; border-left:2px solid var(--red); }
+.dl-doc-num { font-size:11px; font-weight:600; color:var(--red); }
+.dl-doc-title { font-size:11px; color:var(--text-1); margin:2px 0 4px; line-height:1.3; }
+.dl-doc-meta { display:flex; align-items:center; justify-content:space-between; }
+</style>

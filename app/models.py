@@ -18,10 +18,8 @@ ROLES = {
     'field':       'Field Worker',
 }
 
-# Modules each role can access
-# Format: { role: [list of module keys] }
 PERMISSIONS = {
-    'it_admin':    ['*'],  # wildcard — all modules
+    'it_admin':    ['*'],
     'director':    ['dashboard','briefing','equipment','maintenance','transport',
                     'jobs','inventory','documents','hr','pto','worklog',
                     '1c_financial','1c_inventory','sharepoint','kpi','ai','audit'],
@@ -58,6 +56,7 @@ class User(UserMixin, db.Model):
     email         = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     role          = db.Column(db.String(32), nullable=False, default='field')
+    position      = db.Column(db.String(128), nullable=True)   # job title (Должность)
     department    = db.Column(db.String(32), nullable=True)
     language      = db.Column(db.String(4), default='ru')
     is_active     = db.Column(db.Boolean, default=True)
@@ -92,6 +91,11 @@ class User(UserMixin, db.Model):
     def role_display(self):
         return ROLES.get(self.role, self.role)
 
+    @property
+    def position_display(self):
+        """Job title if set, otherwise fall back to role."""
+        return self.position or ROLES.get(self.role, self.role)
+
     def __repr__(self):
         return f'<User {self.email} [{self.role}]>'
 
@@ -115,6 +119,7 @@ DOC_TYPES = {
 DOC_STATUSES = {
     'draft':    'Draft',
     'pending':  'Pending approval',
+    'returned': 'Returned for revision',
     'approved': 'Approved',
     'rejected': 'Rejected',
     'archived': 'Archived',
@@ -150,9 +155,9 @@ class Document(db.Model):
     def generate_number(self):
         prefix_map = {
             'purchase_req': 'ТМЦ',
+            'trebovanie':   'ТРБ',
+            'po_services':  'РОУ',
             'defect_act':   'ДА',
-            'defect_act':   'ДА',
-            'defect_act': 'ДА',
             'memo':         'СЗ',
             'order':        'ПР',
             'act':          'АКТ',
@@ -163,6 +168,7 @@ class Document(db.Model):
         year   = datetime.utcnow().year
         count  = Document.query.filter_by(doc_type=self.doc_type).count()
         self.doc_number = f'{prefix}-{year}-{count+1:03d}'
+
     @property
     def total_cost(self):
         """Sum of all item line totals on this document."""
@@ -179,8 +185,6 @@ class DocumentItem(db.Model):
     document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
     name        = db.Column(db.String(256), nullable=False)
     unit        = db.Column(db.String(32), nullable=True)
-    quantity    = db.Column(db.Float, nullable=True)
-    note        = db.Column(db.String(256), nullable=True)
     quantity    = db.Column(db.Float, nullable=True)
     note        = db.Column(db.String(256), nullable=True)
     price       = db.Column(db.Float, nullable=True)   # unit price
@@ -237,6 +241,7 @@ class Equipment(db.Model):
     notes        = db.Column(db.Text, nullable=True)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class EquipmentMovement(db.Model):
     __tablename__ = 'equipment_movements'
 
@@ -252,6 +257,8 @@ class EquipmentMovement(db.Model):
 
     equipment = db.relationship('Equipment', backref='movements')
     reporter  = db.relationship('User', foreign_keys=[reported_by])
+
+
 class MaintenanceLog(db.Model):
     __tablename__ = 'maintenance_logs'
 
@@ -316,6 +323,8 @@ class WorkLog(db.Model):
     notes      = db.Column(db.String(256), nullable=True)
 
     employee   = db.relationship('User', foreign_keys=[user_id])
+
+
 # ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 
 class Notification(db.Model):

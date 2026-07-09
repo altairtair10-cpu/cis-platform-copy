@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}РО на услуги{% endblock %}
+{% block page_title %}РО на услуги{% endblock %}
+{% block content %}
+<form id="po-form" method="POST" action="{{ url_for('documents.submit_po_services') }}">
+<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
+  <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+  <button type="button" onclick="window.history.back()" class="btn"><i class="ti ti-x"></i> Отмена</button>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">Проект · Версия 1</div>
+</div>
+<div class="stepper" style="margin-bottom:28px;max-width:600px">
+  <div class="stepper-step"><div class="stepper-dot active">1</div><div class="stepper-label active">Создание</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">2</div><div class="stepper-label">Согласование</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">3</div><div class="stepper-label">Утверждение</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">4</div><div class="stepper-label">Утверждён</div></div>
+</div>
+<div class="form-grid-2" style="gap:28px;margin-bottom:28px">
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-file-text"></i><span class="form-section-title">Регистрационные реквизиты</span></div>
+    <div class="form-section-body">
+      <div class="form-group"><label class="form-label">Краткое содержание<span class="req">*</span></label><textarea name="summary" class="form-textarea" required style="min-height:60px"></textarea></div>
+      <div class="form-group"><label class="form-label">Заказано<span class="req">*</span></label><input name="ordered_by" type="text" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Подразделение<span class="req">*</span></label><input name="department" type="text" class="form-input" value="{{ current_user.department or '' }}"></div>
+      <div class="form-group"><label class="form-label">Плательщик НДС</label><select name="vat_payer" class="form-select"><option value="no">Нет</option><option value="yes">Да</option></select></div>
+    </div>
+  </div>
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-user-check"></i><span class="form-section-title">Реквизиты присвоенные отправителем</span></div>
+    <div class="form-section-body">
+      <div class="form-group"><label class="form-label">Автор</label><input type="text" class="form-input" value="{{ current_user.full_name }}" readonly></div>
+      <div class="form-group"><label class="form-label">Валюта<span class="req">*</span></label><select name="currency" class="form-select"><option value="KZT">₸ Тенге (KZT)</option><option value="USD">$ Доллар (USD)</option><option value="EUR">€ Евро (EUR)</option><option value="RUB">₽ Рубль (RUB)</option></select></div>
+      <div class="form-group"><label class="form-label">Дата оплаты<span class="req">*</span></label><input name="payment_date" type="date" class="form-input"></div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-table"></i><span class="form-section-title">Данные документа — таблица по оказаниям услуг<span class="req">*</span></span></div>
+  <div class="form-section-body" style="padding:0">
+    <div style="overflow-x:auto">
+      <table class="data-table" id="items-table">
+        <thead><tr><th style="width:30px">№</th><th>Описание<span class="req">*</span></th><th style="width:80px">Ед. изм.</th><th style="width:70px">Кол-во</th><th style="width:110px">Цена за единицу</th><th style="width:110px;text-align:right">Сумма</th><th style="width:30px"></th></tr></thead>
+        <tbody id="items-body">
+          <tr>
+            <td style="text-align:center;color:var(--text-3)">1</td>
+            <td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
+            <td><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
+            <td><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
+            <td><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
+            <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
+            <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0">✕</button></td>
+          </tr>
+        </tbody>
+        <tfoot><tr><td colspan="4" style="text-align:right;font-weight:600">Итого</td><td style="text-align:right;font-weight:600"><span id="grand-total">0.00</span></td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border)"><button type="button" onclick="addRow()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить строку</button></div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-list-details"></i><span class="form-section-title">Прочие условия</span></div>
+  <div class="form-section-body">
+    <div class="form-grid-2" style="gap:16px">
+      <div class="form-group"><label class="form-label">Основание<span class="req">*</span></label><input name="basis" type="text" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Контрагент<span class="req">*</span></label><input name="counterparty" type="text" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Условия оплаты<span class="req">*</span></label><input name="payment_terms" type="text" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Срок оказания услуг<span class="req">*</span></label><input name="service_date" type="date" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Условия оказания услуг<span class="req">*</span></label><input name="service_terms" type="text" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Статья бюджета<span class="req">*</span></label><input name="budget_line" type="text" class="form-input"></div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-route"></i><span class="form-section-title">Маршрут документа</span></div>
+  <div class="form-section-body">
+    <div class="form-group" style="max-width:500px">
+      <label class="form-label">Утверждающий<span class="req">*</span></label>
+      <input type="hidden" name="signatory_id" id="signatory_id" value="" required>
+      <div onclick="openStructure('signatory')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-input);min-height:36px">
+        <span id="signatory_display" style="font-size:12px;color:var(--text-3);flex:1">— Выбрать —</span>
+        <i class="ti ti-sitemap" style="font-size:14px;color:var(--red)"></i>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="form-label" style="margin-bottom:8px;display:block">Согласующие (маршрут)</label>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <button type="button" onclick="addStage()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить этап</button>
+        <button type="button" onclick="clearStages()" class="btn btn-sm">Очистить</button>
+      </div>
+      <div id="stages-container"></div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-header"><i class="ti ti-send"></i><span class="form-section-title">Получатели</span></div>
+  <div class="form-section-body">
+    <div class="form-group" style="max-width:500px">
+      <label class="form-label">Выберите получателей</label>
+      <select name="recipient_ids" multiple class="form-select" style="height:100px">{% for u in executors %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}</select>
+    </div>
+  </div>
+</div>
+</form>
+<div id="structure-modal" class="modal">
+  <div class="modal-content" style="max-width:820px">
+    <div class="modal-header"><span class="modal-title">Структура</span><button type="button" class="modal-close" onclick="closeStructure()">×</button></div>
+    <div class="modal-body">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="structure-search" oninput="filterStructure()" placeholder="Найти..." class="form-input"></div>
+      <table class="data-table" style="width:100%">
+        <thead><tr><th style="width:30px"></th><th>Сокращенное имя</th><th>Должность</th><th>Подразделение</th></tr></thead>
+        <tbody id="structure-list">
+          {% for u in executors %}
+          <tr class="structure-item" data-id="{{ u.id }}" data-name="{{ u.full_name }}" onclick="toggleStructure(this)">
+            <td><input type="checkbox" class="structure-cb" style="accent-color:var(--red)"></td>
+            <td style="font-weight:500"><i class="ti ti-user" style="font-size:13px;color:var(--text-3);margin-right:5px"></i>{{ u.full_name }}</td>
+            <td class="text-muted">{{ u.position_display }}</td>
+            <td class="text-muted">{{ u.department or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="confirmStructure()">Ок</button><button type="button" class="btn" onclick="closeStructure()">Отмена</button></div>
+  </div>
+</div>
+<script>
+let stageCount = 0;
+let structureTarget = null;
+function openStructure(target) {
+  structureTarget = target;
+  document.querySelectorAll('.structure-cb').forEach(cb => cb.checked = false);
+  if (target !== 'signatory') {
+    document.querySelectorAll('#stage-people-' + target + ' input[name="stage_reviewer[]"]').forEach(inp => {
+      const it = document.querySelector('.structure-item[data-id="' + inp.value + '"]');
+      if (it) it.querySelector('.structure-cb').checked = true;
+    });
+  } else {
+    const cur = document.getElementById('signatory_id').value;
+    if (cur) { const it = document.querySelector('.structure-item[data-id="' + cur + '"]'); if (it) it.querySelector('.structure-cb').checked = true; }
+  }
+  document.getElementById('structure-modal').classList.add('active');
+  document.getElementById('structure-search').value = '';
+  filterStructure();
+}
+function closeStructure() { document.getElementById('structure-modal').classList.remove('active'); }
+function filterStructure() { const q = document.getElementById('structure-search').value.toLowerCase(); document.querySelectorAll('.structure-item').forEach(el => { el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none'; }); }
+function toggleStructure(el) { const cb = el.querySelector('.structure-cb'); if (structureTarget === 'signatory') { document.querySelectorAll('.structure-cb').forEach(c => c.checked = false); cb.checked = true; } else { cb.checked = !cb.checked; } }
+function confirmStructure() {
+  const checked = Array.from(document.querySelectorAll('.structure-cb:checked')).map(cb => cb.closest('.structure-item'));
+  if (structureTarget === 'signatory') {
+    if (checked.length) { document.getElementById('signatory_id').value = checked[0].dataset.id; document.getElementById('signatory_display').textContent = checked[0].dataset.name; document.getElementById('signatory_display').style.color = 'var(--text-1)'; }
+  } else {
+    const c = document.getElementById('stage-people-' + structureTarget);
+    c.innerHTML = '';
+    checked.forEach(it => { const t = document.createElement('span'); t.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:#FDECEA;color:var(--red);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:500'; t.innerHTML = '<i class="ti ti-user" style="font-size:10px"></i> ' + it.dataset.name + ' <input type="hidden" name="stage_reviewer[]" value="' + it.dataset.id + '">'; c.appendChild(t); });
+  }
+  closeStructure();
+}
+function addStage() {
+  stageCount++;
+  const c = document.getElementById('stages-container');
+  const d = document.createElement('div');
+  d.id = 'stage-' + stageCount;
+  d.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md)';
+  d.innerHTML = '<span style="font-size:11px;font-weight:600;color:var(--text-2);min-width:16px">' + stageCount + '</span><select name="stage_type[]" class="form-select" style="flex:0.5;font-size:11px;padding:6px 8px"><option value="parallel">Параллельно</option><option value="sequential">Последовательно</option></select><div id="stage-people-' + stageCount + '" style="display:flex;flex-wrap:wrap;gap:4px;flex:1;min-height:28px"></div><button type="button" onclick="openStructure(' + stageCount + ')" class="btn btn-sm">+ Выбрать</button><button type="button" onclick="document.getElementById(\'stage-' + stageCount + '\').remove()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px">×</button>';
+  c.appendChild(d);
+}
+function clearStages() { document.getElementById('stages-container').innerHTML = ''; stageCount = 0; }
+function addRow() {
+  const tb = document.getElementById('items-body');
+  const n = tb.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td style="text-align:center;color:var(--text-3)">' + n + '</td><td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td><td><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td><td><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td><td><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td><td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td><td style="text-align:center"><button type="button" onclick="this.closest(\'tr\').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0">✕</button></td>';
+  tb.appendChild(tr);
+}
+function recalc() {
+  let g = 0;
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const q = parseFloat((tr.querySelector('input[name="item_qty[]"]') || {}).value) || 0;
+    const p = parseFloat((tr.querySelector('input[name="item_cost[]"]') || {}).value) || 0;
+    const s = q * p;
+    tr.querySelector('.row-sum').textContent = s.toFixed(2);
+    g += s;
+  });
+  document.getElementById('grand-total').textContent = g.toFixed(2);
+}
+window.addEventListener('load', recalc);
+</script>
+{% endblock %}

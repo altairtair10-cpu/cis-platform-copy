@@ -3,7 +3,11 @@
 {% block page_title %}{{ doc.doc_number }}{% endblock %}
 
 {% block content %}
-<div style="max-width:960px">
+<div style="display:flex;gap:18px;align-items:flex-start">
+
+  {% include 'documents/_doclist_panel.html' %}
+
+  <div style="flex:1;min-width:0;max-width:960px">
 
   <!-- HEADER CARD -->
   <div class="card" style="margin-bottom:14px">
@@ -12,17 +16,18 @@
         <div>
           <div style="font-size:18px;font-weight:500;color:var(--text-1)">
             {% if doc.doc_type == 'defect_act' %}{{ {'ru':'Дефектный акт','en':'Defect Act','kz':'Ақаулық актісі'}[current_user.language] }}
-            {% elif doc.doc_type == 'purchase_req' %}{{ {'ru':'Требование на приобретение','en':'Purchase Requisition','kz':'Сатып алу талаптамасы'}[current_user.language] }}
+            {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ {'ru':'Требование на приобретение','en':'Purchase Requisition','kz':'Сатып алу талаптамасы'}[current_user.language] }}
             {% else %}{{ doc.doc_type }}{% endif %}
           </div>
           <div style="font-size:11px;color:var(--text-3);margin-top:3px">
             <span class="doc-number">{{ doc.doc_number }}</span> · {{ doc.author.full_name }} · {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
           </div>
         </div>
-        <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% else %}pill-gray{% endif %}">
+        <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
           {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
           {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
           {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
+          {% elif doc.status == 'returned' %}{{ {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[current_user.language] }}
           {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
         </span>
       </div>
@@ -50,7 +55,7 @@
         <a href="{{ url_for('documents.index') }}" class="btn btn-sm">
           <i class="ti ti-arrow-left"></i>{{ {'ru':'К реестру','en':'Back','kz':'Тізілімге'}[current_user.language] }}
         </a>
-        <button onclick="window.print()" class="btn btn-sm">
+        <button onclick="window.open('{{ url_for('documents.print_doc', doc_id=doc.id) }}', '_blank')" class="btn btn-sm">
           <i class="ti ti-printer"></i>{{ {'ru':'Печать','en':'Print','kz':'Басып шығару'}[current_user.language] }}
         </button>
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
@@ -71,6 +76,37 @@
     </div>
   </div>
 
+  <!-- RETURNED-FOR-REVISION BANNER (author only) -->
+  {% if doc.status == 'returned' and doc.author_id == current_user.id %}
+  <div class="card" style="margin-bottom:14px;border-left:4px solid var(--amber)">
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:20px;margin-top:2px"></i>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:4px">
+            {{ {'ru':'Документ возвращён на доработку','en':'Returned for revision','kz':'Пысықтауға қайтарылды'}[current_user.language] }}
+          </div>
+          {% set ns = namespace(note='') %}
+          {% for c in comments %}{% if 'возвращён на доработку' in c.text %}{% set ns.note = c.text %}{% endif %}{% endfor %}
+          {% if ns.note %}
+          <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:12px">{{ ns.note }}</div>
+          {% else %}
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">{{ {'ru':'Проверьте историю ниже и внесите правки.','en':'Check the history below and make your edits.','kz':'Төмендегі тарихты қараңыз.'}[current_user.language] }}</div>
+          {% endif %}
+          <div style="display:flex;gap:8px">
+            {% if doc.doc_type == 'po_services' %}
+            <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            {% endif %}
+            <form method="POST" action="{{ url_for('documents.resubmit', doc_id=doc.id) }}" style="display:inline">
+              <button type="submit" class="btn btn-sm"><i class="ti ti-send"></i>{{ {'ru':'Отправить без изменений','en':'Resubmit as-is','kz':'Өзгеріссіз жіберу'}[current_user.language] }}</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- DETAILS + APPROVAL -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
     <div class="card" style="margin-bottom:0">
@@ -83,7 +119,7 @@
       <div class="card-body">
         <table style="width:100%;font-size:12px;border-collapse:collapse">
           <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type == 'purchase_req' %}Требование{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>
@@ -112,31 +148,31 @@
           <div style="flex:1"><div class="approver-name">{{ doc.author.full_name }}</div><div class="approver-role">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</div></div>
           <span class="pill pill-green">{{ {'ru':'Создан','en':'Submitted','kz':'Жасалды'}[current_user.language] }}</span>
         </div>
-        <div class="approver-row">
-          <div class="approver-av {% if doc.status == 'approved' %}done{% elif doc.status == 'pending' %}active{% else %}pending{% endif %}">НО</div>
-          <div style="flex:1"><div class="approver-name">{{ {'ru':'Начальник отдела','en':'Dept head','kz':'Бөлім басшысы'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'Шаг 1','en':'Step 1','kz':'1-қадам'}[current_user.language] }}</div></div>
-          <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% else %}pill-gray{% endif %}">
-            {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
-            {% elif doc.status == 'pending' %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
+        {% if approvals %}
+        {% for appr in approvals %}
+        <div class="approver-row" {% if loop.last %}style="border-bottom:none"{% endif %}>
+          <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
+          <div style="flex:1"><div class="approver-name">{{ appr.approver.full_name }}</div><div class="approver-role">{% if appr.step == 0 %}{{ {'ru':'Подписывающий','en':'Signatory','kz':'Қол қоюшы'}[current_user.language] }}{% else %}{{ {'ru':'Этап','en':'Stage','kz':'Кезең'}[current_user.language] }} {{ appr.step }}{% endif %}</div></div>
+          <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
+            {% if appr.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
+            {% elif appr.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
+            {% elif appr.step == doc.current_step %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
             {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
           </span>
         </div>
-        <div class="approver-row">
-          <div class="approver-av pending">ФО</div>
-          <div style="flex:1"><div class="approver-name">{{ {'ru':'Финансовый отдел','en':'Finance','kz':'Қаржы'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'Шаг 2','en':'Step 2','kz':'2-қадам'}[current_user.language] }}</div></div>
-          <span class="pill pill-gray">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
-        </div>
+        {% endfor %}
+        {% else %}
         <div class="approver-row" style="border-bottom:none">
-          <div class="approver-av pending">СН</div>
-          <div style="flex:1"><div class="approver-name">{{ {'ru':'Снабжение','en':'Procurement','kz':'Жабдықтау'}[current_user.language] }}</div><div class="approver-role">{{ {'ru':'ЗП в 1С','en':'PO in 1С','kz':'ТТ 1С-те'}[current_user.language] }}</div></div>
-          <span class="pill pill-gray">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
+          <div style="flex:1;font-size:11px;color:var(--text-3)">{{ {'ru':'Маршрут не задан','en':'No route defined','kz':'Маршрут жоқ'}[current_user.language] }}</div>
         </div>
+        {% endif %}
 
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-          <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ {'ru':'Комментарий...','en':'Comment...','kz':'Түсініктеме...'}[current_user.language] }}" style="margin-bottom:8px"></textarea>
+          <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ {'ru':'Комментарий (обязателен для возврата)...','en':'Comment (required to return)...','kz':'Түсініктеме (қайтару үшін міндетті)...'}[current_user.language] }}" style="margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
             <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;justify-content:center"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
+            <button type="submit" name="action" value="return" class="btn" style="flex:1;justify-content:center;background:var(--amber);color:#fff"><i class="ti ti-arrow-back-up"></i>{{ {'ru':'Вернуть','en':'Return','kz':'Қайтару'}[current_user.language] }}</button>
             <button type="submit" name="action" value="approve" class="btn btn-success" style="flex:1;justify-content:center"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
           </div>
         </form>
@@ -146,7 +182,7 @@
   </div>
 
   <!-- ITEMS TABLE -->
- {% if items %}
+  {% if items %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-header">
       <div class="card-header-left">
@@ -188,6 +224,7 @@
     </table>
   </div>
   {% endif %}
+
   <!-- COMMENT HISTORY -->
   <div class="card">
     <div class="card-header">
@@ -217,5 +254,6 @@
     </div>
   </div>
 
+  </div>
 </div>
 {% endblock %}
