@@ -1,14 +1,17 @@
-from flask import Flask
+from flask import Flask, flash, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from config.config import config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address, storage_uri='memory://')
 
 def create_app(config_name='default'):
     app = Flask(__name__)
@@ -18,6 +21,7 @@ def create_app(config_name='default'):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
@@ -41,6 +45,20 @@ def create_app(config_name='default'):
     app.register_blueprint(hr_bp)
     app.register_blueprint(inventory_bp)
     app.register_blueprint(errors_bp)
+
+    @app.before_request
+    def enforce_password_change():
+        """Users flagged with a temporary password must set a new one first."""
+        from flask_login import current_user
+        allowed = ('auth.settings', 'auth.settings_password', 'auth.logout',
+                   'auth.set_language', 'static')
+        if (current_user.is_authenticated
+                and getattr(current_user, 'must_change_password', False)
+                and request.endpoint
+                and request.endpoint not in allowed):
+            flash('Please set a new password before continuing. / Пожалуйста, смените временный пароль.', 'warning')
+            return redirect(url_for('auth.settings'))
+
     @app.context_processor
     def inject_notifications():
         from flask_login import current_user

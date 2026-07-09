@@ -20,6 +20,7 @@ def seed():
             language   = 'ru',
         )
         admin.set_password('admin123')
+        admin.must_change_password = True
         db.session.add(admin)
 
     # Create Zhanibek
@@ -33,6 +34,7 @@ def seed():
             language   = 'ru',
         )
         zh.set_password('zhanibek123')
+        zh.must_change_password = True
         db.session.add(zh)
 
     # Sample mechanic user
@@ -46,6 +48,7 @@ def seed():
             language   = 'ru',
         )
         mech.set_password('mechanic123')
+        mech.must_change_password = True
         db.session.add(mech)
 
     # Sample equipment

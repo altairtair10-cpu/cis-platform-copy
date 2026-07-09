@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ current_user.language if current_user.is_authenticated else 'ru' }}">
 <head>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}CIS Platform{% endblock %} — Caspian Integrated Services</title>
@@ -153,7 +154,7 @@ function toggleNotifDropdown(){
   const isHidden = d.style.display === 'none';
   d.style.display = isHidden ? 'block' : 'none';
   if(isHidden && {{ unread_count }} > 0){
-    fetch('/auth/notifications/read', {method:'POST', headers:{'X-CSRFToken': window.CSRF_TOKEN}});
+    fetch('/auth/notifications/read', {method:'POST', headers:{'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content}});
     document.querySelectorAll('.tb-notif-badge').forEach(el => el.remove());
   }
 }

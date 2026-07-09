@@ -59,11 +59,13 @@
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <div style="margin-left:auto;display:flex;gap:8px">
           <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="reject">
             <input type="hidden" name="comment" value="">
             <button type="submit" class="btn btn-sm btn-danger"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
           </form>
           <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="approve">
             <input type="hidden" name="comment" value="">
             <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
@@ -100,6 +102,7 @@
             <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
             {% endif %}
             <form method="POST" action="{{ url_for('documents.resubmit', doc_id=doc.id) }}" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-sm"><i class="ti ti-send"></i>{{ {'ru':'Отправить без изменений','en':'Resubmit as-is','kz':'Өзгеріссіз жіберу'}[current_user.language] }}</button>
             </form>
           </div>
@@ -171,6 +174,7 @@
 
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ {'ru':'Комментарий (обязателен для возврата)...','en':'Comment (required to return)...','kz':'Түсініктеме (қайтару үшін міндетті)...'}[current_user.language] }}" style="margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
             <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;justify-content:center"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
@@ -247,6 +251,7 @@
       </div>
       {% endfor %}
       <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:flex;gap:8px;margin-top:10px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="comment">
         <input name="comment" type="text" class="form-input" placeholder="{{ {'ru':'Добавить комментарий...','en':'Add comment...','kz':'Түсініктеме қосу...'}[current_user.language] }}" style="flex:1">
         <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-send"></i></button>

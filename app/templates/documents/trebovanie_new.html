@@ -4,6 +4,7 @@
 {% block content %}
 
 <form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie_new') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <!-- STICKY TOP TOOLBAR -->
 <div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
