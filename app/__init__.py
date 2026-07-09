@@ -13,7 +13,23 @@ migrate = Migrate()
 csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address, storage_uri='memory://')
 
+def init_sentry():
+    """Error monitoring — active only when SENTRY_DSN is set (production)."""
+    import os
+    dsn = os.environ.get('SENTRY_DSN')
+    if dsn:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=dsn,
+            integrations=[FlaskIntegration()],
+            send_default_pii=False,      # do not send user data
+            traces_sample_rate=0.0,      # errors only, no performance tracing
+        )
+
+
 def create_app(config_name='default'):
+    init_sentry()
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
