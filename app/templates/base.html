@@ -130,6 +130,22 @@
   </div>
 </div>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+// CSRF: automatically add the security token to every POST form on the page.
+(function(){
+  window.CSRF_TOKEN = "{{ csrf_token() }}";
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('form').forEach(function(f){
+      var m = (f.getAttribute('method') || '').toLowerCase();
+      if(m === 'post' && !f.querySelector('input[name="csrf_token"]')){
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = 'csrf_token'; i.value = window.CSRF_TOKEN;
+        f.appendChild(i);
+      }
+    });
+  });
+})();
+</script>
 {% block scripts %}{% endblock %}
 <script>
 function toggleNotifDropdown(){
@@ -137,7 +153,7 @@ function toggleNotifDropdown(){
   const isHidden = d.style.display === 'none';
   d.style.display = isHidden ? 'block' : 'none';
   if(isHidden && {{ unread_count }} > 0){
-    fetch('/auth/notifications/read', {method:'POST'});
+    fetch('/auth/notifications/read', {method:'POST', headers:{'X-CSRFToken': window.CSRF_TOKEN}});
     document.querySelectorAll('.tb-notif-badge').forEach(el => el.remove());
   }
 }
