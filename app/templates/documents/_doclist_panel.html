@@ -2,52 +2,39 @@
 <aside style="width:210px;flex-shrink:0;position:sticky;top:70px;align-self:flex-start">
   <div class="card" style="margin-bottom:0">
     <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-      <span style="font-size:12px;font-weight:600;color:var(--text-1)">Требования</span>
+      <span style="font-size:12px;font-weight:600;color:var(--text-1)">Документы</span>
     </div>
     <div style="padding:6px 0">
-      <a href="{{ url_for('documents.index') }}" class="dl-item {% if not request.args.get('status') %}active{% endif %}">
+      {% set cur_type = request.args.get('doc_type') or '' %}
+      {% set cur_status = request.args.get('status') or '' %}
+      <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status %}active{% endif %}">
         <span>Все</span><span class="dl-count">{{ panel_docs|length }}</span>
       </a>
 
       <div class="dl-section">По статусу</div>
-      <a href="{{ url_for('documents.index', status='approved') }}" class="dl-item {% if request.args.get('status')=='approved' %}active{% endif %}">
-        <span>Согласован</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','approved')|list|length }}</span>
+      {% for st, label in [('pending','На согласовании'), ('approved','Согласован'),
+                           ('in_execution','На исполнении'), ('executed','Исполнен'),
+                           ('rejected','Отклонён'), ('draft','Создание'),
+                           ('returned','Возвращён')] %}
+      <a href="{{ url_for('documents.index', status=st, doc_type=cur_type or None) }}" class="dl-item {% if cur_status == st %}active{% endif %}">
+        <span>{{ label }}</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto',st)|list|length }}</span>
       </a>
-      <a href="{{ url_for('documents.index', status='pending') }}" class="dl-item {% if request.args.get('status')=='pending' %}active{% endif %}">
-        <span>На согласовании</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','pending')|list|length }}</span>
-      </a>
-      <a href="{{ url_for('documents.index', status='rejected') }}" class="dl-item {% if request.args.get('status')=='rejected' %}active{% endif %}">
-        <span>Отклонён</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','rejected')|list|length }}</span>
-      </a>
-      <a href="{{ url_for('documents.index', status='draft') }}" class="dl-item {% if request.args.get('status')=='draft' %}active{% endif %}">
-        <span>Создание</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','draft')|list|length }}</span>
-      </a>
-      <a href="{{ url_for('documents.index', status='archived') }}" class="dl-item {% if request.args.get('status')=='archived' %}active{% endif %}">
-        <span>Архив</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto','archived')|list|length }}</span>
-      </a>
-    </div>
-  </div>
+      {% endfor %}
 
-  <!-- RECENT DOC LIST -->
-  <div class="card" style="margin-top:12px;margin-bottom:0">
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em">Документы</div>
-    <div style="max-height:400px;overflow-y:auto">
-      {% for d in panel_docs[:40] %}
-      <a href="{{ url_for('documents.view', doc_id=d.id) }}" class="dl-doc {% if doc is defined and doc.id == d.id %}active{% endif %}">
-        <div class="dl-doc-num">{{ d.doc_number or 'Черновик' }}</div>
-        <div class="dl-doc-title">{{ d.title[:34] }}{% if d.title|length > 34 %}…{% endif %}</div>
-        <div class="dl-doc-meta">
-          <span class="pill {% if d.status=='approved' %}pill-green{% elif d.status=='pending' %}pill-amber{% elif d.status=='rejected' %}pill-red{% else %}pill-gray{% endif %}" style="font-size:9px;padding:2px 7px">
-            {% if d.status=='approved' %}Согласован{% elif d.status=='pending' %}На согл.{% elif d.status=='rejected' %}Отклонён{% else %}Черновик{% endif %}
-          </span>
-          <span style="font-size:9px;color:var(--text-4)">{{ d.created_at.strftime('%d.%m') }}</span>
-        </div>
+      <div class="dl-section">По типу</div>
+      <a href="{{ url_for('documents.index', status=cur_status or None) }}" class="dl-item {% if not cur_type %}active{% endif %}">
+        <span>Все типы</span>
       </a>
-      {% else %}
-      <div style="padding:20px;text-align:center;font-size:11px;color:var(--text-3)">Нет документов</div>
+      {% for tp, label in [('purchase_req','Требования'), ('po_services','ПО на услуги'),
+                           ('po_goods','ПО на товары'), ('defect_act','Дефектные акты'),
+                           ('memo','Служебные записки')] %}
+      <a href="{{ url_for('documents.index', doc_type=tp, status=cur_status or None) }}" class="dl-item {% if cur_type == tp %}active{% endif %}">
+        <span>{{ label }}</span><span class="dl-count">{{ panel_docs|selectattr('doc_type','equalto',tp)|list|length }}</span>
+      </a>
       {% endfor %}
     </div>
   </div>
+
 </aside>
 
 <style>
