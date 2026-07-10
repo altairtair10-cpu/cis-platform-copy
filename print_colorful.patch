@@ -1,0 +1,121 @@
+diff --git a/app/templates/documents/print.html b/app/templates/documents/print.html
+index c4f2986..e4fd55f 100644
+--- a/app/templates/documents/print.html
++++ b/app/templates/documents/print.html
+@@ -4,47 +4,52 @@
+ <meta charset="utf-8">
+ <title>{{ doc.doc_number }}</title>
+ <style>
+-  * { box-sizing: border-box; }
+-  body { font-family: 'Times New Roman', Georgia, serif; color:#000; background:#fff; margin:0; font-size:11pt; }
++  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
++  body { font-family: 'Times New Roman', Georgia, serif; color:#1a1a1a; background:#fff; margin:0; font-size:11pt; }
+   .toolbar { background:#f0f0f0; padding:10px 16px; text-align:center; }
+-  .toolbar button { background:#2563eb; color:#fff; border:none; border-radius:4px; padding:9px 22px; font-size:14px; cursor:pointer; }
++  .toolbar button { background:#1A5276; color:#fff; border:none; border-radius:4px; padding:9px 22px; font-size:14px; cursor:pointer; }
+   .page { max-width:850px; margin:0 auto; padding:36px; }
+ 
+   table.bordered { width:100%; border-collapse:collapse; }
+-  table.bordered td, table.bordered th { border:1px solid #000; padding:6px 8px; vertical-align:top; }
++  table.bordered td, table.bordered th { border:1px solid #B9C7D3; padding:6px 8px; vertical-align:top; }
+ 
+-  .letterhead td { padding:10px 14px; }
+-  .letterhead .logo-cell { width:34%; text-align:center; }
+-  .letterhead .company { font-size:14pt; font-weight:bold; letter-spacing:0.5px; }
+-  .letterhead .sub { font-size:9pt; color:#333; margin-top:2px; }
+-  .letterhead .title-cell { text-align:center; font-weight:bold; font-size:12.5pt; text-transform:uppercase; }
+-  .letterhead .meta-cell { width:20%; font-size:9pt; }
+-  .letterhead .meta-cell div { padding:2px 0; border-bottom:1px solid #ccc; }
++  .letterhead { border:2px solid #1A5276 !important; }
++  .letterhead td { padding:10px 14px; border-color:#B9C7D3 !important; }
++  .letterhead .logo-cell { width:34%; text-align:center; background:#EBF5FB; }
++  .letterhead .company { font-size:14pt; font-weight:bold; letter-spacing:0.5px; color:#1A5276; }
++  .letterhead .sub { font-size:9pt; color:#555; margin-top:2px; }
++  .letterhead .title-cell { text-align:center; font-weight:bold; font-size:12.5pt; text-transform:uppercase; color:#1A5276; }
++  .letterhead .meta-cell { width:20%; font-size:9pt; background:#EBF5FB; }
++  .letterhead .meta-cell div { padding:2px 0; border-bottom:1px solid #B9C7D3; }
+   .letterhead .meta-cell div:last-child { border-bottom:none; }
+ 
+   table.fields { margin-top:14px; font-size:10.5pt; }
+-  table.fields td.label { font-weight:bold; width:22%; background:#f7f7f7; }
++  table.fields td.label { font-weight:bold; width:22%; background:#EBF5FB; color:#1A5276; }
+   table.fields td.value { width:28%; }
+ 
+-  .section-title { font-weight:bold; margin:16px 0 4px; font-size:11pt; }
++  .section-title { font-weight:bold; margin:18px 0 0; font-size:10.5pt; text-transform:uppercase; letter-spacing:0.3px; color:#fff; background:#1A5276; padding:6px 10px; border-radius:3px 3px 0 0; }
++  .section-title + table, .section-title + div { border-top:none; }
+ 
+   table.items { font-size:9.5pt; margin-bottom:6px; }
+-  table.items th { background:#eee; text-align:left; }
++  table.items th { background:#1A5276; color:#fff; text-align:left; border-color:#1A5276; }
+   table.items td.money, table.items th.money { text-align:right; }
+-  .total-row td { font-weight:bold; background:#f7f7f7; }
++  .total-row td { font-weight:bold; background:#EAF5EF; color:#1E6E3E; }
++  .total-row.grand td { background:#1A5276; color:#fff; }
+ 
+   .contact-block { margin-top:14px; font-size:10pt; line-height:1.6; }
+-  .contact-block b { font-weight:bold; }
++  .contact-block b { font-weight:bold; color:#1A5276; }
+ 
+   table.approvals { font-size:9.5pt; margin-top:6px; }
+-  table.approvals th { background:#eee; }
+-  .st-approved { color:#0a7d2c; font-weight:bold; }
+-  .st-rejected { color:#b3261e; font-weight:bold; }
+-  .st-pending  { color:#8a6d00; font-weight:bold; }
+-  .st-skipped  { color:#777; }
++  table.approvals th { background:#1A5276; color:#fff; }
++
++  .pill { display:inline-block; padding:2px 10px; border-radius:10px; font-weight:bold; font-size:9pt; }
++  .pill-green  { background:#EAF5EF; color:#1E6E3E; }
++  .pill-amber  { background:#FEF5E7; color:#784212; }
++  .pill-red    { background:#FDECEA; color:#922B21; }
++  .pill-gray   { background:#F4F1EC; color:#5D5751; }
+ 
+   .sig-block { margin-top:40px; }
+-  .sig-block .line { display:inline-block; width:280px; border-top:1px solid #000; margin-top:34px; padding-top:4px; font-size:9.5pt; text-align:center; }
++  .sig-block .line { display:inline-block; width:280px; border-top:2px solid #1A5276; margin-top:34px; padding-top:4px; font-size:9.5pt; text-align:center; }
+ 
+   @media print {
+     .toolbar { display:none; }
+@@ -98,14 +103,14 @@
+         <td class="label">Основание</td>
+         <td class="value">{{ extras.get('basis') }}</td>
+         <td class="label">Статус</td>
+-        <td class="value">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</td>
++        <td class="value"><span class="pill {% if doc.status=='approved' %}pill-green{% elif doc.status=='pending' %}pill-amber{% elif doc.status=='rejected' %}pill-red{% elif doc.status=='returned' %}pill-amber{% else %}pill-gray{% endif %}">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</span></td>
+       </tr>
+       {% else %}
+       <tr>
+         <td class="label">Статус</td>
+-        <td class="value">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</td>
++        <td class="value"><span class="pill {% if doc.status=='approved' %}pill-green{% elif doc.status=='pending' %}pill-amber{% elif doc.status=='rejected' %}pill-red{% elif doc.status=='returned' %}pill-amber{% else %}pill-gray{% endif %}">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</span></td>
+         <td class="label">Срочность</td>
+-        <td class="value">{{ doc.urgency or '—' }}</td>
++        <td class="value"><span class="pill {% if doc.urgency == 'critical' %}pill-red{% elif doc.urgency == 'urgent' %}pill-amber{% else %}pill-green{% endif %}">{{ doc.urgency or '—' }}</span></td>
+       </tr>
+       {% endif %}
+       {% if extras.get('material_request') %}
+@@ -198,7 +203,7 @@
+           <td colspan="6" style="text-align:right">НДС / VAT 16%:</td>
+           <td class="money">{{ '%.2f'|format(doc.total_cost * 0.16) }}</td>
+         </tr>
+-        <tr class="total-row">
++        <tr class="total-row grand">
+           <td colspan="6" style="text-align:right">Итого с НДС:</td>
+           <td class="money">{{ '%.2f'|format(doc.total_cost * 1.16) }}</td>
+         </tr>
+@@ -235,10 +240,10 @@
+           <td>{{ appr.approver.full_name }}</td>
+           <td>{% if appr.step == 0 %}Утверждающий{% else %}Согласующий · этап {{ appr.step }}{% endif %}</td>
+           <td>
+-            {% if appr.status == 'approved' %}<span class="st-approved">Согласован</span>
+-            {% elif appr.status == 'rejected' %}<span class="st-rejected">Отклонён</span>
+-            {% elif appr.status == 'skipped' %}<span class="st-skipped">Не потребовалось</span>
+-            {% else %}<span class="st-pending">Ожидает</span>{% endif %}
++            {% if appr.status == 'approved' %}<span class="pill pill-green">Согласован</span>
++            {% elif appr.status == 'rejected' %}<span class="pill pill-red">Отклонён</span>
++            {% elif appr.status == 'skipped' %}<span class="pill pill-gray">Не потребовалось</span>
++            {% else %}<span class="pill pill-amber">Ожидает</span>{% endif %}
+           </td>
+           <td>{{ appr.decided_at.strftime('%d.%m.%Y') if appr.decided_at else '—' }}</td>
+         </tr>
