@@ -39,6 +39,16 @@
     </div>
   </a>
 
+  <a href="{{ url_for('admin.permissions') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-lock-cog"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Какая роль видит какие модули','en':'Which role sees which modules','kz':'Қай рөл нені көреді'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
   <a href="{{ url_for('admin.integrations') }}" class="card" style="text-decoration:none">
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-plug"></i></div>

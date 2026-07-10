@@ -5,7 +5,8 @@ from flask import (Blueprint, render_template, redirect, url_for, flash,
                    request, abort)
 from flask_login import login_required, current_user
 from app.models import (EquipmentType, ReferenceDepartment, Location,
-                        AppSetting, DocNumberSetting, DOC_TYPES, db)
+                        AppSetting, DocNumberSetting, RolePermission, ROLES,
+                        PERMISSIONS, all_permission_modules, DOC_TYPES, db)
 from app.audit import log_action
 from app.decorators import requires_role
 from app.storage import save_upload, send_attachment
@@ -255,3 +256,40 @@ def integrations():
 
     return render_template('admin/integrations.html',
                            equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''))
+
+
+# ── ROLE PERMISSIONS ──────────────────────────────────────────────────────────
+
+@admin.route('/permissions', methods=['GET', 'POST'])
+@login_required
+@requires_role('it_admin')
+def permissions():
+    modules = all_permission_modules()
+    editable_roles = [r for r in ROLES if r != 'it_admin']
+
+    if request.method == 'POST':
+        for role in editable_roles:
+            granted = set(request.form.getlist(f'perm_{role}'))
+            granted = {m for m in granted if m in modules}
+            RolePermission.query.filter_by(role=role).delete()
+            for m in granted:
+                db.session.add(RolePermission(role=role, module=m))
+            # marker row keeps "no permissions" distinct from "use defaults"
+            if not granted:
+                db.session.add(RolePermission(role=role, module='__none__'))
+        log_action('role_permissions_updated', details=f'{len(editable_roles)} roles')
+        db.session.commit()
+        flash('Права ролей сохранены. / Role permissions saved.', 'success')
+        return redirect(url_for('admin.permissions'))
+
+    current = {}
+    db_rows = RolePermission.query.all()
+    roles_in_db = {r.role for r in db_rows}
+    for role in editable_roles:
+        if role in roles_in_db:
+            current[role] = {r.module for r in db_rows if r.role == role}
+        else:
+            current[role] = set(PERMISSIONS.get(role, []))
+    return render_template('admin/permissions.html',
+                           roles=ROLES, editable_roles=editable_roles,
+                           modules=modules, current=current)

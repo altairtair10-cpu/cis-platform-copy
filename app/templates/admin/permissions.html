@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body" style="overflow-x:auto">
+    <p class="text-muted" style="font-size:13px;margin-bottom:14px">
+      {{ {'ru':'Галочка = роль видит модуль. IT Admin всегда имеет полный доступ и не редактируется. Изменения действуют сразу после сохранения.',
+          'en':'Checked = the role can access the module. IT Admin always has full access and is not editable. Changes apply immediately after saving.',
+          'kz':'Белгі = рөл модульді көреді. IT Admin әрқашан толық қолжетімділікке ие.'}[current_user.language] }}
+    </p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <table class="data-table" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="position:sticky;left:0;background:var(--color-background-primary)">{{ {'ru':'Модуль','en':'Module','kz':'Модуль'}[current_user.language] }}</th>
+            {% for role in editable_roles %}
+            <th style="text-align:center;white-space:nowrap">{{ roles[role] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in modules %}
+          <tr>
+            <td style="position:sticky;left:0;background:var(--color-background-primary);font-family:ui-monospace,monospace">{{ m }}</td>
+            {% for role in editable_roles %}
+            <td style="text-align:center">
+              <input type="checkbox" name="perm_{{ role }}" value="{{ m }}"
+                     {% if m in current[role] %}checked{% endif %}>
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-primary" style="margin-top:14px">
+        {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
