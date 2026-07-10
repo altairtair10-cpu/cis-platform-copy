@@ -102,14 +102,36 @@ def test_xlsx_export_flat_rows(client, app):
     login(client, 'admin@test.kz', 'adminpass123')
     _submit_req(client, 'Первое')     # 2 items
     _submit_req(client, 'Второе')     # 2 items
-    resp = client.get('/documents/export.xlsx')
+    resp = client.get('/documents/export.xlsx?doc_type=purchase_req')
     assert resp.status_code == 200
     wb = load_workbook(BytesIO(resp.data))
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
     assert len(rows) == 1 + 4          # header + 2 docs × 2 items
     assert rows[1][0].startswith('ТМЦ-')
-    assert rows[1][6] == 'Клапан' and rows[2][6] == 'Сальник'
+    assert rows[1][7] == 'Клапан' and rows[2][7] == 'Сальник'
+
+
+def test_xlsx_export_all_types_and_filtering(client, app):
+    login(client, 'admin@test.kz', 'adminpass123')
+    _submit_req(client, 'Требование')
+    client.post('/documents/defect-act/submit', data={
+        'description': 'Дефект', 'department': 'mechanic', 'action': 'draft',
+        'part_name[]': ['Деталь'], 'part_spec[]': [''], 'part_qty[]': ['1'],
+        'part_unit[]': ['шт'], 'part_cost[]': ['10'],
+    })
+    # all types together
+    wb = load_workbook(BytesIO(client.get('/documents/export.xlsx').data))
+    rows = list(wb.active.iter_rows(values_only=True))
+    numbers = {r[0] for r in rows[1:]}
+    assert any(n.startswith('ТМЦ-') for n in numbers)
+    assert any(n.startswith('ДА-') for n in numbers)
+    # defect acts only
+    wb = load_workbook(BytesIO(client.get('/documents/export.xlsx?doc_type=defect_act').data))
+    rows = list(wb.active.iter_rows(values_only=True))
+    assert all(r[0].startswith('ДА-') for r in rows[1:])
+    # bad type rejected
+    assert client.get('/documents/export.xlsx?doc_type=hack').status_code == 400
 
 
 def test_export_requires_permission(client, app):

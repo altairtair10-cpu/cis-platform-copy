@@ -1365,8 +1365,8 @@ def save_route_template():
 @documents.route('/export.xlsx')
 @login_required
 def export_xlsx():
-    """Flat Excel export: one row per item, with the requisition number.
-    Filters: ?year=2026&month=7 (both optional). Requisitions only."""
+    """Flat Excel export: one row per item, with the document number.
+    Filters: ?doc_type=&year=2026&month=7 (all optional; no type = all types)."""
     if not (current_user.can_access('documents') or current_user.can_access('documents_read')
             or current_user.can_access('documents_procurement')):
         abort(403)
@@ -1376,8 +1376,13 @@ def export_xlsx():
 
     year = request.args.get('year', type=int)
     month = request.args.get('month', type=int)
+    doc_type = request.args.get('doc_type') or None
+    if doc_type and doc_type not in DOC_TYPES:
+        abort(400)
 
-    query = Document.query.filter_by(doc_type='purchase_req')
+    query = Document.query
+    if doc_type:
+        query = query.filter_by(doc_type=doc_type)
     if year:
         query = query.filter(extract('year', Document.created_at) == year)
     if month:
@@ -1386,8 +1391,8 @@ def export_xlsx():
 
     wb = Workbook()
     ws = wb.active
-    ws.title = 'Требования'
-    ws.append(['Номер требования', 'Дата', 'Статус', 'Отдел', 'Автор', 'Код ДА',
+    ws.title = (DOC_TYPES.get(doc_type, 'Документы')[:31] if doc_type else 'Документы')
+    ws.append(['Номер', 'Тип', 'Дата', 'Статус', 'Отдел', 'Автор', 'Код ДА',
                'Наименование', 'Характеристика/прим.', 'Кол-во', 'Ед.',
                'Цена', 'Сумма'])
     from app.models import DOC_STATUSES
@@ -1396,6 +1401,7 @@ def export_xlsx():
         for it in items:
             ws.append([
                 doc.doc_number,
+                DOC_TYPES.get(doc.doc_type, doc.doc_type),
                 doc.created_at.strftime('%d.%m.%Y'),
                 DOC_STATUSES.get(doc.status, doc.status),
                 doc.department or '',
@@ -1409,17 +1415,19 @@ def export_xlsx():
                 (float(it.quantity) * float(it.price))
                     if it and it.quantity is not None and it.price is not None else None,
             ])
-    for col, width in zip('ABCDEFGHIJKL', [16, 11, 14, 12, 20, 12, 40, 24, 8, 6, 12, 14]):
+    for col, width in zip('ABCDEFGHIJKLM', [16, 22, 11, 14, 12, 20, 12, 40, 24, 8, 6, 12, 14]):
         ws.column_dimensions[col].width = width
 
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    suffix = f'-{year}' if year else ''
+    suffix = f'-{doc_type}' if doc_type else ''
+    suffix += f'-{year}' if year else ''
     suffix += f'-{month:02d}' if month else ''
     from flask import send_file
-    log_action('requisitions_exported', details=f'year={year} month={month} docs={len(docs)}')
+    log_action('documents_exported',
+               details=f'type={doc_type or "all"} year={year} month={month} docs={len(docs)}')
     db.session.commit()
     return send_file(buf, as_attachment=True,
-                     download_name=f'trebovaniya{suffix}.xlsx',
+                     download_name=f'documents{suffix}.xlsx',
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
