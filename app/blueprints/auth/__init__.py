@@ -95,19 +95,26 @@ def signup():
             flash('An account with this email already exists.', 'danger')
             return render_template('signup.html', form=form)
         first, last = _split_name(form.full_name.data)
+        # Bootstrap: the very first account in an empty system becomes the active
+        # IT admin. Every later signup is inactive until an admin approves it.
+        is_first_user = User.query.count() == 0
         user = User(
             first_name=first,
             last_name=last,
             email=email,
-            role='field',
-            is_active=False,
+            role='it_admin' if is_first_user else 'field',
+            is_active=is_first_user,
         )
         user.password_hash = generate_password_hash(form.password.data, method='pbkdf2:sha256')
         db.session.add(user)
         db.session.flush()
-        log_action('signup', 'user', user.id, details=email)
+        log_action('signup_bootstrap_admin' if is_first_user else 'signup',
+                   'user', user.id, details=email)
         db.session.commit()
-        flash('Account created. An admin will review and activate your account soon.', 'success')
+        if is_first_user:
+            flash('Welcome! As the first user you are the IT admin. You can now log in.', 'success')
+        else:
+            flash('Account created. An admin will review and activate your account soon.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('signup.html', form=form)
 
