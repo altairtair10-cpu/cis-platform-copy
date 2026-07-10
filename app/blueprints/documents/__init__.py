@@ -85,11 +85,17 @@ def _visible_docs_query(user):
     return query.filter(or_(*conditions))
 
 
-def _panel_docs(doc_type=None):
-    query = _visible_docs_query(current_user)
+def _panel_counts(doc_type=None):
+    """Status counters for the left panel via a single aggregate query —
+    stays fast no matter how many documents accumulate over the years."""
+    from sqlalchemy import func
+    visible = _visible_docs_query(current_user).subquery()
+    query = db.session.query(visible.c.status, func.count()).group_by(visible.c.status)
     if doc_type:
-        query = query.filter_by(doc_type=doc_type)
-    return query.order_by(Document.created_at.desc()).all()
+        query = query.filter(visible.c.doc_type == doc_type)
+    counts = dict(query.all())
+    counts['_total'] = sum(counts.values())
+    return counts
 
 
 def _build_route(doc, action, signatory_id):
@@ -178,7 +184,7 @@ def index():
     doc_type = request.args.get('doc_type')
     page = request.args.get('page', 1, type=int)
 
-    panel_docs = _panel_docs(doc_type)
+    panel_counts = _panel_counts(doc_type)
 
     query = _visible_docs_query(current_user)
     if status:
@@ -196,7 +202,7 @@ def index():
     from sqlalchemy import extract, distinct
     years = sorted({y for (y,) in db.session.query(
         distinct(extract('year', Document.created_at))).all() if y}, reverse=True)
-    return render_template('documents/index.html', docs=docs, panel_docs=panel_docs,
+    return render_template('documents/index.html', docs=docs, panel_counts=panel_counts,
                            years=years, sel_year=year, sel_type=doc_type,
                            pagination=pagination,
                            doc_types=DOC_TYPES, statuses=DOC_STATUSES)
@@ -226,9 +232,9 @@ def view(doc_id):
     items     = doc.items.all()
     comments  = doc.comments.order_by('created_at').all()
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
-    panel_docs = _panel_docs()
+    panel_counts = _panel_counts()
     return render_template('documents/view.html', doc=doc, items=items,
-                           comments=comments, approvals=approvals, panel_docs=panel_docs)
+                           comments=comments, approvals=approvals, panel_counts=panel_counts)
 
 
 @documents.route('/<int:doc_id>/attachments/upload', methods=['POST'])

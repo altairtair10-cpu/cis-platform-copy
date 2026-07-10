@@ -8,7 +8,7 @@
       {% set cur_type = request.args.get('doc_type') or '' %}
       {% set cur_status = request.args.get('status') or '' %}
       <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status %}active{% endif %}">
-        <span>{{ {'ru':'Все','en':'All','kz':'Барлығы'}[current_user.language] }}</span><span class="dl-count">{{ panel_docs|length }}</span>
+        <span>Все</span><span class="dl-count">{{ panel_counts.get('_total', 0) }}</span>
       </a>
 
       <div class="dl-section">{{ {'ru':'По статусу','en':'By status','kz':'Мәртебе бойынша'}[current_user.language] }}</div>
@@ -22,7 +22,7 @@
           ('draft',        {'ru':'Создание','en':'Draft','kz':'Жоба'}[L]),
           ('returned',     {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[L])] %}
       <a href="{{ url_for('documents.index', status=st, doc_type=cur_type or None) }}" class="dl-item {% if cur_status == st %}active{% endif %}">
-        <span>{{ label }}</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto',st)|list|length }}</span>
+        <span>{{ label }}</span><span class="dl-count">{{ panel_counts.get(st, 0) }}</span>
       </a>
       {% endfor %}
 
