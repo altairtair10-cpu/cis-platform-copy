@@ -1,5 +1,5 @@
-<!-- Reusable pager. Include with: {% include '_pagination.html' %}
-     Requires a `pagination` object (Flask-SQLAlchemy Pagination) in context. -->
+{# Reusable pager. Include with: {% include '_pagination.html' %}
+   Requires a `pagination` object (Flask-SQLAlchemy Pagination) in context. #}
 {% if pagination and pagination.pages > 1 %}
 <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border-top:1px solid var(--border)">
   {% set args = request.args.to_dict() %}
