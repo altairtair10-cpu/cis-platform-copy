@@ -52,12 +52,6 @@
       <a href="{{ url_for('documents.new') }}" class="sb-item {% if request.endpoint == 'documents.new' %}active{% endif %}">
         <i class="ti ti-plus"></i><span>{{ {'ru':'Новый документ','en':'New document','kz':'Жаңа құжат'}[current_user.language] }}</span>
       </a>
-      <a href="{{ url_for('documents.new_defect_act') }}" class="sb-item {% if request.endpoint == 'documents.new_defect_act' %}active{% endif %}">
-        <i class="ti ti-alert-triangle"></i><span>{{ {'ru':'Дефектный акт','en':'Defect act','kz':'Ақаулық актісі'}[current_user.language] }}</span>
-      </a>
-      <a href="{{ url_for('documents.new_trebovanie') }}" class="sb-item {% if request.endpoint == 'documents.new_trebovanie' %}active{% endif %}">
-        <i class="ti ti-shopping-cart"></i><span>{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}</span>
-      </a>
       {% if current_user.is_authenticated and (current_user.can_access('hr') or current_user.can_access('hr_read')) %}
       <div class="sb-section">{{ {'ru':'Сотрудники','en':'People','kz':'Қызметкерлер'}[current_user.language] }}</div>
       <a href="{{ url_for('hr.index') }}" class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
