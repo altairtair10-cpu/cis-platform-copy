@@ -1,382 +1,205 @@
 {% extends "base.html" %}
-{% block title %}Заявка на закупку (PO){% endblock %}
-{% block page_title %}Заявка на закупку (PO){% endblock %}
+{% block title %}Требование на приобретение{% endblock %}
+{% block page_title %}Требование на приобретение{% endblock %}
 
 {% block content %}
-<div style="max-width:960px;margin:0 auto;padding:20px 0">
+{% include 'documents/_dlog_style.html' %}
+<div style="max-width:1100px;margin:0 auto">
 
-  <!-- HEADER -->
-  <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between">
-    <div>
-      <div style="font-size:13px;font-weight:600;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px">{{ {'ru':'ПРОЕКТ ЗАЯВКИ НА ЗАКУПКУ','en':'DRAFT PURCHASE ORDER','kz':'САТЫП АЛУ ТАПСЫРЫСЫНЫҢ ЖОБАСЫ'}[current_user.language] }}</div>
-      <div style="display:flex;gap:20px;font-size:11px;color:var(--color-text-tertiary)">
-        <span>{{ {'ru':'Версия 1','en':'Version 1','kz':'1-нұсқа'}[current_user.language] }}</span>
-        <span>{{ {'ru':'Не контрольный','en':'Non-binding','kz':'Бақылаусыз'}[current_user.language] }}</span>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button type="submit" form="treb-form" name="action" value="submit" style="background:#2563eb;color:#fff;border:none;border-radius:var(--border-radius-sm);padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px"><i class="ti ti-send" style="font-size:12px"></i>{{ {'ru':'Отправить','en':'Submit','kz':'Жіберу'}[current_user.language] }}</button>
-      <button type="submit" form="treb-form" name="action" value="draft" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px"><i class="ti ti-device-floppy" style="font-size:12px"></i>{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}</button>
-      <a href="{{ url_for('documents.index') }}" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;text-decoration:none"><i class="ti ti-x" style="font-size:12px"></i>{{ {'ru':'Отмена','en':'Cancel','kz':'Бас тарту'}[current_user.language] }}</a>
-    </div>
+  <!-- ACTION BAR -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+    <button type="submit" form="treb-form" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Отправить</button>
+    <button type="submit" form="treb-form" name="action" value="draft" class="btn"><i class="ti ti-device-floppy"></i> Сохранить</button>
+    <a href="{{ url_for('documents.index') }}" class="btn"><i class="ti ti-x"></i> Отменить</a>
+    <div style="margin-left:auto;text-align:right;font-size:11px;color:var(--text-3)">Версия 1<br>Не контрольный</div>
+  </div>
+
+  <!-- TITLE + STEPPER -->
+  <div class="dlg-title">Требование на приобретение материалов</div>
+  <div class="dlg-steps">
+    <div class="dlg-step active">Создание</div>
+    <div class="dlg-step">Согласование</div>
+    <div class="dlg-step">Подпись</div>
+    <div class="dlg-step">Архив</div>
   </div>
 
   <form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie') }}" enctype="multipart/form-data">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     {% if linked_defect %}
-    <div style="background:#eaf3de;border:0.5px solid #97c459;border-radius:var(--border-radius-sm);padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="background:#eaf3de;border:1px solid #97c459;border-radius:6px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin:14px 0">
       <i class="ti ti-link" style="font-size:16px;color:#3b6d11"></i>
-      <div style="font-size:11px;color:#3b6d11;font-weight:500">{{ {'ru':'Автоматически создан из Дефектного акта','en':'Auto-generated from Defect Act','kz':'Ақаулық актісінен автоматты жасалған'}[current_user.language] }} <span style="font-weight:600">{{ linked_defect }}</span></div>
+      <div style="font-size:11px;color:#3b6d11;font-weight:500">Автоматически создан из Дефектного акта <span style="font-weight:600">{{ linked_defect }}</span></div>
     </div>
     {% endif %}
 
-    <!-- SECTION 1: REGISTRATION -->
-    <div style="margin-bottom:24px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
-        <div>
-          <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Регистрационные реквизиты','en':'Registration details','kz':'Тіркеу деректемелері'}[current_user.language] }}</div>
-          <table style="width:100%;border-collapse:collapse">
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap;width:150px">{{ {'ru':'Вид документа:','en':'Document type:','kz':'Құжат түрі:'}[current_user.language] }}</td>
-              <td style="font-size:12px;color:var(--color-text-primary);padding:6px 0">{{ {'ru':'Заявка на закупку (PO)','en':'Purchase Order','kz':'Сатып алу тапсырысы'}[current_user.language] }}</td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Форма документа:','en':'Document form:','kz':'Құжат нысаны:'}[current_user.language] }}</td>
-              <td style="font-size:12px;color:var(--color-text-primary);padding:6px 0">{{ {'ru':'Электронный документ','en':'Electronic document','kz':'Электрондық құжат'}[current_user.language] }}</td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Язык документа:','en':'Document language:','kz':'Құжат тілі:'}[current_user.language] }}</td>
-              <td style="padding:4px 0">
-                <select name="doc_language" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-                  <option value="ru" {% if current_user.language == 'ru' %}selected{% endif %}>Русский</option>
-                  <option value="en" {% if current_user.language == 'en' %}selected{% endif %}>English</option>
-                  <option value="kz" {% if current_user.language == 'kz' %}selected{% endif %}>Қазақша</option>
-                </select>
-              </td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Степень срочности:','en':'Urgency:','kz':'Шұғылдылық:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-              <td style="padding:4px 0">
-                <select name="urgency" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-                  <option value="standard">{{ {'ru':'Стандарт (5 рабочих дней)','en':'Standard (5 business days)','kz':'Стандарт (5 жұмыс күні)'}[current_user.language] }}</option>
-                  <option value="urgent">{{ {'ru':'Срочно (2 дня)','en':'Urgent (2 days)','kz':'Шұғыл (2 күн)'}[current_user.language] }}</option>
-                  <option value="critical">{{ {'ru':'Критично (сегодня)','en':'Critical (today)','kz':'Өте шұғыл (бүгін)'}[current_user.language] }}</option>
-                </select>
-              </td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Связанный ДА:','en':'Linked defect act:','kz':'Байланысты ДА:'}[current_user.language] }}</td>
-              <td style="padding:4px 0"><input name="linked_defect_ref" type="text" value="{{ linked_defect or '' }}" placeholder="ДА-2026-###" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit"></td>
-            </tr>
-          </table>
+    <!-- TWO-COLUMN REQUISITES -->
+    <div class="dlg-cols" style="margin-top:20px">
+      <div>
+        <div class="dlg-h">Регистрационные реквизиты</div>
+        <div class="dlg-row">
+          <div class="dlg-label">Вид документа:</div>
+          <div class="dlg-static">Требование на приобретение материалов</div>
         </div>
-        <div>
-          <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Реквизиты присвоенные отправителем','en':'Sender assigned details','kz':'Жіберуші тағайындаған деректемелер'}[current_user.language] }}</div>
-          <table style="width:100%;border-collapse:collapse">
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap;width:150px">{{ {'ru':'Исполнитель:','en':'Executor:','kz':'Орындаушы:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-              <td style="padding:4px 0">
-                <select name="executor_id" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-                  {% for u in executors %}<option value="{{ u.id }}" {% if u.id == current_user.id %}selected{% endif %}>{{ u.full_name }}</option>{% endfor %}
-                </select>
-              </td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Подразделение:','en':'Department:','kz':'Бөлім:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-              <td style="padding:4px 0">
-                <select name="department" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-                  <option value="">— {{ {'ru':'Выберите','en':'Select','kz':'Таңдаңыз'}[current_user.language] }} —</option>
-                  <option value="mechanic">{{ {'ru':'Механический','en':'Mechanic','kz':'Механикалық'}[current_user.language] }}</option>
-                  <option value="transport">{{ {'ru':'Транспорт','en':'Transport','kz':'Көлік'}[current_user.language] }}</option>
-                  <option value="hse">{{ {'ru':'ОТ и ТБ','en':'HSE','kz':'ЕҚ және ТҚ'}[current_user.language] }}</option>
-                  <option value="engineering">{{ {'ru':'Инженерный','en':'Engineering','kz':'Инженерлік'}[current_user.language] }}</option>
-                  <option value="admin">{{ {'ru':'Административный','en':'Admin','kz':'Әкімшілік'}[current_user.language] }}</option>
-                  <option value="it">IT</option>
-                </select>
-              </td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Срок исполнения:','en':'Required by:','kz':'Орындау мерзімі:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-              <td style="padding:4px 0"><input name="needed_by" type="date" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit"></td>
-            </tr>
-            <tr style="vertical-align:top">
-              <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Примечание:','en':'Note:','kz':'Ескертпе:'}[current_user.language] }}</td>
-              <td style="padding:4px 0"><textarea name="note" rows="2" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea></td>
-            </tr>
-          </table>
+        <div class="dlg-row">
+          <div class="dlg-label">Краткое содержание:<span class="dlg-req">*</span></div>
+          <div><textarea name="summary" class="dlg-textarea" required></textarea></div>
         </div>
-      </div>
-    </div>
-
-    <!-- SECTION 2: APPROVAL ROUTE -->
-    <div style="margin-bottom:24px">
-      <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Маршрут документа','en':'Approval route','kz':'Құжат маршруты'}[current_user.language] }}</div>
-      <table style="width:100%;border-collapse:collapse">
-        <tr style="vertical-align:top">
-          <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap;width:150px">{{ {'ru':'Подписывающий:','en':'Signatory:','kz':'Қол қоюшы:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-          <td style="padding:4px 0">
-            <select name="signatory_id" style="width:100%;max-width:400px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-              <option value="">— {{ {'ru':'Выбрать','en':'Select','kz':'Таңдау'}[current_user.language] }} —</option>
-              {% for u in approvers %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}
+        <div class="dlg-row">
+          <div class="dlg-label">Степень срочности:<span class="dlg-req">*</span></div>
+          <div>
+            <select name="urgency" class="dlg-select" required>
+              <option value="standard">Стандарт (5 рабочих дней)</option>
+              <option value="urgent">Срочно (2 дня)</option>
+              <option value="critical">Критично (сегодня)</option>
             </select>
-          </td>
-        </tr>
-        <tr style="vertical-align:top">
-          <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap;padding-top:10px">{{ {'ru':'Согласующие:','en':'Reviewers:','kz':'Келісушілер:'}[current_user.language] }}</td>
-          <td style="padding:8px 0">
-            <div style="display:flex;gap:10px;margin-bottom:10px">
-              <button type="button" onclick="addStage()" style="background:none;border:1px solid #2563eb;color:#2563eb;border-radius:var(--border-radius-sm);padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit">+ {{ {'ru':'Выбрать маршрут','en':'Add stage','kz':'Маршрут таңдау'}[current_user.language] }}</button>
-              <button type="button" onclick="clearStages()" style="background:none;border:1px solid var(--color-border-tertiary);color:var(--color-text-secondary);border-radius:var(--border-radius-sm);padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit">{{ {'ru':'Очистить маршрут','en':'Clear route','kz':'Маршрутты тазалау'}[current_user.language] }}</button>
-            </div>
-            <div id="stages-container"></div>
-          </td>
-        </tr>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Связанный ДА:</div>
+          <div><input name="linked_defect_ref" type="text" class="dlg-input" value="{{ linked_defect or '' }}" placeholder="ДА-2026-###"></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Язык документа:</div>
+          <div>
+            <select name="doc_language" class="dlg-select">
+              <option value="ru" selected>Русский</option>
+              <option value="en">English</option>
+              <option value="kz">Қазақша</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="dlg-h">Реквизиты присвоенные отправителем</div>
+        <div class="dlg-row">
+          <div class="dlg-label">Автор:</div>
+          <div class="dlg-static"><i class="ti ti-user" style="font-size:12px;color:var(--text-3);margin-right:4px"></i>{{ current_user.full_name }}</div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Исполнитель:<span class="dlg-req">*</span></div>
+          <div>
+            <select name="executor_id" class="dlg-select" required>
+              {% for u in executors %}<option value="{{ u.id }}" {% if u.id == current_user.id %}selected{% endif %}>{{ u.full_name }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Подразделение:<span class="dlg-req">*</span></div>
+          <div>
+            <select name="department" class="dlg-select" required>
+              <option value="">— Выберите —</option>
+              <option value="mechanic">Механический</option>
+              <option value="transport">Транспорт</option>
+              <option value="hse">ОТ и ТБ</option>
+              <option value="engineering">Инженерный</option>
+              <option value="admin">Административный</option>
+              <option value="it">IT</option>
+            </select>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Срок исполнения:<span class="dlg-req">*</span></div>
+          <div><input name="needed_by" type="date" class="dlg-input" required></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Вложения:</div>
+          <div>
+            <label class="dlg-upl" for="attachments">
+              <i class="ti ti-upload" style="font-size:14px"></i> Загрузить
+              <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv" style="display:none" onchange="showAttachments(this)">
+            </label>
+            <div class="dlg-chips" id="attachment-list"></div>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Примечание:</div>
+          <div><textarea name="note" rows="2" class="dlg-textarea" style="min-height:40px"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTE (Documentolog-style) -->
+    {% include 'documents/_dlog_route.html' %}
+
+    <!-- ITEMS TABLE -->
+    <div class="dlg-h">
+      <span>Таблица · Наименование товаров, работ и услуг<span class="dlg-req">*</span></span>
+      <span style="font-size:10px;font-weight:500;color:#185fa5;background:#e6f1fb;border-radius:20px;padding:2px 8px"><i class="ti ti-database" style="font-size:9px"></i> Остатки из 1С</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px" id="items-table">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:30px">№</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Наименование <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Характеристика</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:65px">Кол-во <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:60px">Ед. изм.</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:110px">Сумма без НДС, ₸</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:100px">Срок поставки</th>
+            <th style="width:24px"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          <tr>
+            <td style="padding:6px;color:var(--text-3);text-align:center;border-bottom:1px solid var(--border)">1</td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_name[]" type="text" required placeholder="Наименование..." class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_spec[]" type="text" placeholder="Характеристика..." class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="1" value="1" required class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)">
+              <select name="item_unit[]" class="dlg-select"><option>шт</option><option>кг</option><option>л</option><option>м</option><option>уп</option><option>к-т</option><option>пара</option><option>рулон</option></select>
+            </td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" placeholder="0" onchange="updateTotal()" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_delivery[]" type="date" class="dlg-input"></td>
+            <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><button type="button" onclick="removeItemRow(this)" style="background:none;border:none;cursor:pointer;color:var(--text-3)"><i class="ti ti-trash" style="font-size:12px"></i></button></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="padding:10px 6px;font-size:11px;font-weight:600;color:var(--text-2);text-align:right">Итого:</td>
+            <td style="padding:10px 6px;font-size:13px;font-weight:600;color:var(--text-1)" id="grand-total">0 ₸</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
-
-    <!-- SECTION 3: BRIEF CONTENT -->
-    <div style="margin-bottom:24px">
-      <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Краткое содержание, связанные документы','en':'Summary, linked documents','kz':'Қысқаша мазмұн, байланысты құжаттар'}[current_user.language] }}</div>
-      <table style="width:100%;border-collapse:collapse">
-        <tr style="vertical-align:top">
-          <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap;width:150px">{{ {'ru':'Краткое содержание:','en':'Brief summary:','kz':'Қысқаша мазмұны:'}[current_user.language] }} <span style="color:#C0392B">*</span></td>
-          <td style="padding:4px 0"><textarea name="summary" required rows="3" style="width:100%;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea></td>
-        </tr>
-        <tr style="vertical-align:top">
-          <td style="font-size:12px;color:var(--color-text-secondary);padding:6px 12px 6px 0;white-space:nowrap">{{ {'ru':'Имеет ссылку с:','en':'Linked to:','kz':'Байланысты:'}[current_user.language] }}</td>
-          <td style="padding:4px 0"><input name="linked_docs" type="text" style="width:100%;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-sm);padding:5px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit"></td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- SECTION 4: ITEMS TABLE -->
-    <div style="margin-bottom:24px">
-      <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-        <span>{{ {'ru':'Таблица · Наименование товаров, работ и услуг','en':'Table · Goods, works and services','kz':'Кесте · Тауарлар, жұмыстар және қызметтер'}[current_user.language] }} <span style="color:#C0392B">*</span></span>
-        <span style="font-size:10px;font-weight:500;color:#185fa5;background:#e6f1fb;border-radius:20px;padding:2px 8px"><i class="ti ti-database" style="font-size:9px"></i> {{ {'ru':'Остатки из 1С','en':'1С stock check','kz':'1С қоймасы'}[current_user.language] }}</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px" id="items-table">
-          <thead>
-            <tr style="background:var(--color-background-secondary)">
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:30px">№</th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Наименование товаров, работ и услуг','en':'Name of goods/works/services','kz':'Тауарлар атауы'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">{{ {'ru':'Характеристика','en':'Specification','kz':'Сипаттама'}[current_user.language] }}</th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:65px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:60px">{{ {'ru':'Ед. изм.','en':'Unit','kz':'Өлш.'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:110px">{{ {'ru':'Сумма без НДС, ₸','en':'Amount excl. VAT, ₸','kz':'НДС-сіз сома, ₸'}[current_user.language] }}</th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:100px">{{ {'ru':'Срок поставки','en':'Delivery date','kz':'Жеткізу мерзімі'}[current_user.language] }}</th>
-              <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);width:80px">{{ {'ru':'1С статус','en':'1С status','kz':'1С мәртебесі'}[current_user.language] }}</th>
-              <th style="border:0.5px solid var(--color-border-tertiary);width:24px"></th>
-            </tr>
-          </thead>
-          <tbody id="items-body">
-            <tr id="item-row-1">
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);text-align:center">1</td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_name[]" type="text" required placeholder="{{ {'ru':'Наименование...','en':'Item name...','kz':'Атауы...'}[current_user.language] }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none;min-width:150px"></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_spec[]" type="text" placeholder="{{ {'ru':'Характеристика...','en':'Spec...','kz':'Сипаттама...'}[current_user.language] }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none;min-width:120px"></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="1" value="1" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)">
-                <select name="item_unit[]" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none">
-                  <option>шт</option><option>кг</option><option>л</option><option>м</option><option>уп</option><option>к-т</option><option>пара</option><option>рулон</option>
-                </select>
-              </td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_cost[]" type="number" min="0" placeholder="0" onchange="updateTotal()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_delivery[]" type="date" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none"></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-clock" style="font-size:9px"></i> {{ {'ru':'Ожидание','en':'Pending','kz':'Күтуде'}[current_user.language] }}</span></td>
-              <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:center"><button type="button" onclick="removeItemRow(this)" style="background:none;border:none;cursor:pointer;color:var(--color-text-tertiary)"><i class="ti ti-trash" style="font-size:12px"></i></button></td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr style="background:var(--color-background-secondary)">
-              <td colspan="5" style="padding:8px 6px;font-size:10px;font-weight:500;color:var(--color-text-secondary);text-align:right;border-top:0.5px solid var(--color-border-secondary)">{{ {'ru':'ИТОГО БЕЗ НДС','en':'TOTAL EXCL. VAT','kz':'ҚҚС-СЫЗ БАРЛЫҒЫ'}[current_user.language] }}</td>
-              <td style="padding:8px 6px;font-size:13px;font-weight:600;color:var(--color-text-primary);border-top:0.5px solid var(--color-border-secondary)" id="grand-total">0 ₸</td>
-              <td colspan="3" style="border-top:0.5px solid var(--color-border-secondary)"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <button type="button" onclick="addItemRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ {{ {'ru':'Добавить позицию','en':'Add item','kz':'Позиция қосу'}[current_user.language] }}</button>
-    </div>
-
-    <!-- SECTION 5: ATTACHMENTS -->
-    <div style="margin-bottom:24px">
-      <div style="font-size:12px;font-weight:600;color:#2563eb;border-bottom:1.5px solid #2563eb;padding-bottom:4px;margin-bottom:16px">{{ {'ru':'Приложения','en':'Attachments','kz':'Қосымшалар'}[current_user.language] }}</div>
-      <label for="attachments" style="display:inline-flex;align-items:center;gap:6px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-primary)">
-        <i class="ti ti-upload" style="font-size:14px"></i>{{ {'ru':'Загрузить','en':'Upload','kz':'Жүктеу'}[current_user.language] }}
-        <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display:none" onchange="showAttachments(this)">
-      </label>
-      <div id="attachment-list" style="margin-top:8px"></div>
-    </div>
+    <button type="button" onclick="addItemRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ Добавить позицию</button>
 
   </form>
 </div>
 
-<!-- PEOPLE MODAL -->
-<div id="people-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--color-background-primary);border-radius:var(--border-radius-lg);width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
-    <div style="background:#2563eb;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:13px;font-weight:600;color:#fff">{{ {'ru':'Структура','en':'People','kz':'Құрылым'}[current_user.language] }}</span>
-      <button type="button" onclick="closePeopleModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;line-height:1">×</button>
-    </div>
-    <div style="padding:12px 18px;border-bottom:1px solid var(--color-border-tertiary)">
-      <input type="text" id="people-search" oninput="filterPeople()" placeholder="{{ {'ru':'Найти...','en':'Search...','kz':'Іздеу...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:1px solid #2563eb;border-radius:var(--border-radius-sm);padding:7px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;outline:none">
-    </div>
-    <div style="overflow-y:auto;flex:1">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 18px;font-size:11px;font-weight:600;color:var(--color-text-tertiary);border-bottom:1px solid var(--color-border-tertiary)">
-        <span>{{ {'ru':'Имя','en':'Name','kz':'Аты'}[current_user.language] }}</span>
-        <span>{{ {'ru':'Должность','en':'Position','kz':'Лауазым'}[current_user.language] }}</span>
-        <span>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</span>
-      </div>
-      <div id="people-list">
-        {% for u in executors %}
-        <div class="people-item" data-id="{{ u.id }}" data-name="{{ u.full_name }}" onclick="togglePerson(this)" style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:10px 18px;cursor:pointer;font-size:12px;color:var(--color-text-primary);border-bottom:0.5px solid var(--color-border-tertiary);align-items:center" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="if(!this.classList.contains('selected'))this.style.background='transparent'">
-          <span style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="people-cb" style="accent-color:#2563eb"> {{ u.full_name }}</span>
-          <span style="color:var(--color-text-secondary)">{{ u.role_display }}</span>
-          <span style="color:var(--color-text-secondary)">{{ u.department or '—' }}</span>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    <div style="padding:12px 18px;border-top:1px solid var(--color-border-tertiary);display:flex;justify-content:flex-end;gap:8px">
-      <button type="button" onclick="confirmPeople()" style="background:#2563eb;color:#fff;border:none;border-radius:var(--border-radius-sm);padding:7px 20px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">OK</button>
-      <button type="button" onclick="closePeopleModal()" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:7px 20px;font-size:12px;cursor:pointer;font-family:inherit">{{ {'ru':'Отмена','en':'Cancel','kz':'Бас тарту'}[current_user.language] }}</button>
-    </div>
-  </div>
-</div>
+{% include 'documents/_dlog_modal.html' %}
 
 <script>
-let itemCount = 1;
-const lang = '{{ current_user.language }}';
-const t = {
-  ru:{name:'Наименование...', spec:'Характеристика...', pending:'Ожидание'},
-  en:{name:'Item name...', spec:'Spec...', pending:'Pending'},
-  kz:{name:'Атауы...', spec:'Сипаттама...', pending:'Күтуде'}
-};
-const p = t[lang] || t.ru;
-
 function addItemRow(){
-  itemCount++;
   const tbody = document.getElementById('items-body');
+  const n = tbody.rows.length + 1;
   const tr = document.createElement('tr');
-  tr.id = 'item-row-' + itemCount;
   tr.innerHTML = `
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);text-align:center">${itemCount}</td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_name[]" type="text" required placeholder="${p.name}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none;min-width:150px"></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_spec[]" type="text" placeholder="${p.spec}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--color-text-primary);font-family:inherit;outline:none;min-width:120px"></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_qty[]" type="number" min="1" value="1" required style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><select name="item_unit[]" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"><option>шт</option><option>кг</option><option>л</option><option>м</option><option>уп</option><option>к-т</option><option>пара</option><option>рулон</option></select></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_cost[]" type="number" min="0" placeholder="0" onchange="updateTotal()" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><input name="item_delivery[]" type="date" style="width:100%;background:transparent;border:none;font-size:11px;font-family:inherit;outline:none"></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary)"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-clock" style="font-size:9px"></i> ${p.pending}</span></td>
-    <td style="padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:center"><button type="button" onclick="removeItemRow(this)" style="background:none;border:none;cursor:pointer;color:var(--color-text-tertiary)"><i class="ti ti-trash" style="font-size:12px"></i></button></td>
-  `;
+    <td style="padding:6px;color:var(--text-3);text-align:center;border-bottom:1px solid var(--border)">${n}</td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_name[]" type="text" required placeholder="Наименование..." class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_spec[]" type="text" placeholder="Характеристика..." class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="1" value="1" required class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="item_unit[]" class="dlg-select"><option>шт</option><option>кг</option><option>л</option><option>м</option><option>уп</option><option>к-т</option><option>пара</option><option>рулон</option></select></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" placeholder="0" onchange="updateTotal()" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_delivery[]" type="date" class="dlg-input"></td>
+    <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><button type="button" onclick="removeItemRow(this)" style="background:none;border:none;cursor:pointer;color:var(--text-3)"><i class="ti ti-trash" style="font-size:12px"></i></button></td>`;
   tbody.appendChild(tr);
 }
-
 function removeItemRow(btn){
-  if(document.querySelectorAll('#items-body tr').length > 1){
+  if (document.querySelectorAll('#items-body tr').length > 1){
     btn.closest('tr').remove();
     updateTotal();
-    renumberItems();
+    document.querySelectorAll('#items-body tr').forEach((tr,i)=>{ tr.cells[0].textContent = i+1; });
   }
 }
-
-function renumberItems(){
-  document.querySelectorAll('#items-body tr').forEach((tr,i)=>{
-    tr.cells[0].textContent = i+1;
-  });
-  itemCount = document.querySelectorAll('#items-body tr').length;
-}
-
 function updateTotal(){
   let total = 0;
   document.querySelectorAll('input[name="item_cost[]"]').forEach(inp=>{ total += parseFloat(inp.value)||0; });
   document.getElementById('grand-total').textContent = total.toLocaleString('ru-RU') + ' ₸';
 }
-
 document.addEventListener('change', function(e){ if(e.target.name==='item_cost[]') updateTotal(); });
-
-function showAttachments(input){
-  const list = document.getElementById('attachment-list');
-  list.innerHTML = '';
-  Array.from(input.files).forEach(file => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-sm);margin-bottom:6px;border:0.5px solid var(--color-border-tertiary)';
-    const ext = file.name.split('.').pop().toLowerCase();
-    const iconMap = {pdf:'ti-file-type-pdf',doc:'ti-file-type-doc',docx:'ti-file-type-doc',xls:'ti-file-type-xls',xlsx:'ti-file-type-xls',jpg:'ti-photo',jpeg:'ti-photo',png:'ti-photo'};
-    div.innerHTML = `<i class="ti ${iconMap[ext]||'ti-file'}" style="font-size:16px;color:#C0392B;flex-shrink:0"></i><span style="font-size:12px;color:var(--color-text-primary);flex:1">${file.name}</span><span style="font-size:10px;color:var(--color-text-tertiary)">${(file.size/1024).toFixed(0)} KB</span>`;
-    list.appendChild(div);
-  });
-}
-
-// ── STAGES ──
-let stageCount = 0;
-let currentStageTarget = null;
-
-function addStage(){
-  stageCount++;
-  const container = document.getElementById('stages-container');
-  const div = document.createElement('div');
-  div.id = 'stage-' + stageCount;
-  div.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-sm);border:0.5px solid var(--color-border-tertiary)';
-  div.innerHTML = `
-    <span style="font-size:11px;font-weight:600;color:var(--color-text-secondary);min-width:16px">${stageCount}</span>
-    <select name="stage_type[]" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-sm);padding:4px 8px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-      <option value="parallel">Параллельное</option>
-      <option value="sequential">Последовательное</option>
-    </select>
-    <div id="stage-people-${stageCount}" style="display:flex;flex-wrap:wrap;gap:4px;flex:1;min-height:28px"></div>
-    <button type="button" onclick="openPeopleModal(${stageCount})" style="background:none;border:0.5px solid #2563eb;color:#2563eb;border-radius:var(--border-radius-sm);padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">+ Добавить</button>
-    <button type="button" onclick="document.getElementById('stage-${stageCount}').remove();renumberStages()" style="background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;font-size:16px;line-height:1">×</button>
-  `;
-  container.appendChild(div);
-}
-
-function clearStages(){ document.getElementById('stages-container').innerHTML=''; stageCount=0; }
-
-function renumberStages(){
-  document.querySelectorAll('#stages-container > div').forEach((div,i)=>{ div.querySelector('span').textContent=i+1; });
-  stageCount = document.querySelectorAll('#stages-container > div').length;
-}
-
-function openPeopleModal(stageId){
-  currentStageTarget = stageId;
-  document.querySelectorAll('.people-item').forEach(el=>{ el.classList.remove('selected'); el.style.background='transparent'; el.querySelector('.people-cb').checked=false; });
-  document.querySelectorAll(`#stage-people-${stageId} input[name="stage_reviewer[]"]`).forEach(inp=>{
-    const item = document.querySelector(`.people-item[data-id="${inp.value}"]`);
-    if(item){ item.classList.add('selected'); item.style.background='var(--color-background-secondary)'; item.querySelector('.people-cb').checked=true; }
-  });
-  document.getElementById('people-modal').style.display='flex';
-  document.getElementById('people-search').value='';
-  filterPeople();
-}
-
-function closePeopleModal(){ document.getElementById('people-modal').style.display='none'; }
-
-function filterPeople(){
-  const q = document.getElementById('people-search').value.toLowerCase();
-  document.querySelectorAll('.people-item').forEach(el=>{ el.style.display=el.dataset.name.toLowerCase().includes(q)?'grid':'none'; });
-}
-
-function togglePerson(el){
-  el.classList.toggle('selected');
-  const cb = el.querySelector('.people-cb');
-  cb.checked = !cb.checked;
-  el.style.background = cb.checked ? '#eff6ff' : 'transparent';
-}
-
-function confirmPeople(){
-  const container = document.getElementById(`stage-people-${currentStageTarget}`);
-  container.innerHTML='';
-  document.querySelectorAll('.people-item.selected').forEach(el=>{
-    const tag = document.createElement('span');
-    tag.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#2563eb;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:500';
-    tag.innerHTML=`<i class="ti ti-user" style="font-size:10px"></i> ${el.dataset.name}<input type="hidden" name="stage_reviewer[]" value="${el.dataset.id}">`;
-    container.appendChild(tag);
-  });
-  closePeopleModal();
-}
 </script>
 {% endblock %}

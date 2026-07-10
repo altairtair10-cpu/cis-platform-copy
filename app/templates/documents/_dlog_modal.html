@@ -1,0 +1,164 @@
+{# Documentolog-style people picker modal + route/attachment JS.
+   Include AFTER the </form>. Requires `executors` in the template context. #}
+<div id="people-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;width:640px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
+    <div style="background:#2563eb;padding:13px 18px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;font-weight:600;color:#fff">Структура</span>
+      <button type="button" onclick="closePeopleModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;line-height:1">×</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+      <input type="text" id="people-search" oninput="filterPeople()" placeholder="Найти..." class="dlg-input" style="border-color:#2563eb">
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr;padding:8px 18px;font-size:11px;font-weight:600;color:var(--text-3);border-bottom:1px solid var(--border)">
+        <span></span><span>Сокращенное имя</span><span>Должность</span><span>Подразделение</span>
+      </div>
+      <div id="people-list">
+        {% for u in executors %}
+        <div class="people-item" data-id="{{ u.id }}" data-name="{{ u.full_name }}" data-pos="{{ u.position_display }}" onclick="togglePerson(this)"
+             style="display:grid;grid-template-columns:24px 1fr 1fr 1fr;padding:9px 18px;cursor:pointer;font-size:12px;color:var(--text-1);border-bottom:1px solid var(--border);align-items:center">
+          <input type="checkbox" class="people-cb" style="accent-color:#2563eb" onclick="event.preventDefault()">
+          <span><i class="ti ti-user" style="font-size:12px;color:var(--text-3);margin-right:5px"></i>{{ u.full_name }}</span>
+          <span style="color:var(--text-2)">{{ u.position_display }}</span>
+          <span style="color:var(--text-2)">{{ u.department or '—' }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+      <button type="button" onclick="confirmPeople()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:7px 22px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">Ок</button>
+      <button type="button" onclick="closePeopleModal()" style="background:#fff;color:var(--text-1);border:1px solid var(--border);border-radius:6px;padding:7px 22px;font-size:12px;cursor:pointer;font-family:inherit">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Documentolog-style route + picker ─────────────────────────────── */
+let dlgStageCount = 0;
+let dlgTarget = null;   /* 'signatory' or stage number */
+
+function personChip(id, name, inputName){
+  const chip = document.createElement('div');
+  chip.className = 'dlg-chip';
+  chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${name}</span>` +
+    `<button type="button" class="dlg-chip-x" onclick="removeChip(this)">×</button>` +
+    (inputName ? `<input type="hidden" name="${inputName}" value="${id}">` : '');
+  chip.dataset.id = id;
+  return chip;
+}
+
+function removeChip(btn){
+  const chip = btn.closest('.dlg-chip');
+  const wrap = chip.parentElement;
+  chip.remove();
+  if (wrap.id === 'signatory-chip') document.getElementById('signatory_id').value = '';
+}
+
+function addStage(){
+  dlgStageCount++;
+  const n = dlgStageCount;
+  const div = document.createElement('div');
+  div.className = 'dlg-stage';
+  div.id = 'stage-' + n;
+  div.innerHTML = `
+    <i class="ti ti-menu-2"></i>
+    <span class="dlg-stage-num">${n}</span>
+    <select name="stage_type[]" class="dlg-select">
+      <option value="parallel">Параллельное</option>
+      <option value="sequential">Последовательное</option>
+    </select>
+    <div>
+      <div class="dlg-picker" onclick="openPeopleModal(${n})"><span class="dlg-picker-ph"></span><i class="ti ti-sitemap"></i></div>
+      <div class="dlg-chips" id="stage-people-${n}"></div>
+    </div>
+    <button type="button" class="dlg-chip-x" style="margin-top:8px" onclick="document.getElementById('stage-${n}').remove();renumberStages()">×</button>`;
+  document.getElementById('stages-container').appendChild(div);
+}
+
+function clearStages(){
+  document.getElementById('stages-container').innerHTML = '';
+  dlgStageCount = 0;
+}
+
+function renumberStages(){
+  document.querySelectorAll('#stages-container .dlg-stage').forEach((div,i)=>{
+    div.querySelector('.dlg-stage-num').textContent = i + 1;
+  });
+  dlgStageCount = document.querySelectorAll('#stages-container .dlg-stage').length;
+}
+
+function openPeopleModal(target){
+  dlgTarget = target;
+  document.querySelectorAll('.people-item').forEach(el=>{
+    el.classList.remove('selected'); el.style.background = 'transparent';
+    el.querySelector('.people-cb').checked = false;
+  });
+  const preset = (target === 'signatory')
+    ? (document.getElementById('signatory_id').value ? [document.getElementById('signatory_id').value] : [])
+    : Array.from(document.querySelectorAll(`#stage-people-${target} .dlg-chip`)).map(c=>c.dataset.id);
+  preset.forEach(id=>{
+    const item = document.querySelector(`.people-item[data-id="${id}"]`);
+    if(item){ item.classList.add('selected'); item.style.background='#eff6ff'; item.querySelector('.people-cb').checked=true; }
+  });
+  document.getElementById('people-modal').style.display = 'flex';
+  document.getElementById('people-search').value = '';
+  filterPeople();
+}
+
+function closePeopleModal(){ document.getElementById('people-modal').style.display = 'none'; }
+
+function filterPeople(){
+  const q = document.getElementById('people-search').value.toLowerCase();
+  document.querySelectorAll('.people-item').forEach(el=>{
+    el.style.display = el.dataset.name.toLowerCase().includes(q) ? 'grid' : 'none';
+  });
+}
+
+function togglePerson(el){
+  if (dlgTarget === 'signatory'){
+    document.querySelectorAll('.people-item').forEach(x=>{
+      x.classList.remove('selected'); x.style.background='transparent'; x.querySelector('.people-cb').checked=false;
+    });
+    el.classList.add('selected'); el.style.background='#eff6ff'; el.querySelector('.people-cb').checked=true;
+  } else {
+    el.classList.toggle('selected');
+    const on = el.classList.contains('selected');
+    el.style.background = on ? '#eff6ff' : 'transparent';
+    el.querySelector('.people-cb').checked = on;
+  }
+}
+
+function confirmPeople(){
+  const sel = document.querySelectorAll('.people-item.selected');
+  if (dlgTarget === 'signatory'){
+    const wrap = document.getElementById('signatory-chip');
+    wrap.innerHTML = '';
+    document.getElementById('signatory_id').value = '';
+    if (sel.length){
+      const el = sel[0];
+      document.getElementById('signatory_id').value = el.dataset.id;
+      wrap.appendChild(personChip(el.dataset.id, `${el.dataset.name} (${el.dataset.pos})`, null));
+    }
+  } else {
+    const wrap = document.getElementById(`stage-people-${dlgTarget}`);
+    wrap.innerHTML = '';
+    sel.forEach(el=>{
+      wrap.appendChild(personChip(el.dataset.id, `${el.dataset.name} (${el.dataset.pos})`, 'stage_reviewer[]'));
+    });
+  }
+  closePeopleModal();
+}
+
+/* ── Attachments (client-side chip preview before submit) ──────────── */
+function showAttachments(input){
+  const list = document.getElementById('attachment-list');
+  list.innerHTML = '';
+  Array.from(input.files).forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'dlg-chip';
+    chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${f.name}</span>` +
+      `<span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
+    list.appendChild(chip);
+  });
+}
+</script>

@@ -3,6 +3,7 @@
 {% block page_title %}{{ doc.doc_number }}{% endblock %}
 
 {% block content %}
+{% include 'documents/_dlog_style.html' %}
 <div style="display:flex;gap:18px;align-items:flex-start">
 
   {% include 'documents/_doclist_panel.html' %}
@@ -144,10 +145,35 @@
       <div class="card-header">
         <div class="card-header-left">
           <div class="card-icon"><i class="ti ti-git-branch"></i></div>
-          <div class="card-title">{{ {'ru':'Согласование','en':'Approval','kz':'Келісу'}[current_user.language] }}</div>
+          <div class="card-title">{{ {'ru':'Результаты согласования','en':'Approval results','kz':'Келісу нәтижелері'}[current_user.language] }}</div>
         </div>
       </div>
       <div class="card-body" style="padding:14px 16px">
+        {% if approvals %}
+        <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px">
+            {{ {'ru':'Версия 1 от','en':'Version 1 of','kz':'1-нұсқа'}[current_user.language] }} {{ doc.created_at.strftime('%d.%m.%Y') }} : {{ doc.doc_number }}
+          </div>
+          {% set reviewers = approvals | selectattr('step', 'gt', 0) | list %}
+          {% set signatories = approvals | selectattr('step', 'equalto', 0) | list %}
+          {% if reviewers %}
+          <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ {'ru':'Согласующие:','en':'Reviewers:','kz':'Келісушілер:'}[current_user.language] }}</span>
+            <span style="display:flex;flex-wrap:wrap;gap:4px">
+              {% for appr in reviewers %}<span style="background:var(--bg-input,#f2f3f5);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-1)">{{ appr.approver.full_name }}</span>{% endfor %}
+            </span>
+          </div>
+          {% endif %}
+          {% if signatories %}
+          <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">
+            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ {'ru':'Подписывающий:','en':'Signatory:','kz':'Қол қоюшы:'}[current_user.language] }}</span>
+            <span style="display:flex;flex-wrap:wrap;gap:4px">
+              {% for appr in signatories %}<span style="background:var(--bg-input,#f2f3f5);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-1)">{{ appr.approver.full_name }}</span>{% endfor %}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
         <div class="approver-row">
           <div class="approver-av done">{{ doc.author.initials }}</div>
           <div style="flex:1"><div class="approver-name">{{ doc.author.full_name }}</div><div class="approver-role">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</div></div>
@@ -238,25 +264,27 @@
       </div>
     </div>
     <div class="card-body">
-      {% for a in doc.attachments %}
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <a href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="display:flex;align-items:center;gap:8px;color:var(--text-1)">
-          <i class="ti ti-file"></i>
-          <span>{{ a.original_filename }}</span>
-          <span class="text-muted text-small">({{ (a.size_bytes / 1024)|round(1) }} KB)</span>
-        </a>
-        <form method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}" onsubmit="return confirm('{{ {'ru':'Удалить файл?','en':'Delete file?','kz':'Файлды жою керек пе?'}[current_user.language] }}')">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-sm"><i class="ti ti-trash"></i></button>
-        </form>
+      <div class="dlg-chips" style="margin:0 0 10px">
+        {% for a in doc.attachments %}
+        <div class="dlg-chip">
+          <i class="ti ti-menu-2"></i>
+          <a class="dlg-chip-name" href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="color:var(--text-1)">{{ a.original_filename }}</a>
+          <span style="font-size:10px;color:var(--text-3);flex-shrink:0">{{ ((a.size_bytes or 0) / 1024)|round(1) }} KB</span>
+          <form method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}" onsubmit="return confirm('{{ {'ru':'Удалить файл?','en':'Delete file?','kz':'Файлды жою керек пе?'}[current_user.language] }}')" style="margin-left:auto;display:flex">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="dlg-chip-x">×</button>
+          </form>
+        </div>
+        {% else %}
+        <div class="text-muted text-small">{{ {'ru':'Нет вложений','en':'No attachments yet','kz':'Тіркемелер жоқ'}[current_user.language] }}</div>
+        {% endfor %}
       </div>
-      {% else %}
-      <div class="text-muted text-small" style="padding:8px 0">{{ {'ru':'Нет вложений','en':'No attachments yet','kz':'Тіркемелер жоқ'}[current_user.language] }}</div>
-      {% endfor %}
-      <form method="POST" action="{{ url_for('documents.upload_attachment', doc_id=doc.id) }}" enctype="multipart/form-data" style="display:flex;gap:8px;margin-top:10px">
+      <form method="POST" action="{{ url_for('documents.upload_attachment', doc_id=doc.id) }}" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="file" name="file" class="form-input" required>
-        <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-upload"></i>{{ {'ru':'Загрузить','en':'Upload','kz':'Жүктеу'}[current_user.language] }}</button>
+        <label class="dlg-upl" for="view-att-upload">
+          <i class="ti ti-upload" style="font-size:14px"></i>{{ {'ru':'Загрузить','en':'Upload','kz':'Жүктеу'}[current_user.language] }}
+          <input id="view-att-upload" type="file" name="file" required style="display:none" onchange="this.form.submit()">
+        </label>
       </form>
     </div>
   </div>

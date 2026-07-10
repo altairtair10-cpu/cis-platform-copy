@@ -73,6 +73,31 @@ def _build_route(doc, action, signatory_id):
         step += 1
 
 
+def _save_form_attachments(doc):
+    """Save files posted in the 'attachments' field of a create/edit form.
+    Mirrors the validation in upload_attachment()."""
+    from werkzeug.utils import secure_filename
+    for f in request.files.getlist('attachments'):
+        if not f or not f.filename:
+            continue
+        if not allowed_file(f.filename):
+            flash(f'Файл «{f.filename}» не загружен: недопустимый тип.', 'warning')
+            continue
+        stored_filename, backend, size_bytes = save_upload(f)
+        if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
+            flash(f'Файл «{f.filename}» не загружен: больше {MAX_FILE_SIZE_MB} МБ.', 'warning')
+            continue
+        db.session.add(DocumentAttachment(
+            document_id=doc.id,
+            original_filename=secure_filename(f.filename),
+            stored_filename=stored_filename,
+            storage_backend=backend,
+            content_type=f.content_type,
+            size_bytes=size_bytes,
+            uploaded_by=current_user.id,
+        ))
+
+
 def _notify_approvers(doc):
     all_approvals = DocumentApproval.query.filter_by(document_id=doc.id).all()
     notified = set()
@@ -505,10 +530,19 @@ def submit_trebovanie():
         status        = 'pending' if action == 'submit' else 'draft',
     )
 
+    needed_by = request.form.get('needed_by')
+    if needed_by:
+        try:
+            doc.needed_by = datetime.strptime(needed_by, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
     log_action('document_created', 'document', doc.id, details=doc.doc_number)
+
+    _save_form_attachments(doc)
 
     names = request.form.getlist('item_name[]')
     specs = request.form.getlist('item_spec[]')
@@ -533,6 +567,8 @@ def submit_trebovanie():
         text        = f'Требование {"отправлено на согласование" if action == "submit" else "сохранено как черновик"} пользователем {current_user.full_name}.',
         is_system   = True,
     ))
+
+    _build_route(doc, action, request.form.get('signatory_id', type=int))
 
     approvers = User.query.filter(
         User.role.in_(['dept_head', 'director', 'it_admin']),
@@ -615,6 +651,7 @@ def submit_trebovanie_new():
     ))
 
     _build_route(doc, action, signatory_id)
+    _save_form_attachments(doc)
 
     db.session.commit()
 
@@ -700,6 +737,7 @@ def submit_po_services():
     ))
 
     _build_route(doc, action, signatory_id)
+    _save_form_attachments(doc)
 
     db.session.commit()
 
@@ -777,6 +815,8 @@ def update_po_services(doc_id):
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
 
+    _save_form_attachments(doc)
+
     action = request.form.get('action', 'save')
     if action == 'submit':
         doc.status = 'pending'
@@ -852,6 +892,8 @@ def update_trebovanie(doc_id):
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
 
+    _save_form_attachments(doc)
+
     action = request.form.get('action', 'save')
     if action == 'submit':
         doc.status = 'pending'
@@ -920,6 +962,8 @@ def update_defect_act(doc_id):
                 note=specs[i] if i < len(specs) else '',
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
+
+    _save_form_attachments(doc)
 
     action = request.form.get('action', 'save')
     if action == 'submit':

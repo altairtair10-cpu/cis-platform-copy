@@ -1,0 +1,25 @@
+{# Documentolog-style "Маршрут документа" section — include INSIDE the <form>.
+   Emits: signatory_id, stage_type[], stage_reviewer[] (same names the backend already parses). #}
+<div class="dlg-h">Маршрут документа</div>
+
+<div class="dlg-row">
+  <div class="dlg-label">Утверждающий:<span class="dlg-req">*</span></div>
+  <div style="max-width:440px">
+    <input type="hidden" name="signatory_id" id="signatory_id" value="">
+    <div class="dlg-picker" onclick="openPeopleModal('signatory')">
+      <span class="dlg-picker-ph" id="signatory-ph"></span><i class="ti ti-sitemap"></i>
+    </div>
+    <div class="dlg-chips" id="signatory-chip"></div>
+  </div>
+</div>
+
+<div class="dlg-row">
+  <div class="dlg-label" style="padding-top:4px">Согласующие:</div>
+  <div>
+    <div style="display:flex;gap:30px;margin-bottom:14px;padding-left:26px">
+      <button type="button" class="dlg-textbtn" onclick="addStage()">Выбрать маршрут</button>
+      <button type="button" class="dlg-textbtn" onclick="clearStages()">Очистить маршрут</button>
+    </div>
+    <div id="stages-container"></div>
+  </div>
+</div>
