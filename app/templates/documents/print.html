@@ -5,31 +5,51 @@
 <title>{{ doc.doc_number }}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Times New Roman', Georgia, serif; color:#000; background:#fff; margin:0; font-size:12pt; }
+  body { font-family: 'Times New Roman', Georgia, serif; color:#000; background:#fff; margin:0; font-size:11pt; }
   .toolbar { background:#f0f0f0; padding:10px 16px; text-align:center; }
   .toolbar button { background:#2563eb; color:#fff; border:none; border-radius:4px; padding:9px 22px; font-size:14px; cursor:pointer; }
-  .page { max-width:800px; margin:0 auto; padding:40px; }
-  .letterhead { text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:20px; }
-  .letterhead .company { font-size:16pt; font-weight:bold; letter-spacing:1px; }
-  .letterhead .sub { font-size:10pt; color:#333; }
-  h1 { font-size:14pt; text-align:center; margin:20px 0 4px; text-transform:uppercase; }
-  .docnum { text-align:center; font-size:11pt; margin-bottom:20px; }
-  table.meta { width:100%; font-size:11pt; margin-bottom:16px; }
-  table.meta td { padding:3px 0; vertical-align:top; }
-  table.meta .label { color:#333; width:200px; }
-  .section-title { font-weight:bold; margin:16px 0 6px; font-size:11pt; }
-  table.items { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:20px; }
-  table.items th, table.items td { border:1px solid #000; padding:5px 6px; text-align:left; }
-  table.items th { background:#eee; }
-  table.items td.money { text-align:right; }
-  .total-row td { font-weight:bold; }
-  .signatures { margin-top:50px; display:flex; justify-content:space-between; gap:40px; }
-  .sig { flex:1; }
-  .sig .line { border-top:1px solid #000; margin-top:36px; padding-top:4px; font-size:10pt; text-align:center; }
+  .page { max-width:850px; margin:0 auto; padding:36px; }
+
+  table.bordered { width:100%; border-collapse:collapse; }
+  table.bordered td, table.bordered th { border:1px solid #000; padding:6px 8px; vertical-align:top; }
+
+  .letterhead td { padding:10px 14px; }
+  .letterhead .logo-cell { width:34%; text-align:center; }
+  .letterhead .company { font-size:14pt; font-weight:bold; letter-spacing:0.5px; }
+  .letterhead .sub { font-size:9pt; color:#333; margin-top:2px; }
+  .letterhead .title-cell { text-align:center; font-weight:bold; font-size:12.5pt; text-transform:uppercase; }
+  .letterhead .meta-cell { width:20%; font-size:9pt; }
+  .letterhead .meta-cell div { padding:2px 0; border-bottom:1px solid #ccc; }
+  .letterhead .meta-cell div:last-child { border-bottom:none; }
+
+  table.fields { margin-top:14px; font-size:10.5pt; }
+  table.fields td.label { font-weight:bold; width:22%; background:#f7f7f7; }
+  table.fields td.value { width:28%; }
+
+  .section-title { font-weight:bold; margin:16px 0 4px; font-size:11pt; }
+
+  table.items { font-size:9.5pt; margin-bottom:6px; }
+  table.items th { background:#eee; text-align:left; }
+  table.items td.money, table.items th.money { text-align:right; }
+  .total-row td { font-weight:bold; background:#f7f7f7; }
+
+  .contact-block { margin-top:14px; font-size:10pt; line-height:1.6; }
+  .contact-block b { font-weight:bold; }
+
+  table.approvals { font-size:9.5pt; margin-top:6px; }
+  table.approvals th { background:#eee; }
+  .st-approved { color:#0a7d2c; font-weight:bold; }
+  .st-rejected { color:#b3261e; font-weight:bold; }
+  .st-pending  { color:#8a6d00; font-weight:bold; }
+  .st-skipped  { color:#777; }
+
+  .sig-block { margin-top:40px; }
+  .sig-block .line { display:inline-block; width:280px; border-top:1px solid #000; margin-top:34px; padding-top:4px; font-size:9.5pt; text-align:center; }
+
   @media print {
     .toolbar { display:none; }
     .page { margin:0; padding:0; max-width:100%; }
-    @page { margin:2cm; }
+    @page { margin:1.6cm; }
   }
 </style>
 </head>
@@ -38,43 +58,122 @@
     <button onclick="window.print()">🖨 Печать / Сохранить в PDF</button>
   </div>
   <div class="page">
-    <div class="letterhead">
-      <div class="company">CASPIAN INTEGRATED SERVICES</div>
-      <div class="sub">ТОО «Caspian Integrated Services»</div>
-    </div>
 
-    <h1>
-      {% if doc.doc_type == 'defect_act' %}Дефектный акт
-      {% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование на приобретение материалов
-      {% else %}{{ doc.title }}{% endif %}
-    </h1>
-    <div class="docnum">№ {{ doc.doc_number }} от {{ doc.created_at.strftime('%d.%m.%Y') }}</div>
-
-    <table class="meta">
-      <tr><td class="label">Автор:</td><td>{{ doc.author.full_name }}</td></tr>
-      <tr><td class="label">Подразделение:</td><td>{{ doc.department or '—' }}</td></tr>
-      <tr><td class="label">Срочность:</td><td>{{ doc.urgency or '—' }}</td></tr>
-      {% if doc.needed_by %}<tr><td class="label">Срок поставки:</td><td>{{ doc.needed_by.strftime('%d.%m.%Y') }}</td></tr>{% endif %}
-      <tr><td class="label">Статус:</td><td>{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% else %}Черновик{% endif %}</td></tr>
+    <!-- LETTERHEAD -->
+    <table class="bordered letterhead">
+      <tr>
+        <td class="logo-cell">
+          <div class="company">CASPIAN INTEGRATED SERVICES</div>
+          <div class="sub">ТОО «Caspian Integrated Services»</div>
+        </td>
+        <td class="title-cell">
+          {% if doc.doc_type == 'defect_act' %}Дефектный акт
+          {% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование на приобретение материалов
+          {% elif doc.doc_type == 'po_services' %}Заявка на закупку услуг<br><span style="font-weight:normal;font-size:9pt;text-transform:none">(Purchase order — services)</span>
+          {% elif doc.doc_type == 'po_trebovanie' %}Заявка на закупку товаров<br><span style="font-weight:normal;font-size:9pt;text-transform:none">(Purchase order — goods)</span>
+          {% else %}{{ doc.title }}{% endif %}
+        </td>
+        <td class="meta-cell">
+          <div>№ {{ doc.doc_number }}</div>
+          <div>от {{ doc.created_at.strftime('%d.%m.%Y') }}</div>
+          <div>Рев 00</div>
+        </td>
+      </tr>
     </table>
 
-    {% if doc.purpose %}
-    <div class="section-title">Краткое содержание:</div>
-    <div>{{ doc.purpose }}</div>
+    <!-- CORE FIELDS -->
+    <table class="bordered fields">
+      <tr>
+        <td class="label">Краткое содержание</td>
+        <td class="value" colspan="3">{{ doc.purpose or '—' }}</td>
+      </tr>
+      <tr>
+        <td class="label">Инициатор</td>
+        <td class="value">{{ doc.author.full_name }}{% if doc.author.position_display %} ({{ doc.author.position_display }}){% endif %}</td>
+        <td class="label">Подразделение</td>
+        <td class="value">{{ doc.department or '—' }}</td>
+      </tr>
+      {% if extras.get('basis') %}
+      <tr>
+        <td class="label">Основание</td>
+        <td class="value">{{ extras.get('basis') }}</td>
+        <td class="label">Статус</td>
+        <td class="value">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td class="label">Статус</td>
+        <td class="value">{% if doc.status=='approved' %}Согласован{% elif doc.status=='pending' %}На согласовании{% elif doc.status=='rejected' %}Отклонён{% elif doc.status=='returned' %}Возвращён на доработку{% else %}Черновик{% endif %}</td>
+        <td class="label">Срочность</td>
+        <td class="value">{{ doc.urgency or '—' }}</td>
+      </tr>
+      {% endif %}
+      {% if extras.get('material_request') %}
+      <tr>
+        <td class="label">Требование на приобретение материалов №</td>
+        <td class="value">{{ extras.get('material_request') }}</td>
+        <td class="label">Заказано</td>
+        <td class="value">{{ extras.get('ordered_by') or '—' }}</td>
+      </tr>
+      {% endif %}
+      {% if extras.get('counterparty') %}
+      <tr>
+        <td class="label">Контрагент / Поставщик</td>
+        <td class="value">{{ extras.get('counterparty') }}</td>
+        <td class="label">Плательщик НДС</td>
+        <td class="value">{{ 'Да' if extras.get('vat_payer')=='yes' else 'Нет' }}</td>
+      </tr>
+      {% endif %}
+      {% if extras.get('currency') or extras.get('payment_date') %}
+      <tr>
+        <td class="label">Валюта</td>
+        <td class="value">{{ extras.get('currency') or 'KZT' }}</td>
+        <td class="label">Дата оплаты</td>
+        <td class="value">{{ extras.get('payment_date') or '—' }}</td>
+      </tr>
+      {% endif %}
+      {% if doc.needed_by %}
+      <tr>
+        <td class="label">Срок исполнения</td>
+        <td class="value" colspan="3">{{ doc.needed_by.strftime('%d.%m.%Y') }}</td>
+      </tr>
+      {% endif %}
+    </table>
+
+    <!-- OTHER TERMS -->
+    {% if extras.get('payment_terms') or extras.get('service_terms') or extras.get('service_date') or extras.get('budget_line') %}
+    <div class="section-title">Прочие условия</div>
+    <table class="bordered fields">
+      <tr>
+        <td class="label">Условия оплаты</td>
+        <td class="value">{{ extras.get('payment_terms') or '—' }}</td>
+        <td class="label">Статья бюджета</td>
+        <td class="value">{{ extras.get('budget_line') or '—' }}</td>
+      </tr>
+      {% if extras.get('service_terms') or extras.get('service_date') %}
+      <tr>
+        <td class="label">Условия оказания услуг</td>
+        <td class="value">{{ extras.get('service_terms') or '—' }}</td>
+        <td class="label">Срок оказания услуг</td>
+        <td class="value">{{ extras.get('service_date') or '—' }}</td>
+      </tr>
+      {% endif %}
+    </table>
     {% endif %}
 
+    <!-- ITEMS -->
     {% if items %}
-    <div class="section-title">Таблица товаров:</div>
-    <table class="items">
+    <div class="section-title">Таблица товаров</div>
+    <table class="bordered items">
       <thead>
         <tr>
-          <th style="width:30px">№</th>
+          <th style="width:26px">№</th>
           <th>Наименование</th>
           <th>Характеристика</th>
-          <th style="width:50px">Кол-во</th>
-          <th style="width:45px">Ед.</th>
-          <th style="width:90px">Цена, ₸</th>
-          <th style="width:100px">Сумма, ₸</th>
+          <th style="width:44px">Кол-во</th>
+          <th style="width:40px">Ед.</th>
+          <th style="width:80px" class="money">Цена, ₸</th>
+          <th style="width:90px" class="money">Сумма, ₸</th>
         </tr>
       </thead>
       <tbody>
@@ -91,18 +190,69 @@
         {% endfor %}
         {% if doc.total_cost %}
         <tr class="total-row">
-          <td colspan="6" style="text-align:right">Итого, ₸:</td>
+          <td colspan="6" style="text-align:right">Итого:</td>
           <td class="money">{{ '%.2f'|format(doc.total_cost) }}</td>
         </tr>
+        {% if extras.get('vat_payer') == 'yes' %}
+        <tr class="total-row">
+          <td colspan="6" style="text-align:right">НДС / VAT 16%:</td>
+          <td class="money">{{ '%.2f'|format(doc.total_cost * 0.16) }}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="6" style="text-align:right">Итого с НДС:</td>
+          <td class="money">{{ '%.2f'|format(doc.total_cost * 1.16) }}</td>
+        </tr>
+        {% endif %}
         {% endif %}
       </tbody>
     </table>
     {% endif %}
 
-    <div class="signatures">
-      <div class="sig"><div class="line">{{ doc.author.full_name }}<br>(Автор / составил)</div></div>
-      <div class="sig"><div class="line">_______________________<br>(Согласовано / подпись)</div></div>
+    <!-- CONTACT BLOCK -->
+    <div class="contact-block">
+      <b>Инициатор:</b><br>
+      Исп.: {{ doc.author.full_name }}{% if doc.author.position_display %} ({{ doc.author.position_display }}){% endif %}<br>
+      Эл. почта: {{ doc.author.email }}
     </div>
+
+    <!-- APPROVAL SHEET -->
+    <div class="section-title">Лист согласования и утверждения</div>
+    {% if approvals %}
+    <table class="bordered approvals">
+      <thead>
+        <tr>
+          <th style="width:34px">№</th>
+          <th>ФИО</th>
+          <th style="width:150px">Роль в маршруте</th>
+          <th style="width:120px">Статус</th>
+          <th style="width:110px">Дата решения</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appr in approvals %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ appr.approver.full_name }}</td>
+          <td>{% if appr.step == 0 %}Утверждающий{% else %}Согласующий · этап {{ appr.step }}{% endif %}</td>
+          <td>
+            {% if appr.status == 'approved' %}<span class="st-approved">Согласован</span>
+            {% elif appr.status == 'rejected' %}<span class="st-rejected">Отклонён</span>
+            {% elif appr.status == 'skipped' %}<span class="st-skipped">Не потребовалось</span>
+            {% else %}<span class="st-pending">Ожидает</span>{% endif %}
+          </td>
+          <td>{{ appr.decided_at.strftime('%d.%m.%Y') if appr.decided_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="font-size:10pt;color:#555">Маршрут согласования не задан.</div>
+    {% endif %}
+
+    <div class="sig-block">
+      <span class="line">{{ doc.author.full_name }}<br>(Автор / составил)</span>
+    </div>
+
   </div>
 </body>
 </html>

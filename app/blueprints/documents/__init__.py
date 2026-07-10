@@ -1246,7 +1246,12 @@ def update_defect_act(doc_id):
 @login_required
 def print_doc(doc_id):
     doc = Document.query.get_or_404(doc_id)
-    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+    if (not current_user.can_access('documents')
+            and doc.author_id != current_user.id
+            and not _is_assigned_approver(doc, current_user)):
         abort(403)
     items = doc.items.all()
-    return render_template('documents/print.html', doc=doc, items=items)
+    extras = _unpack_extras(doc.justification)
+    approvals = doc.approvals.order_by(DocumentApproval.step).all()
+    return render_template('documents/print.html', doc=doc, items=items,
+                           extras=extras, approvals=approvals)
