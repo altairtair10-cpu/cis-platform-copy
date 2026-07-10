@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from app import db
@@ -55,16 +55,34 @@ def _is_assigned_approver(doc, user):
     return DocumentApproval.query.filter_by(document_id=doc.id, approver_id=user.id).first() is not None
 
 
+PROCUREMENT_DOC_TYPES = ('purchase_req', 'po_services')
+
+
+def _can_view_doc(user, doc):
+    """View access: broad permission, own doc, routed approver, or procurement
+    for procurement document types."""
+    if user.can_access('documents') or user.can_access('documents_read'):
+        return True
+    if doc.author_id == user.id or _is_assigned_approver(doc, user):
+        return True
+    return (doc.doc_type in PROCUREMENT_DOC_TYPES
+            and user.can_access('documents_procurement'))
+
+
 def _visible_docs_query(user):
     """Documents a user may see: everything (broad 'documents' permission),
-    or their own + anything they're routed to approve/review."""
+    or their own + anything they're routed to approve/review + procurement types
+    for procurement staff."""
     query = Document.query
-    if user.can_access('documents'):
+    if user.can_access('documents') or user.can_access('documents_read'):
         return query
-    return query.filter(or_(
+    conditions = [
         Document.author_id == user.id,
         Document.id.in_(_assigned_doc_ids_subquery(user)),
-    ))
+    ]
+    if user.can_access('documents_procurement'):
+        conditions.append(Document.doc_type.in_(PROCUREMENT_DOC_TYPES))
+    return query.filter(or_(*conditions))
 
 
 def _panel_docs():
@@ -153,6 +171,8 @@ def _notify_current_approvers(doc, title):
 @login_required
 def index():
     status = request.args.get('status')
+    year = request.args.get('year', type=int)
+    doc_type = request.args.get('doc_type')
     page = request.args.get('page', 1, type=int)
 
     panel_docs = _panel_docs()
@@ -160,12 +180,21 @@ def index():
     query = _visible_docs_query(current_user)
     if status:
         query = query.filter_by(status=status)
+    if doc_type:
+        query = query.filter_by(doc_type=doc_type)
+    if year:
+        from sqlalchemy import extract
+        query = query.filter(extract('year', Document.created_at) == year)
     query = query.order_by(Document.created_at.desc())
 
     pagination = query.paginate(page=page, per_page=25, error_out=False)
     docs = pagination.items
 
+    from sqlalchemy import extract, distinct
+    years = sorted({y for (y,) in db.session.query(
+        distinct(extract('year', Document.created_at))).all() if y}, reverse=True)
     return render_template('documents/index.html', docs=docs, panel_docs=panel_docs,
+                           years=years, sel_year=year, sel_type=doc_type,
                            pagination=pagination,
                            doc_types=DOC_TYPES, statuses=DOC_STATUSES)
 
@@ -178,66 +207,18 @@ def new():
 @documents.route('/new/purchase-requisition', methods=['GET', 'POST'])
 @login_required
 def new_purchase_req():
+    """Old wizard — funnels into the single full form (kept for old links/tests)."""
     if request.method == 'POST':
-        doc = Document(
-            doc_type      = 'purchase_req',
-            title         = request.form.get('purpose', 'Purchase Requisition'),
-            department    = request.form.get('department'),
-            urgency       = request.form.get('urgency', 'standard'),
-            purpose       = request.form.get('purpose'),
-            justification = request.form.get('justification'),
-            author_id     = current_user.id,
-            status        = 'draft',
-        )
-        needed_by = request.form.get('needed_by')
-        if needed_by:
-            doc.needed_by = datetime.strptime(needed_by, '%Y-%m-%d').date()
-
-        db.session.add(doc)
-        db.session.flush()
-        doc.generate_number()
-        log_action('document_created', 'document', doc.id, details=doc.doc_number)
-
-        names = request.form.getlist('item_name[]')
-        units = request.form.getlist('item_unit[]')
-        qtys  = request.form.getlist('item_qty[]')
-        notes = request.form.getlist('item_note[]')
-        costs = request.form.getlist('item_cost[]')
-        for i, name in enumerate(names):
-            if name.strip():
-                db.session.add(DocumentItem(
-                    document_id = doc.id,
-                    name        = name.strip(),
-                    unit        = units[i] if i < len(units) else '',
-                    quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
-                    note        = notes[i] if i < len(notes) else '',
-                    price       = _to_float(costs[i]) if i < len(costs) else None,
-                ))
-
-        action = request.form.get('action', 'draft')
-        if action == 'submit':
-            doc.status = 'pending'
-            db.session.add(DocumentComment(
-                document_id = doc.id,
-                author_id   = current_user.id,
-                text        = f'Document submitted for approval by {current_user.full_name}.',
-                is_system   = True,
-            ))
-
-        db.session.commit()
-        flash(f'Document {doc.doc_number} {"submitted" if action=="submit" else "saved as draft"}.', 'success')
-        return redirect(url_for('documents.view', doc_id=doc.id))
-
-    return render_template('documents/purchase_req.html')
+        return submit_trebovanie_new()
+    return redirect(url_for('documents.new_trebovanie_new',
+                            from_defect=request.args.get('from_defect')))
 
 
 @documents.route('/<int:doc_id>')
 @login_required
 def view(doc_id):
     doc = Document.query.get_or_404(doc_id)
-    if (not current_user.can_access('documents')
-            and doc.author_id != current_user.id
-            and not _is_assigned_approver(doc, current_user)):
+    if not _can_view_doc(current_user, doc):
         abort(403)
     items     = doc.items.all()
     comments  = doc.comments.order_by('created_at').all()
@@ -289,9 +270,7 @@ def upload_attachment(doc_id):
 @login_required
 def download_attachment(doc_id, attachment_id):
     doc = Document.query.get_or_404(doc_id)
-    if (not current_user.can_access('documents')
-            and doc.author_id != current_user.id
-            and not _is_assigned_approver(doc, current_user)):
+    if not _can_view_doc(current_user, doc):
         abort(403)
     attachment = DocumentAttachment.query.filter_by(id=attachment_id, document_id=doc.id).first_or_404()
     return send_attachment(attachment)
@@ -397,13 +376,14 @@ def approve(doc_id):
             DocumentApproval.query.filter_by(document_id=doc_id, status='pending')\
                 .update({'status': 'skipped'}, synchronize_session=False)
         else:
+            db.session.flush()   # decision above must be visible to the count
             pending_at_step = DocumentApproval.query.filter_by(
                 document_id=doc_id,
                 step=doc.current_step,
                 status='pending'
             ).count()
 
-            if pending_at_step == 1:
+            if pending_at_step == 0:
                 next_step_approvals = DocumentApproval.query.filter_by(
                     document_id=doc_id,
                     step=doc.current_step + 1
@@ -413,6 +393,13 @@ def approve(doc_id):
                     doc.current_step += 1
                 else:
                     doc.status = 'approved'
+                    if doc.doc_type == 'purchase_req':
+                        for proc in User.query.filter_by(role='procurement', is_active=True).all():
+                            db.session.add(Notification(
+                                user_id=proc.id,
+                                title=f'Требование подписано: {doc.doc_number}',
+                                body=(doc.title or '')[:100],
+                                link=f'/documents/{doc.id}', is_read=False))
 
         text = comment_text or f'Документ {"согласован" if action == "approve" else "отклонён"} пользователем {current_user.full_name}.'
         db.session.add(DocumentComment(
@@ -563,21 +550,12 @@ def submit_defect_act():
     return redirect(url_for('documents.view', doc_id=doc.id))
 
 
-@documents.route('/trebovanie/new', methods=['GET', 'POST'])
+@documents.route('/trebovanie/new', methods=['GET'])
 @login_required
 def new_trebovanie():
-    now = datetime.now().strftime('%d.%m.%Y %H:%M')
-    linked_defect = request.args.get('from_defect', None)
-    linked_defect_doc = None
-    if linked_defect and str(linked_defect).isdigit():
-        linked_defect_doc = Document.query.filter_by(id=int(linked_defect),
-                                                     doc_type='defect_act').first()
-        if linked_defect_doc:
-            linked_defect = linked_defect_doc.event_code or linked_defect_doc.doc_number
-    executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
-    approvers = User.query.filter(User.is_active==True, User.role.in_(['dept_head', 'director', 'it_admin'])).order_by(User.first_name, User.last_name).all()
-    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect,
-                           linked_defect_doc=linked_defect_doc, executors=executors, approvers=approvers)
+    """Old entry point — everything funnels into the single full form."""
+    return redirect(url_for('documents.new_trebovanie_new',
+                            from_defect=request.args.get('from_defect')))
 
 
 @documents.route('/trebovanie/submit', methods=['POST'])
@@ -669,10 +647,21 @@ def submit_trebovanie():
 @documents.route('/trebovanie-new/new', methods=['GET'])
 @login_required
 def new_trebovanie_new():
+    import json as _json
+    from app.models import RouteTemplate
     now = datetime.now().strftime('%d.%m.%Y %H:%M')
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
     approvers = User.query.filter(User.is_active==True, User.role.in_(['dept_head', 'director', 'it_admin'])).order_by(User.first_name, User.last_name).all()
-    return render_template('documents/trebovanie_new.html', now=now, executors=executors, approvers=approvers)
+    open_defects = Document.query.filter_by(doc_type='defect_act', defect_closed=False)\
+                                 .order_by(Document.created_at.desc()).limit(100).all()
+    from_defect = request.args.get('from_defect', type=int)
+    route_templates = RouteTemplate.query.order_by(RouteTemplate.name).all()
+    templates_json = _json.dumps(
+        [{'id': t.id, 'name': t.name, 'data': _json.loads(t.data)} for t in route_templates],
+        ensure_ascii=False)
+    return render_template('documents/trebovanie_new.html', now=now, executors=executors,
+                           approvers=approvers, open_defects=open_defects,
+                           from_defect=from_defect, templates_json=templates_json)
 
 
 @documents.route('/trebovanie-new/submit', methods=['POST'])
@@ -686,8 +675,14 @@ def submit_trebovanie_new():
         action = 'draft'
         flash('Документ сохранён как черновик: не выбран Утверждающий. Укажите утверждающего и отправьте документ ещё раз.', 'warning')
 
+    related_defect_id = request.form.get('related_defect_id', type=int) or None
+    if related_defect_id:
+        rel = Document.query.filter_by(id=related_defect_id, doc_type='defect_act').first()
+        related_defect_id = rel.id if rel else None
+
     doc = Document(
-        doc_type      = 'trebovanie',
+        doc_type      = 'purchase_req',
+        related_defect_id = related_defect_id,
         title         = request.form.get('summary', 'Требование на приобретение материалов')[:100],
         purpose       = request.form.get('summary'),
         justification = request.form.get('linked_to'),
@@ -748,8 +743,13 @@ def submit_trebovanie_new():
 @documents.route('/po-services/new', methods=['GET'])
 @login_required
 def new_po_services():
+    from_req = request.args.get('from_req', type=int)
+    linked_req = None
+    if from_req:
+        linked_req = Document.query.filter_by(id=from_req, doc_type='purchase_req').first()
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
-    return render_template('documents/po_services.html', executors=executors)
+    return render_template('documents/po_services.html', executors=executors,
+                           linked_req=linked_req)
 
 
 @documents.route('/po-services/submit', methods=['POST'])
@@ -778,6 +778,7 @@ def submit_po_services():
 
     doc = Document(
         doc_type      = 'po_services',
+        related_req_id = (request.form.get('related_req_id', type=int) or None),
         title         = request.form.get('summary', 'РО на услуги')[:100],
         department    = request.form.get('department', current_user.department),
         purpose       = request.form.get('summary'),
@@ -825,6 +826,15 @@ def submit_po_services():
     _build_route(doc, action, signatory_id)
     _save_form_attachments(doc)
 
+    req_id = request.form.get('related_req_id', type=int)
+    if req_id:
+        req = Document.query.filter_by(id=req_id, doc_type='purchase_req').first()
+        if req and req.status in ('approved', 'in_execution'):
+            req.status = 'in_execution'
+            db.session.add(DocumentComment(
+                document_id=req.id, author_id=current_user.id,
+                text=f'Создан ПО по требованию (см. связанные документы).',
+                is_system=True))
     db.session.commit()
 
     if action == 'submit':
@@ -1294,3 +1304,113 @@ def close_defect(doc_id):
     db.session.commit()
     flash(f'Дефект {doc.event_code or doc.doc_number} закрыт.', 'success')
     return redirect(url_for('documents.view', doc_id=doc_id))
+
+
+@documents.route('/<int:doc_id>/mark-executed', methods=['POST'])
+@login_required
+def mark_executed(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.doc_type != 'purchase_req' or doc.status not in ('approved', 'in_execution'):
+        flash('Документ нельзя отметить исполненным.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    if not (current_user.role in ('procurement', 'it_admin', 'director')
+            or current_user.can_access('documents_procurement')):
+        abort(403)
+    doc.status = 'executed'
+    db.session.add(DocumentComment(
+        document_id=doc.id, author_id=current_user.id,
+        text=f'Требование исполнено ({current_user.full_name}).', is_system=True))
+    db.session.add(Notification(
+        user_id=doc.author_id, title=f'Требование {doc.doc_number} исполнено',
+        body=(doc.title or '')[:100], link=f'/documents/{doc.id}', is_read=False))
+    log_action('document_executed', 'document', doc.id, details=doc.doc_number)
+    db.session.commit()
+    flash('Требование отмечено исполненным.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc_id))
+
+
+@documents.route('/route-templates/save', methods=['POST'])
+@login_required
+def save_route_template():
+    import json as _json
+    from app.models import RouteTemplate
+    name = (request.form.get('template_name') or '').strip()
+    raw = request.form.get('template_json') or ''
+    if not name or not raw:
+        return jsonify({'error': 'name and route required'}), 400
+    try:
+        data = _json.loads(raw)
+        assert isinstance(data.get('stages'), list)
+    except Exception:
+        return jsonify({'error': 'bad route data'}), 400
+    tpl = RouteTemplate.query.filter_by(name=name).first()
+    if tpl is None:
+        tpl = RouteTemplate(name=name, created_by=current_user.id)
+        db.session.add(tpl)
+    tpl.data = _json.dumps(data, ensure_ascii=False)
+    log_action('route_template_saved', details=name)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': tpl.id, 'name': tpl.name})
+
+
+@documents.route('/export.xlsx')
+@login_required
+def export_xlsx():
+    """Flat Excel export: one row per item, with the requisition number.
+    Filters: ?year=2026&month=7 (both optional). Requisitions only."""
+    if not (current_user.can_access('documents') or current_user.can_access('documents_read')
+            or current_user.can_access('documents_procurement')):
+        abort(403)
+    import io
+    from openpyxl import Workbook
+    from sqlalchemy import extract
+
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+
+    query = Document.query.filter_by(doc_type='purchase_req')
+    if year:
+        query = query.filter(extract('year', Document.created_at) == year)
+    if month:
+        query = query.filter(extract('month', Document.created_at) == month)
+    docs = query.order_by(Document.created_at).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Требования'
+    ws.append(['Номер требования', 'Дата', 'Статус', 'Отдел', 'Автор', 'Код ДА',
+               'Наименование', 'Характеристика/прим.', 'Кол-во', 'Ед.',
+               'Цена', 'Сумма'])
+    from app.models import DOC_STATUSES
+    for doc in docs:
+        items = doc.items.all() or [None]
+        for it in items:
+            ws.append([
+                doc.doc_number,
+                doc.created_at.strftime('%d.%m.%Y'),
+                DOC_STATUSES.get(doc.status, doc.status),
+                doc.department or '',
+                doc.author.full_name if doc.author else '',
+                (doc.related_defect.event_code if doc.related_defect else '') or '',
+                it.name if it else '',
+                (it.note or '') if it else '',
+                float(it.quantity) if it and it.quantity is not None else None,
+                (it.unit or '') if it else '',
+                float(it.price) if it and it.price is not None else None,
+                (float(it.quantity) * float(it.price))
+                    if it and it.quantity is not None and it.price is not None else None,
+            ])
+    for col, width in zip('ABCDEFGHIJKL', [16, 11, 14, 12, 20, 12, 40, 24, 8, 6, 12, 14]):
+        ws.column_dimensions[col].width = width
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    suffix = f'-{year}' if year else ''
+    suffix += f'-{month:02d}' if month else ''
+    from flask import send_file
+    log_action('requisitions_exported', details=f'year={year} month={month} docs={len(docs)}')
+    db.session.commit()
+    return send_file(buf, as_attachment=True,
+                     download_name=f'trebovaniya{suffix}.xlsx',
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

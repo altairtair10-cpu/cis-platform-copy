@@ -6,14 +6,13 @@ from tests.conftest import login
 def test_dlog_forms_render_and_flow(client):
     login(client, 'admin@test.kz', 'adminpass123')
 
-    # New forms render with the Documentolog route section
-    r = client.get('/documents/trebovanie/new')
+    # Old entry point now funnels into the unified form
+    r = client.get('/documents/trebovanie/new', follow_redirects=True)
     assert r.status_code == 200
     html = r.data.decode()
-    assert 'Маршрут документа' in html
-    assert 'Выбрать маршрут' in html
     assert 'signatory_id' in html
-    assert 'Вложения' in html
+    assert 'Согласующие' in html
+    assert 'attachments' in html
 
     r = client.get('/documents/po-services/new')
     assert r.status_code == 200
@@ -23,7 +22,7 @@ def test_dlog_forms_render_and_flow(client):
     assert 'Вложения' in html
 
     # Submit a trebovanie with route + attachment; check the view page
-    r = client.post('/documents/trebovanie/submit', data={
+    r = client.post('/documents/trebovanie-new/submit', data={
         'action': 'submit',
         'summary': 'Труба проф. 40х40х3,0',
         'urgency': 'standard',

@@ -79,14 +79,16 @@ def test_requisition_links_to_defect(client, app):
     with app.app_context():
         defect = Document.query.filter_by(doc_type='defect_act').first()
         defect_id, code = defect.id, defect.event_code
-    # GET prefilled form shows the code
-    body = client.get(f'/documents/trebovanie/new?from_defect={defect_id}').get_data(as_text=True)
+    # GET prefilled form shows the code (old route redirects to the unified form)
+    body = client.get(f'/documents/trebovanie/new?from_defect={defect_id}',
+                      follow_redirects=True).get_data(as_text=True)
     assert code in body
     # POST stores the FK
-    client.post('/documents/trebovanie/submit', data={
-        'summary': 'Клапан для ремонта', 'urgency': 'standard', 'action': 'draft',
+    client.post('/documents/trebovanie-new/submit', data={
+        'summary': 'Клапан для ремонта', 'action': 'draft',
         'related_defect_id': str(defect_id),
-        'item_name[]': ['Клапан ИМЗ'], 'item_unit[]': ['шт'], 'item_qty[]': ['3'],
+        'item_name[]': ['Клапан ИМЗ'], 'item_spec[]': [''], 'item_unit[]': ['шт'],
+        'item_qty[]': ['3'], 'item_date[]': [''],
         'item_note[]': [''], 'item_cost[]': ['100000'],
     })
     with app.app_context():
