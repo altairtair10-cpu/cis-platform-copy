@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+
+  <a href="{{ url_for('admin.reference_data') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-list-details"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Справочники','en':'Reference data','kz':'Анықтамалықтар'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">
+          {{ counts.locations }} {{ {'ru':'локаций','en':'locations','kz':'локация'}[current_user.language] }} ·
+          {{ counts.departments }} {{ {'ru':'отделов','en':'departments','kz':'бөлім'}[current_user.language] }} ·
+          {{ counts.equipment_types }} {{ {'ru':'типов оборуд.','en':'equipment types','kz':'жабдық түрі'}[current_user.language] }}
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin.branding') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-palette"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Брендинг','en':'Branding','kz':'Брендинг'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Логотип и название компании','en':'Logo and company name','kz':'Логотип және компания атауы'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin.numbering') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-hash"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Префиксы номеров (ТМЦ, ДА...)','en':'Number prefixes (ТМЦ, ДА...)','kz':'Нөмір префикстері'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{{ url_for('auth.users') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-users"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Пользователи','en':'Users','kz':'Пайдаланушылар'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Роли, доступы, активация','en':'Roles, access, activation','kz':'Рөлдер, қолжетімділік'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
+</div>
+{% endblock %}

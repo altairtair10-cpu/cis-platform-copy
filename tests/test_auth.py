@@ -56,3 +56,40 @@ def test_password_change_clears_flag(client, app):
         u = User.query.filter_by(email='mech@test.kz').first()
         assert u.must_change_password is False
         assert u.check_password('newsecurepass1')
+
+
+def test_first_signup_becomes_active_admin(client, app):
+    with app.app_context():
+        User.query.delete()
+        db.session.commit()
+    client.post('/auth/signup', data={
+        'full_name': 'Zhanibek Mubinov', 'email': 'zhanibek@cis.kz',
+        'password': 'longsecurepass1',
+    })
+    with app.app_context():
+        u = User.query.filter_by(email='zhanibek@cis.kz').first()
+        assert u is not None and u.role == 'it_admin' and u.is_active is True
+
+
+def test_second_signup_stays_inactive_field(client, app):
+    client.post('/auth/signup', data={
+        'full_name': 'New Person', 'email': 'newperson@cis.kz',
+        'password': 'longsecurepass1',
+    })
+    with app.app_context():
+        u = User.query.filter_by(email='newperson@cis.kz').first()
+        assert u is not None and u.role == 'field' and u.is_active is False
+
+
+def test_single_word_name_does_not_crash(client, app):
+    login(client, 'admin@test.kz', 'adminpass123')
+    client.post('/auth/users/new', data={
+        'full_name': 'Джун', 'email': 'jun@test.kz', 'password': 'temppass123',
+        'role': 'field', 'department': 'it', 'language': 'ru', 'is_active': 'y',
+    })
+    resp = client.get('/auth/users')
+    assert resp.status_code == 200
+    with app.app_context():
+        u = User.query.filter_by(email='jun@test.kz').first()
+        assert u is not None
+        assert u.initials == 'Д'
