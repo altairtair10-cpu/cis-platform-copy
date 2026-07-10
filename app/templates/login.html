@@ -10,7 +10,7 @@
 <body class="login-page">
   <div class="login-shell">
   <div class="login-brand">
-  <img src="{{ url_for('static', filename='img/cis-logo.svg') }}" 
+  <img src="{% if branding.has_logo %}{{ url_for('admin.logo') }}{% else %}{{ url_for('static', filename='img/cis-logo.svg') }}{% endif %}" 
        alt="CIS Platform" 
        style="height:60px;filter:brightness(0) invert(1);opacity:0.9;margin-bottom:14px">
   <div class="login-brand-name">CIS Platform</div>

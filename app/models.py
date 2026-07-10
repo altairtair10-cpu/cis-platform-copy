@@ -165,7 +165,9 @@ class Document(db.Model):
             'incoming':     'ВХ',
             'outgoing':     'ИСХ',
         }
-        prefix = prefix_map.get(self.doc_type, 'ДОК')
+        setting = DocNumberSetting.query.filter_by(doc_type=self.doc_type).first()
+        prefix  = (setting.prefix.strip() if setting and setting.prefix and setting.prefix.strip()
+                   else prefix_map.get(self.doc_type, 'ДОК'))
         year   = datetime.utcnow().year
         seq    = DocumentSequence.next_value(self.doc_type, year)
         self.doc_number = f'{prefix}-{year}-{seq:03d}'
@@ -490,3 +492,46 @@ class ContractDetailRow(db.Model):
     remainder  = db.Column(db.Integer, nullable=False, default=0)
     sort_order = db.Column(db.Integer, nullable=False, default=0)
     
+
+
+# ── ADMIN-MANAGED REFERENCE DATA (Phase 1) ────────────────────────────────────
+
+class Location(db.Model):
+    """Flat list of company locations (bases, fields, wells, offices)."""
+    __tablename__ = 'locations'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    name       = db.Column(db.String(128), unique=True, nullable=False)
+    is_active  = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class AppSetting(db.Model):
+    """Key-value store for site-wide settings (branding, etc.)."""
+    __tablename__ = 'app_settings'
+
+    id    = db.Column(db.Integer, primary_key=True)
+    key   = db.Column(db.String(64), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=True)
+
+    @classmethod
+    def get(cls, key, default=None):
+        row = cls.query.filter_by(key=key).first()
+        return row.value if row and row.value else default
+
+    @classmethod
+    def set(cls, key, value):
+        row = cls.query.filter_by(key=key).first()
+        if row is None:
+            row = cls(key=key)
+            db.session.add(row)
+        row.value = value
+
+
+class DocNumberSetting(db.Model):
+    """Admin-editable document number prefix per document type."""
+    __tablename__ = 'doc_number_settings'
+
+    id       = db.Column(db.Integer, primary_key=True)
+    doc_type = db.Column(db.String(32), unique=True, nullable=False)
+    prefix   = db.Column(db.String(16), nullable=True)

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:640px">
+  <div class="card-body">
+    <p class="text-muted" style="font-size:13px;margin-bottom:14px">
+      {{ {'ru':'Формат номера: ПРЕФИКС-ГОД-НОМЕР (напр. ТМЦ-2026-014). Пустое поле = префикс по умолчанию. Изменение действует только на новые документы.',
+          'en':'Number format: PREFIX-YEAR-SEQ (e.g. ТМЦ-2026-014). Empty field = default prefix. Changes affect new documents only.',
+          'kz':'Нөмір форматы: ПРЕФИКС-ЖЫЛ-НӨМІР (мыс. ТМЦ-2026-014). Бос өріс = әдепкі префикс.'}[current_user.language] }}
+    </p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ {'ru':'Тип документа','en':'Document type','kz':'Құжат түрі'}[current_user.language] }}</th>
+            <th>{{ {'ru':'По умолчанию','en':'Default','kz':'Әдепкі'}[current_user.language] }}</th>
+            <th>{{ {'ru':'Свой префикс','en':'Custom prefix','kz':'Өз префиксі'}[current_user.language] }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc_type, default, custom in rows %}
+          <tr>
+            <td>{{ doc_types.get(doc_type, doc_type) }}</td>
+            <td class="text-muted">{{ default }}</td>
+            <td><input type="text" name="prefix_{{ doc_type }}" value="{{ custom }}" class="form-input" maxlength="16" style="max-width:120px" placeholder="{{ default }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-primary" style="margin-top:14px">
+        {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
