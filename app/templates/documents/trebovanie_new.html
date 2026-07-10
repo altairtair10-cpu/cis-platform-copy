@@ -274,7 +274,7 @@ function openStructure(target) {
   document.querySelectorAll('.structure-cb').forEach(cb => cb.checked = false);
   // preload existing selection for stages
   if (!single) {
-    document.querySelectorAll(`#stage-people-${target} input[name="stage_reviewer[]"]`).forEach(inp => {
+    document.querySelectorAll(`#stage-people-${target} input[name^="stage_reviewer"]`).forEach(inp => {
       const it = document.querySelector(`.structure-item[data-id="${inp.value}"]`);
       if (it) it.querySelector('.structure-cb').checked = true;
     });
@@ -311,7 +311,7 @@ function confirmStructure() {
     checked.forEach(it => {
       const t = document.createElement('span');
       t.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:#FDECEA;color:var(--red);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:500';
-      t.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${it.dataset.name} <input type="hidden" name="stage_reviewer[]" value="${it.dataset.id}">`;
+      t.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${it.dataset.name} <input type="hidden" name="stage_reviewer_${structureTarget}[]" value="${it.dataset.id}">`;
       c.appendChild(t);
     });
   }
@@ -327,6 +327,7 @@ function addStage() {
   d.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md)';
   d.innerHTML = `
     <span style="font-size:11px;font-weight:600;color:var(--text-2);min-width:16px">${stageCount}</span>
+    <input type="hidden" name="stage_no[]" value="${stageCount}">
     <select name="stage_type[]" class="form-select" style="flex:0.5;font-size:11px;padding:6px 8px">
       <option value="parallel">Параллельно</option>
       <option value="sequential">Последовательно</option>
@@ -408,7 +409,7 @@ function applySelectedTemplate() {
       const s = document.createElement('span');
       s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:#FDECEA;color:var(--red);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:500';
       s.dataset.name = rv.name;
-      s.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${rv.name} <input type="hidden" name="stage_reviewer[]" value="${rv.id}">`;
+      s.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${rv.name} <input type="hidden" name="stage_reviewer_${stageCount}[]" value="${rv.id}">`;
       people.appendChild(s);
     });
   });
@@ -421,7 +422,7 @@ function collectRoute() {
   document.querySelectorAll('#stages-container > div').forEach(box => {
     const type = box.querySelector('select[name="stage_type[]"]').value;
     const reviewers = [];
-    box.querySelectorAll('input[name="stage_reviewer[]"]').forEach(inp => {
+    box.querySelectorAll('input[name^="stage_reviewer"]').forEach(inp => {
       const chip = inp.closest('span');
       reviewers.push({id: parseInt(inp.value),
                       name: (chip && (chip.dataset.name || chip.textContent.trim())) || ''});

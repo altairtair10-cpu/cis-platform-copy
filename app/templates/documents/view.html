@@ -41,7 +41,8 @@
         {% set steps_kz = ['Жасалды','Келісім','Қол қою','Орындауда','Орындалды'] %}
         {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
         {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':4,'executed':5,'rejected':2}.get(doc.status,1) %}
-        {% if doc.status == 'pending' and doc.current_step == 0 %}{% set cur = 3 %}{% endif %}
+        {% set _steps = approvals|map(attribute='step')|list %}
+        {% if doc.status == 'pending' and _steps and doc.current_step == _steps|max %}{% set cur = 3 %}{% endif %}
         {% for step in steps %}
         <div class="stepper-step">
           <div class="stepper-dot {% if loop.index < cur %}done{% elif loop.index == cur %}active{% else %}pending{% endif %}">

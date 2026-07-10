@@ -99,27 +99,40 @@ def _panel_counts(doc_type=None):
 
 
 def _build_route(doc, action, signatory_id):
-    """Create DocumentApproval records + notify. Shared by all forms."""
+    """Create DocumentApproval records. Shared by all forms.
+
+    Order: reviewer stages first (steps 0..k-1, in form order), the signatory
+    signs LAST (step k) — Создание → Согласование → Подпись.
+
+    New form format: each stage emits stage_no[] (aligned with stage_type[])
+    and its reviewers as stage_reviewer_<no>[]. Legacy flat stage_reviewer[]
+    is treated as a single parallel stage.
+    """
     if action != 'submit' or not signatory_id:
         return
-    db.session.add(DocumentApproval(document_id=doc.id, approver_id=signatory_id, step=0, status='pending'))
-    stage_types = request.form.getlist('stage_type[]')
-    all_reviewers = request.form.getlist('stage_reviewer[]')
-    reviewer_ids_by_stage = {}
-    stage_idx = 0
-    for i, rid_str in enumerate(all_reviewers):
-        try:
-            rid = int(rid_str)
-            reviewer_ids_by_stage.setdefault(stage_idx, []).append(rid)
-            if stage_idx < len(stage_types) and stage_types[stage_idx] == 'sequential':
-                stage_idx += 1
-        except (ValueError, TypeError):
-            pass
-    step = 1
-    for stg in sorted(reviewer_ids_by_stage.keys()):
-        for rid in reviewer_ids_by_stage[stg]:
-            db.session.add(DocumentApproval(document_id=doc.id, approver_id=rid, step=step, status='pending'))
+    stage_nos = request.form.getlist('stage_no[]')
+    stages = []
+    if stage_nos:
+        for no in stage_nos:
+            ids = [int(r) for r in request.form.getlist(f'stage_reviewer_{no}[]')
+                   if r.strip().isdigit()]
+            if ids:
+                stages.append(ids)
+    else:
+        ids = [int(r) for r in request.form.getlist('stage_reviewer[]')
+               if r.strip().isdigit()]
+        if ids:
+            stages.append(ids)
+
+    step = 0
+    for ids in stages:
+        for rid in ids:
+            db.session.add(DocumentApproval(document_id=doc.id, approver_id=rid,
+                                            step=step, status='pending'))
         step += 1
+    # the signatory always signs last
+    db.session.add(DocumentApproval(document_id=doc.id, approver_id=signatory_id,
+                                    step=step, status='pending'))
 
 
 def _save_form_attachments(doc):
@@ -400,6 +413,7 @@ def approve(doc_id):
 
                 if next_step_approvals > 0:
                     doc.current_step += 1
+                    _notify_current_approvers(doc, f'Документ на согласование: {doc.doc_number}')
                 else:
                     doc.status = 'approved'
                     if doc.doc_type == 'purchase_req':
