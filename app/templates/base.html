@@ -70,6 +70,7 @@
       <div class="sb-section">{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}</div>
       <a href="{{ url_for('auth.users') }}" class="sb-item {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}"><i class="ti ti-users-cog"></i><span>{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}</span></a>
       <a href="{{ url_for('admin.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('admin.') and request.endpoint != 'admin.logo' %}active{% endif %}"><i class="ti ti-adjustments"></i><span>{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}</span></a>
+      <a href="{{ url_for('ai.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('ai.') %}active{% endif %}"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}</span></a>
       <a href="{{ url_for('auth.settings') }}" class="sb-item {% if request.endpoint == 'auth.settings' %}active{% endif %}"><i class="ti ti-settings"></i><span>{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[current_user.language] }}</span></a>
       {% endif %}
     </nav>

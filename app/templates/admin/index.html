@@ -59,6 +59,16 @@
     </div>
   </a>
 
+  <a href="{{ url_for('admin.agents') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-robot"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'ИИ-агенты','en':'AI agents','kz':'ЖИ-агенттер'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Промпты, файлы знаний, доступ','en':'Prompts, knowledge files, access','kz':'Промпттар, файлдар'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
   <a href="{{ url_for('admin.integrations') }}" class="card" style="text-decoration:none">
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-plug"></i></div>

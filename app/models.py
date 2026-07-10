@@ -684,3 +684,47 @@ class RouteTemplate(db.Model):
     data       = db.Column(db.Text, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# ── AI AGENTS ─────────────────────────────────────────────────────────────────
+
+class AiAgent(db.Model):
+    """Configurable department assistant: prompt + knowledge files + optional
+    live platform tools. Managed in the admin panel."""
+    __tablename__ = 'ai_agents'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    name          = db.Column(db.String(128), unique=True, nullable=False)
+    description   = db.Column(db.String(256), nullable=True)
+    system_prompt = db.Column(db.Text, nullable=False, default='')
+    model         = db.Column(db.String(64), nullable=False,
+                              default='claude-haiku-4-5-20251001')
+    allowed_roles = db.Column(db.Text, nullable=True)   # csv; empty/null = все роли
+    use_platform_tools = db.Column(db.Boolean, nullable=False, default=False)
+    is_active     = db.Column(db.Boolean, nullable=False, default=True)
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    files         = db.relationship('AgentKnowledgeFile', backref='agent',
+                                    lazy='dynamic', cascade='all, delete-orphan')
+
+    def role_allowed(self, user):
+        if user.role == 'it_admin':
+            return True
+        if not self.is_active:
+            return False
+        roles = [r.strip() for r in (self.allowed_roles or '').split(',') if r.strip()]
+        return not roles or user.role in roles
+
+
+class AgentKnowledgeFile(db.Model):
+    __tablename__ = 'agent_knowledge_files'
+
+    id                = db.Column(db.Integer, primary_key=True)
+    agent_id          = db.Column(db.Integer, db.ForeignKey('ai_agents.id'), nullable=False)
+    original_filename = db.Column(db.String(256), nullable=False)
+    stored_filename   = db.Column(db.String(64), nullable=True)
+    storage_backend   = db.Column(db.String(16), nullable=True)
+    size_bytes        = db.Column(db.Integer, nullable=True)
+    extracted_text    = db.Column(db.Text, nullable=True)   # что читает агент
+    uploaded_by       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at        = db.Column(db.DateTime, default=datetime.utcnow)
