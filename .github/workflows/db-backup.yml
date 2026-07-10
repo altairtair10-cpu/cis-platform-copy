@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Dump database (pg_dump via postgres:17 image)
         run: |
-          docker run --rm -e DATABASE_URL postgres:17 \
+          docker run --rm -e DATABASE_URL postgres:18 \
             sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner' > backup.dump
           test -s backup.dump || { echo "Dump is empty — failing"; exit 1; }
           ls -la backup.dump
