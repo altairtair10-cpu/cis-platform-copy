@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ agent.name if agent else 'Новый агент' }}{% endblock %}
+{% block page_title %}{{ agent.name if agent else {'ru':'Новый агент','en':'New agent','kz':'Жаңа агент'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start">
+  <div class="card"><div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="form-label">{{ {'ru':'Название','en':'Name','kz':'Атауы'}[current_user.language] }} *</label>
+      <input type="text" name="name" class="form-input" required value="{{ agent.name if agent else '' }}" style="margin-bottom:12px">
+
+      <label class="form-label">{{ {'ru':'Короткое описание (видят сотрудники)','en':'Short description','kz':'Қысқаша сипаттама'}[current_user.language] }}</label>
+      <input type="text" name="description" class="form-input" value="{{ agent.description if agent and agent.description else '' }}" style="margin-bottom:12px">
+
+      <label class="form-label">{{ {'ru':'Системный промпт (кто такой агент, как отвечать)','en':'System prompt','kz':'Жүйелік промпт'}[current_user.language] }}</label>
+      <textarea name="system_prompt" class="form-input" rows="10" style="margin-bottom:12px;font-family:ui-monospace,monospace;font-size:12px">{{ agent.system_prompt if agent else '' }}</textarea>
+
+      <label class="form-label">{{ {'ru':'Модель','en':'Model','kz':'Модель'}[current_user.language] }}</label>
+      <select name="model" class="form-select" style="margin-bottom:12px;max-width:320px">
+        {% set cur_model = agent.model if agent else 'claude-haiku-4-5-20251001' %}
+        <option value="claude-haiku-4-5-20251001" {% if cur_model=='claude-haiku-4-5-20251001' %}selected{% endif %}>Haiku — быстрый и дешёвый</option>
+        <option value="claude-sonnet-4-6" {% if cur_model=='claude-sonnet-4-6' %}selected{% endif %}>Sonnet — умнее, дороже</option>
+      </select>
+
+      <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px">
+        <input type="checkbox" name="use_platform_tools" {% if agent and agent.use_platform_tools %}checked{% endif %}>
+        {{ {'ru':'Доступ к живым данным (техника, ТО, дефекты)','en':'Live platform data (equipment, service, defects)','kz':'Тірі деректерге қолжетімділік'}[current_user.language] }}
+      </label>
+      <label style="display:flex;gap:8px;align-items:center;margin-bottom:12px;font-size:13px">
+        <input type="checkbox" name="is_active" {% if not agent or agent.is_active %}checked{% endif %}>
+        {{ {'ru':'Агент активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
+      </label>
+
+      <label class="form-label">{{ {'ru':'Кому доступен (пусто = всем)','en':'Allowed roles (empty = everyone)','kz':'Кімге қолжетімді'}[current_user.language] }}</label>
+      {% set sel_roles = (agent.allowed_roles or '').split(',') if agent else [] %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:14px">
+        {% for rk, rv in roles.items() if rk != 'it_admin' %}
+        <label style="display:flex;gap:6px;align-items:center;font-size:12px">
+          <input type="checkbox" name="allowed_roles" value="{{ rk }}" {% if rk in sel_roles %}checked{% endif %}>{{ rv }}
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}</button>
+      <a href="{{ url_for('admin.agents') }}" class="btn">{{ {'ru':'К списку','en':'Back','kz':'Тізімге'}[current_user.language] }}</a>
+    </form>
+  </div></div>
+
+  <div class="card"><div class="card-body">
+    <b style="display:block;margin-bottom:10px">{{ {'ru':'База знаний','en':'Knowledge base','kz':'Білім қоры'}[current_user.language] }}</b>
+    {% if agent %}
+    <form method="POST" action="{{ url_for('admin.agent_upload_file', agent_id=agent.id) }}" enctype="multipart/form-data" style="display:flex;gap:8px;margin-bottom:12px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="file" name="file" accept=".txt,.md,.pdf" required style="flex:1;font-size:12px">
+      <button type="submit" class="btn btn-sm"><i class="ti ti-upload"></i></button>
+    </form>
+    {% for f in agent.files %}
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--color-border-tertiary,#eee);font-size:13px">
+      <i class="ti ti-file-text"></i>
+      <span style="flex:1">{{ f.original_filename }}
+        <span class="text-muted" style="font-size:11px">({{ (f.extracted_text or '')|length }} симв.)</span></span>
+      <form method="POST" action="{{ url_for('admin.agent_delete_file', file_id=f.id) }}"
+            onsubmit="return confirm('Удалить файл из базы знаний?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm" style="color:#A31E08">×</button>
+      </form>
+    </div>
+    {% else %}
+    <p class="text-muted" style="font-size:12px">
+      {{ {'ru':'Загрузите TXT, MD или PDF (текстовый, не скан). Это документы, по которым агент отвечает.','en':'Upload TXT, MD or text PDF files the agent answers from.','kz':'TXT, MD немесе PDF жүктеңіз.'}[current_user.language] }}</p>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted" style="font-size:12px">{{ {'ru':'Сначала сохраните агента — затем здесь появится загрузка файлов.','en':'Save the agent first, then upload files here.','kz':'Алдымен агентті сақтаңыз.'}[current_user.language] }}</p>
+    {% endif %}
+  </div></div>
+</div>
+{% endblock %}

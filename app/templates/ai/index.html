@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+{% if agents %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+  {% for a in agents %}
+  <a href="{{ url_for('ai.chat_page', agent_id=a.id) }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-robot"></i></div>
+      <div>
+        <div class="card-title">{{ a.name }}</div>
+        <div class="text-muted" style="font-size:12px">{{ a.description or '' }}</div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px">
+  <i class="ti ti-robot" style="font-size:32px;color:var(--color-text-secondary)"></i>
+  <p style="margin-top:12px" class="text-muted">
+    {{ {'ru':'Доступных ассистентов пока нет.','en':'No assistants available yet.','kz':'Көмекшілер әзірге жоқ.'}[current_user.language] }}
+  </p>
+</div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ agent.name }}{% endblock %}
+{% block page_title %}{{ agent.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:860px;display:flex;flex-direction:column;height:calc(100vh - 150px)">
+  <div class="card-body" id="chat-messages"
+       style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+    <div style="align-self:flex-start;background:var(--color-background-secondary,#f4f2ee);padding:10px 14px;border-radius:12px 12px 12px 2px;max-width:80%">
+      {{ agent.description or {'ru':'Задайте вопрос.','en':'Ask a question.','kz':'Сұрақ қойыңыз.'}[current_user.language] }}
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;padding:12px;border-top:1px solid var(--color-border-tertiary,#e3e0da)">
+    <input id="chat-input" class="form-input" style="flex:1"
+           placeholder="{{ {'ru':'Ваш вопрос...','en':'Your question...','kz':'Сұрағыңыз...'}[current_user.language] }}"
+           onkeydown="if(event.key==='Enter')sendMsg()">
+    <button id="chat-send" class="btn btn-primary" onclick="sendMsg()">
+      <i class="ti ti-send"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+const HISTORY = [];
+function bubble(text, mine) {
+  const m = document.getElementById('chat-messages');
+  const d = document.createElement('div');
+  d.style.cssText = mine
+    ? 'align-self:flex-end;background:#FDECEA;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;white-space:pre-wrap'
+    : 'align-self:flex-start;background:var(--color-background-secondary,#f4f2ee);padding:10px 14px;border-radius:12px 12px 12px 2px;max-width:80%;white-space:pre-wrap';
+  d.textContent = text;
+  m.appendChild(d);
+  m.scrollTop = m.scrollHeight;
+  return d;
+}
+async function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; btn.disabled = true;
+  bubble(text, true);
+  const loading = bubble('…', false);
+  try {
+    const r = await fetch('{{ url_for("ai.chat", agent_id=agent.id) }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content},
+      body: JSON.stringify({message: text, history: HISTORY}),
+    });
+    const j = await r.json();
+    loading.remove();
+    if (j.reply) {
+      bubble(j.reply, false);
+      HISTORY.push({role: 'user', content: text}, {role: 'assistant', content: j.reply});
+      if (HISTORY.length > 20) HISTORY.splice(0, HISTORY.length - 20);
+    } else {
+      bubble('Ошибка: ' + (j.error || 'неизвестная'), false);
+    }
+  } catch (e) {
+    loading.remove(); bubble('Ошибка сети. Попробуйте ещё раз.', false);
+  }
+  btn.disabled = false; inp.focus();
+}
+</script>
+{% endblock %}

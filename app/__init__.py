@@ -52,6 +52,7 @@ def create_app(config_name='default'):
     from app.blueprints.errors import errors as errors_bp
     from app.blueprints.contracts import contracts as contracts_bp
     from app.blueprints.inventory import inventory as inventory_bp
+    from app.blueprints.ai import ai as ai_bp
     from app.blueprints.admin import admin as admin_bp
     app.register_blueprint(contracts_bp)
     app.register_blueprint(auth_bp)
@@ -61,6 +62,7 @@ def create_app(config_name='default'):
     app.register_blueprint(transport_bp)
     app.register_blueprint(hr_bp)
     app.register_blueprint(inventory_bp)
+    app.register_blueprint(ai_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(errors_bp)
 

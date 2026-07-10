@@ -372,3 +372,109 @@ def maintenance():
     return render_template('admin/maintenance.html', eq_types=eq_types,
                            policies=policies, users=users, notify_ids=notify_ids,
                            unmatched=unmatched, all_units=all_units)
+
+
+# ── AI AGENTS ─────────────────────────────────────────────────────────────────
+
+AGENT_TEXT_EXTENSIONS = {'txt', 'md', 'pdf'}
+
+
+def _extract_text(file_storage):
+    """Extract plain text from txt/md/pdf for the agent knowledge base."""
+    name = (file_storage.filename or '').lower()
+    ext = name.rsplit('.', 1)[-1] if '.' in name else ''
+    file_storage.stream.seek(0)
+    data = file_storage.stream.read()
+    if ext in ('txt', 'md'):
+        try:
+            return data.decode('utf-8')
+        except UnicodeDecodeError:
+            return data.decode('cp1251', errors='replace')
+    if ext == 'pdf':
+        import io
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(data))
+        return '\n'.join((page.extract_text() or '') for page in reader.pages)
+    return ''
+
+
+@admin.route('/agents')
+@login_required
+@requires_role('it_admin')
+def agents():
+    from app.models import AiAgent
+    return render_template('admin/agents.html',
+                           agents=AiAgent.query.order_by(AiAgent.name).all())
+
+
+@admin.route('/agents/new', methods=['GET', 'POST'])
+@admin.route('/agents/<int:agent_id>/edit', methods=['GET', 'POST'])
+@login_required
+@requires_role('it_admin')
+def agent_form(agent_id=None):
+    from app.models import AiAgent, ROLES
+    agent = AiAgent.query.get_or_404(agent_id) if agent_id else None
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        if not name:
+            flash('Название обязательно.', 'danger')
+            return redirect(request.url)
+        if agent is None:
+            agent = AiAgent(name=name)
+            db.session.add(agent)
+        agent.name = name
+        agent.description = (request.form.get('description') or '').strip() or None
+        agent.system_prompt = request.form.get('system_prompt') or ''
+        agent.model = (request.form.get('model') or '').strip() or agent.model
+        agent.allowed_roles = ','.join(request.form.getlist('allowed_roles')) or None
+        agent.use_platform_tools = bool(request.form.get('use_platform_tools'))
+        agent.is_active = bool(request.form.get('is_active'))
+        db.session.flush()
+        log_action('ai_agent_saved', 'ai_agent', agent.id, details=agent.name)
+        db.session.commit()
+        flash('Агент сохранён.', 'success')
+        return redirect(url_for('admin.agent_form', agent_id=agent.id))
+    return render_template('admin/agent_form.html', agent=agent, roles=ROLES)
+
+
+@admin.route('/agents/<int:agent_id>/files', methods=['POST'])
+@login_required
+@requires_role('it_admin')
+def agent_upload_file(agent_id):
+    from app.models import AiAgent, AgentKnowledgeFile
+    agent = AiAgent.query.get_or_404(agent_id)
+    f = request.files.get('file')
+    if not f or not f.filename:
+        flash('Выберите файл.', 'warning')
+        return redirect(url_for('admin.agent_form', agent_id=agent.id))
+    ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+    if ext not in AGENT_TEXT_EXTENSIONS:
+        flash('Поддерживаются TXT, MD и PDF.', 'danger')
+        return redirect(url_for('admin.agent_form', agent_id=agent.id))
+    text = _extract_text(f)
+    if not text.strip():
+        flash('Не удалось извлечь текст из файла (возможно, PDF из сканов — нужен текстовый).', 'danger')
+        return redirect(url_for('admin.agent_form', agent_id=agent.id))
+    stored, backend, size = save_upload(f)
+    db.session.add(AgentKnowledgeFile(
+        agent_id=agent.id, original_filename=f.filename, stored_filename=stored,
+        storage_backend=backend, size_bytes=size, extracted_text=text,
+        uploaded_by=current_user.id))
+    log_action('ai_agent_file_added', 'ai_agent', agent.id, details=f.filename)
+    db.session.commit()
+    flash(f'Файл «{f.filename}» добавлен ({len(text)} символов текста).', 'success')
+    return redirect(url_for('admin.agent_form', agent_id=agent.id))
+
+
+@admin.route('/agents/files/<int:file_id>/delete', methods=['POST'])
+@login_required
+@requires_role('it_admin')
+def agent_delete_file(file_id):
+    from app.models import AgentKnowledgeFile
+    kf = AgentKnowledgeFile.query.get_or_404(file_id)
+    agent_id = kf.agent_id
+    log_action('ai_agent_file_removed', 'ai_agent', agent_id, details=kf.original_filename)
+    db.session.delete(kf)
+    db.session.commit()
+    flash('Файл удалён из базы знаний.', 'success')
+    return redirect(url_for('admin.agent_form', agent_id=agent_id))
