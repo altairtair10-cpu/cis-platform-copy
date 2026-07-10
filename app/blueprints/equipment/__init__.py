@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.models import Equipment, MaintenanceLog, db
+from app.models import Equipment, MaintenanceLog, AppSetting, db
 from app.decorators import requires_permission
 from datetime import datetime
 
@@ -82,3 +82,11 @@ def add_log(unit_id):
     db.session.commit()
     flash('Maintenance logged successfully.', 'success')
     return redirect(url_for('equipment.view', unit_id=unit.id))
+
+@equipment.route('/dashboard')
+@login_required
+@requires_permission('equipment')
+def dashboard():
+    """Embedded external equipment dashboard (URL managed in the admin panel)."""
+    dashboard_url = AppSetting.get('equipment_dashboard_url')
+    return render_template('equipment/dashboard.html', dashboard_url=dashboard_url)

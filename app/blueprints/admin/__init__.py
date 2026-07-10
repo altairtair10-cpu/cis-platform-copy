@@ -234,3 +234,24 @@ def numbering():
     settings = {r.doc_type: r.prefix for r in DocNumberSetting.query.all()}
     rows = [(dt, DEFAULT_PREFIXES[dt], settings.get(dt) or '') for dt in DEFAULT_PREFIXES]
     return render_template('admin/numbering.html', rows=rows, doc_types=DOC_TYPES)
+
+
+# ── INTEGRATIONS ─────────────────────────────────────────────────────────────
+
+@admin.route('/integrations', methods=['GET', 'POST'])
+@login_required
+@requires_role('it_admin')
+def integrations():
+    if request.method == 'POST':
+        url = (request.form.get('equipment_dashboard_url') or '').strip()
+        if url and not (url.startswith('https://') or url.startswith('http://')):
+            flash('URL must start with https:// (or http://).', 'danger')
+            return redirect(url_for('admin.integrations'))
+        AppSetting.set('equipment_dashboard_url', url or None)
+        log_action('integration_dashboard_url', details=url or '(cleared)')
+        db.session.commit()
+        flash('Integrations saved.', 'success')
+        return redirect(url_for('admin.integrations'))
+
+    return render_template('admin/integrations.html',
+                           equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''))
