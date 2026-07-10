@@ -24,9 +24,11 @@
             <span class="doc-number">{{ doc.doc_number }}</span> · {{ doc.author.full_name }} · {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
           </div>
         </div>
-        <span class="pill {% if doc.status == 'approved' %}pill-green{% elif doc.status == 'pending' %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
+        <span class="pill {% if doc.status in ('approved','executed') %}pill-green{% elif doc.status in ('pending','in_execution') %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
           {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
           {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
+          {% elif doc.status == 'in_execution' %}{{ {'ru':'На исполнении','en':'In execution','kz':'Орындалуда'}[current_user.language] }}
+          {% elif doc.status == 'executed' %}{{ {'ru':'Исполнен','en':'Executed','kz':'Орындалды'}[current_user.language] }}
           {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
           {% elif doc.status == 'returned' %}{{ {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[current_user.language] }}
           {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
@@ -38,7 +40,8 @@
         {% set steps_en = ['Created','Approval','Signature','In progress','Completed'] %}
         {% set steps_kz = ['Жасалды','Келісім','Қол қою','Орындауда','Орындалды'] %}
         {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
-        {% set cur = 2 if doc.status == 'pending' else (3 if doc.status == 'approved' else 1) %}
+        {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':4,'executed':5,'rejected':2}.get(doc.status,1) %}
+        {% if doc.status == 'pending' and doc.current_step == 0 %}{% set cur = 3 %}{% endif %}
         {% for step in steps %}
         <div class="stepper-step">
           <div class="stepper-dot {% if loop.index < cur %}done{% elif loop.index == cur %}active{% else %}pending{% endif %}">
@@ -106,6 +109,45 @@
         </form>
         {% endif %}
       </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.doc_type == 'purchase_req' and doc.status in ('approved', 'in_execution')
+        and (current_user.role in ('procurement', 'it_admin', 'director')
+             or current_user.can_access('documents_procurement')) %}
+  <div class="card" style="margin-bottom:14px;border-left:4px solid #001D89">
+    <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <b>{{ {'ru':'Снабжение','en':'Procurement','kz':'Жабдықтау'}[current_user.language] }}:</b>
+      <a href="{{ url_for('documents.new_po_services', from_req=doc.id) }}" class="btn btn-sm btn-primary">
+        <i class="ti ti-file-plus"></i> {{ {'ru':'Создать ПО по требованию','en':'Create PO from requisition','kz':'Талаптама бойынша ПО жасау'}[current_user.language] }}
+      </a>
+      <form method="POST" action="{{ url_for('documents.mark_executed', doc_id=doc.id) }}"
+            onsubmit="return confirm('{{ {'ru':'Отметить требование исполненным?','en':'Mark as executed?','kz':'Орындалды деп белгілеу?'}[current_user.language] }}')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm"><i class="ti ti-circle-check"></i>
+          {{ {'ru':'Отметить исполненным','en':'Mark executed','kz':'Орындалды'}[current_user.language] }}</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.doc_type == 'purchase_req' and doc.purchase_orders.count() %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-body" style="font-size:13px">
+      <i class="ti ti-files"></i> {{ {'ru':'Созданные ПО по этому требованию','en':'POs created from this requisition','kz':'Осы талаптама бойынша ПО'}[current_user.language] }}:
+      {% for po in doc.purchase_orders %}
+      <a href="{{ url_for('documents.view', doc_id=po.id) }}" class="pill pill-gray" style="margin-left:6px;text-decoration:none">{{ po.doc_number }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.related_req %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-body" style="font-size:13px">
+      <i class="ti ti-link"></i> {{ {'ru':'Создан по требованию','en':'Created from requisition','kz':'Талаптама негізінде'}[current_user.language] }}:
+      <a href="{{ url_for('documents.view', doc_id=doc.related_req.id) }}">{{ doc.related_req.doc_number }}</a>
     </div>
   </div>
   {% endif %}

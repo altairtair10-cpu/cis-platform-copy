@@ -8,6 +8,31 @@
   {% include 'documents/_doclist_panel.html' %}
 
   <div style="flex:1;min-width:0">
+    <form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <select name="doc_type" class="form-select" style="max-width:220px;font-size:12px" onchange="this.form.submit()">
+        <option value="">{{ {'ru':'Тип: все','en':'Type: all','kz':'Түрі: барлығы'}[current_user.language] }}</option>
+        {% for k, v in doc_types.items() %}
+        <option value="{{ k }}" {% if sel_type == k %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+      <select name="year" class="form-select" style="max-width:130px;font-size:12px" onchange="this.form.submit()">
+        <option value="">{{ {'ru':'Год: все','en':'Year: all','kz':'Жыл: барлығы'}[current_user.language] }}</option>
+        {% for y in years %}
+        <option value="{{ y|int }}" {% if sel_year == y|int %}selected{% endif %}>{{ y|int }}</option>
+        {% endfor %}
+      </select>
+      <select name="status" class="form-select" style="max-width:190px;font-size:12px" onchange="this.form.submit()">
+        <option value="">{{ {'ru':'Статус: все','en':'Status: all','kz':'Мәртебе: барлығы'}[current_user.language] }}</option>
+        {% for k, v in statuses.items() %}
+        <option value="{{ k }}" {% if request.args.get('status') == k %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+      {% if current_user.can_access('documents') or current_user.can_access('documents_read') or current_user.can_access('documents_procurement') %}
+      <a href="{{ url_for('documents.export_xlsx', year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
+        <i class="ti ti-file-spreadsheet"></i> {{ {'ru':'Экспорт в Excel','en':'Export to Excel','kz':'Excel-ге экспорт'}[current_user.language] }}
+      </a>
+      {% endif %}
+    </form>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
       <a href="{{ url_for('documents.new_defect_act') }}" class="btn">
         <i class="ti ti-alert-triangle"></i>

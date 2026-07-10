@@ -89,6 +89,13 @@
     </div>
     <div style="margin-top:16px">
       <label class="form-label" style="margin-bottom:8px;display:block">Согласующие (маршрут)</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <select id="route-template-select" class="form-select" style="max-width:280px;font-size:12px">
+          <option value="">— готовый маршрут —</option>
+        </select>
+        <button type="button" class="btn btn-sm" onclick="applySelectedTemplate()">Применить</button>
+        <button type="button" class="btn btn-sm" onclick="saveRouteTemplate()">Сохранить текущий как маршрут</button>
+      </div>
       <div style="display:flex;gap:10px;margin-bottom:12px">
         <button type="button" onclick="addStage()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить этап</button>
         <button type="button" onclick="clearStages()" class="btn btn-sm">Очистить</button>
@@ -109,6 +116,16 @@
     <div class="form-group">
       <label class="form-label">Имеет ссылку с</label>
       <input name="linked_to" type="text" class="form-input" placeholder="например: ПР-2026-001">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Связанный дефектный акт</label>
+      <select name="related_defect_id" class="form-select">
+        <option value="">— не связан —</option>
+        {% for da in open_defects %}
+        <option value="{{ da.id }}" {% if from_defect == da.id %}selected{% endif %}>
+          {{ da.event_code or da.doc_number }} — {{ da.title[:60] }}</option>
+        {% endfor %}
+      </select>
     </div>
   </div>
 </div>
@@ -361,5 +378,89 @@ function recalc() {
   document.getElementById('grand-total').textContent = g.toFixed(2);
 }
 window.addEventListener('load', recalc);
+
+// ── ROUTE TEMPLATES ──
+const ROUTE_TEMPLATES = {{ templates_json|safe if templates_json else '[]' }};
+const CSRF = document.querySelector('input[name=csrf_token]').value;
+
+(function initTemplates() {
+  const sel = document.getElementById('route-template-select');
+  if (!sel) return;
+  ROUTE_TEMPLATES.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+})();
+
+function applySelectedTemplate() {
+  const sel = document.getElementById('route-template-select');
+  const tpl = ROUTE_TEMPLATES.find(t => String(t.id) === sel.value);
+  if (!tpl) return;
+  const d = tpl.data;
+  // signatory
+  if (d.signatory && d.signatory.id) {
+    document.getElementById('signatory_id').value = d.signatory.id;
+    const disp = document.getElementById('signatory_display');
+    disp.textContent = d.signatory.name; disp.style.color = 'var(--text-1)';
+  }
+  // stages
+  clearStages();
+  (d.stages || []).forEach(st => {
+    addStage();
+    const box = document.getElementById('stage-' + stageCount);
+    box.querySelector('select[name="stage_type[]"]').value =
+        st.type === 'sequential' ? 'sequential' : 'parallel';
+    const people = document.getElementById('stage-people-' + stageCount);
+    (st.reviewers || []).forEach(rv => {
+      const s = document.createElement('span');
+      s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:#FDECEA;color:var(--red);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:500';
+      s.dataset.name = rv.name;
+      s.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${rv.name} <input type="hidden" name="stage_reviewer[]" value="${rv.id}">`;
+      people.appendChild(s);
+    });
+  });
+}
+
+function collectRoute() {
+  const sig_id = document.getElementById('signatory_id').value;
+  const sig_name = document.getElementById('signatory_display').textContent.trim();
+  const stages = [];
+  document.querySelectorAll('#stages-container > div').forEach(box => {
+    const type = box.querySelector('select[name="stage_type[]"]').value;
+    const reviewers = [];
+    box.querySelectorAll('input[name="stage_reviewer[]"]').forEach(inp => {
+      const chip = inp.closest('span');
+      reviewers.push({id: parseInt(inp.value),
+                      name: (chip && (chip.dataset.name || chip.textContent.trim())) || ''});
+    });
+    if (reviewers.length) stages.push({type, reviewers});
+  });
+  return {signatory: sig_id ? {id: parseInt(sig_id), name: sig_name} : null, stages};
+}
+
+function saveRouteTemplate() {
+  const route = collectRoute();
+  if (!route.stages.length && !route.signatory) {
+    alert('Сначала соберите маршрут (утверждающий и/или согласующие).'); return;
+  }
+  const name = prompt('Название маршрута (например: «Стандарт: нач. отдела → директор»):');
+  if (!name) return;
+  const fd = new FormData();
+  fd.append('template_name', name);
+  fd.append('template_json', JSON.stringify(route));
+  fd.append('csrf_token', CSRF);
+  fetch('{{ url_for("documents.save_route_template") }}', {method: 'POST', body: fd})
+    .then(r => r.json())
+    .then(j => {
+      if (j.ok) {
+        ROUTE_TEMPLATES.push({id: j.id, name: j.name, data: route});
+        const sel = document.getElementById('route-template-select');
+        const o = document.createElement('option');
+        o.value = j.id; o.textContent = j.name; sel.appendChild(o); sel.value = j.id;
+        alert('Маршрут сохранён.');
+      } else { alert('Ошибка: ' + (j.error || '')); }
+    });
+}
 </script>
 {% endblock %}

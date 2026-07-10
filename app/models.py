@@ -125,12 +125,14 @@ DOC_TYPES = {
 }
 
 DOC_STATUSES = {
-    'draft':    'Draft',
-    'pending':  'Pending approval',
-    'returned': 'Returned for revision',
-    'approved': 'Approved',
-    'rejected': 'Rejected',
-    'archived': 'Archived',
+    'draft':        'Draft',
+    'pending':      'Pending approval',
+    'returned':     'Returned for revision',
+    'approved':     'Approved',
+    'in_execution': 'In execution',
+    'executed':     'Executed',
+    'rejected':     'Rejected',
+    'archived':     'Archived',
 }
 
 class Document(db.Model):
@@ -154,6 +156,7 @@ class Document(db.Model):
     defect_closed = db.Column(db.Boolean, nullable=False, default=False)
     defect_closed_at = db.Column(db.DateTime, nullable=True)
     related_defect_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
+    related_req_id    = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -168,6 +171,9 @@ class Document(db.Model):
                                     foreign_keys=[equipment_id])
     related_defect = db.relationship('Document', remote_side='Document.id',
                                      foreign_keys=[related_defect_id])
+    related_req    = db.relationship('Document', remote_side='Document.id',
+                                     foreign_keys=[related_req_id],
+                                     backref=db.backref('purchase_orders', lazy='dynamic'))
 
     def assign_event_code(self):
         """Per-unit sequential code for defect acts: <unit_id>-ДА<n>."""
@@ -663,3 +669,19 @@ class ServiceRecord(db.Model):
 
     equipment    = db.relationship('Equipment',
                                    backref=db.backref('service_records', lazy='dynamic'))
+
+
+# ── APPROVAL ROUTE TEMPLATES ──────────────────────────────────────────────────
+
+class RouteTemplate(db.Model):
+    """Saved approval route: signatory + stages, applied to new documents.
+    data JSON: {"signatory": {"id":..,"name":..},
+                "stages": [{"type":"parallel|sequential",
+                            "reviewers":[{"id":..,"name":..}]}]}"""
+    __tablename__ = 'route_templates'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    name       = db.Column(db.String(128), unique=True, nullable=False)
+    data       = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
