@@ -86,7 +86,8 @@ class User(UserMixin, db.Model):
 
     @property
     def initials(self):
-        return f'{self.first_name[0]}{self.last_name[0]}'.upper()
+        parts = [p.strip() for p in (self.first_name, self.last_name) if p and p.strip()]
+        return ''.join(p[0] for p in parts).upper() or '?'
 
     @property
     def role_display(self):
