@@ -27,7 +27,7 @@
       </select>
       
       {% if current_user.can_access('documents') or current_user.can_access('documents_read') or current_user.can_access('documents_procurement') %}
-      <a href="{{ url_for('documents.export_xlsx', year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
+      <a href="{{ url_for('documents.export_xlsx', doc_type=sel_type, year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
         <i class="ti ti-file-spreadsheet"></i> {{ {'ru':'Экспорт в Excel','en':'Export to Excel','kz':'Excel-ге экспорт'}[current_user.language] }}
       </a>
       {% endif %}

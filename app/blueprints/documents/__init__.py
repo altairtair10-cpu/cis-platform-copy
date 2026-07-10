@@ -85,11 +85,17 @@ def _visible_docs_query(user):
     return query.filter(or_(*conditions))
 
 
-def _panel_docs(doc_type=None):
-    query = _visible_docs_query(current_user)
+def _panel_counts(doc_type=None):
+    """Status counters for the left panel via a single aggregate query —
+    stays fast no matter how many documents accumulate over the years."""
+    from sqlalchemy import func
+    visible = _visible_docs_query(current_user).subquery()
+    query = db.session.query(visible.c.status, func.count()).group_by(visible.c.status)
     if doc_type:
-        query = query.filter_by(doc_type=doc_type)
-    return query.order_by(Document.created_at.desc()).all()
+        query = query.filter(visible.c.doc_type == doc_type)
+    counts = dict(query.all())
+    counts['_total'] = sum(counts.values())
+    return counts
 
 
 def _build_route(doc, action, signatory_id):
@@ -178,7 +184,7 @@ def index():
     doc_type = request.args.get('doc_type')
     page = request.args.get('page', 1, type=int)
 
-    panel_docs = _panel_docs(doc_type)
+    panel_counts = _panel_counts(doc_type)
 
     query = _visible_docs_query(current_user)
     if status:
@@ -196,7 +202,7 @@ def index():
     from sqlalchemy import extract, distinct
     years = sorted({y for (y,) in db.session.query(
         distinct(extract('year', Document.created_at))).all() if y}, reverse=True)
-    return render_template('documents/index.html', docs=docs, panel_docs=panel_docs,
+    return render_template('documents/index.html', docs=docs, panel_counts=panel_counts,
                            years=years, sel_year=year, sel_type=doc_type,
                            pagination=pagination,
                            doc_types=DOC_TYPES, statuses=DOC_STATUSES)
@@ -226,9 +232,9 @@ def view(doc_id):
     items     = doc.items.all()
     comments  = doc.comments.order_by('created_at').all()
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
-    panel_docs = _panel_docs()
+    panel_counts = _panel_counts()
     return render_template('documents/view.html', doc=doc, items=items,
-                           comments=comments, approvals=approvals, panel_docs=panel_docs)
+                           comments=comments, approvals=approvals, panel_counts=panel_counts)
 
 
 @documents.route('/<int:doc_id>/attachments/upload', methods=['POST'])
@@ -1359,8 +1365,8 @@ def save_route_template():
 @documents.route('/export.xlsx')
 @login_required
 def export_xlsx():
-    """Flat Excel export: one row per item, with the requisition number.
-    Filters: ?year=2026&month=7 (both optional). Requisitions only."""
+    """Flat Excel export: one row per item, with the document number.
+    Filters: ?doc_type=&year=2026&month=7 (all optional; no type = all types)."""
     if not (current_user.can_access('documents') or current_user.can_access('documents_read')
             or current_user.can_access('documents_procurement')):
         abort(403)
@@ -1370,8 +1376,13 @@ def export_xlsx():
 
     year = request.args.get('year', type=int)
     month = request.args.get('month', type=int)
+    doc_type = request.args.get('doc_type') or None
+    if doc_type and doc_type not in DOC_TYPES:
+        abort(400)
 
-    query = Document.query.filter_by(doc_type='purchase_req')
+    query = Document.query
+    if doc_type:
+        query = query.filter_by(doc_type=doc_type)
     if year:
         query = query.filter(extract('year', Document.created_at) == year)
     if month:
@@ -1380,8 +1391,8 @@ def export_xlsx():
 
     wb = Workbook()
     ws = wb.active
-    ws.title = 'Требования'
-    ws.append(['Номер требования', 'Дата', 'Статус', 'Отдел', 'Автор', 'Код ДА',
+    ws.title = (DOC_TYPES.get(doc_type, 'Документы')[:31] if doc_type else 'Документы')
+    ws.append(['Номер', 'Тип', 'Дата', 'Статус', 'Отдел', 'Автор', 'Код ДА',
                'Наименование', 'Характеристика/прим.', 'Кол-во', 'Ед.',
                'Цена', 'Сумма'])
     from app.models import DOC_STATUSES
@@ -1390,6 +1401,7 @@ def export_xlsx():
         for it in items:
             ws.append([
                 doc.doc_number,
+                DOC_TYPES.get(doc.doc_type, doc.doc_type),
                 doc.created_at.strftime('%d.%m.%Y'),
                 DOC_STATUSES.get(doc.status, doc.status),
                 doc.department or '',
@@ -1403,17 +1415,19 @@ def export_xlsx():
                 (float(it.quantity) * float(it.price))
                     if it and it.quantity is not None and it.price is not None else None,
             ])
-    for col, width in zip('ABCDEFGHIJKL', [16, 11, 14, 12, 20, 12, 40, 24, 8, 6, 12, 14]):
+    for col, width in zip('ABCDEFGHIJKLM', [16, 22, 11, 14, 12, 20, 12, 40, 24, 8, 6, 12, 14]):
         ws.column_dimensions[col].width = width
 
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    suffix = f'-{year}' if year else ''
+    suffix = f'-{doc_type}' if doc_type else ''
+    suffix += f'-{year}' if year else ''
     suffix += f'-{month:02d}' if month else ''
     from flask import send_file
-    log_action('requisitions_exported', details=f'year={year} month={month} docs={len(docs)}')
+    log_action('documents_exported',
+               details=f'type={doc_type or "all"} year={year} month={month} docs={len(docs)}')
     db.session.commit()
     return send_file(buf, as_attachment=True,
-                     download_name=f'trebovaniya{suffix}.xlsx',
+                     download_name=f'documents{suffix}.xlsx',
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
