@@ -63,6 +63,7 @@ function addStage(){
   div.innerHTML = `
     <i class="ti ti-menu-2"></i>
     <span class="dlg-stage-num">${n}</span>
+    <input type="hidden" name="stage_no[]" value="${n}">
     <select name="stage_type[]" class="dlg-select">
       <option value="parallel">Параллельное</option>
       <option value="sequential">Последовательное</option>
@@ -143,7 +144,7 @@ function confirmPeople(){
     const wrap = document.getElementById(`stage-people-${dlgTarget}`);
     wrap.innerHTML = '';
     sel.forEach(el=>{
-      wrap.appendChild(personChip(el.dataset.id, `${el.dataset.name} (${el.dataset.pos})`, 'stage_reviewer[]'));
+      wrap.appendChild(personChip(el.dataset.id, `${el.dataset.name} (${el.dataset.pos})`, `stage_reviewer_${dlgTarget}[]`));
     });
   }
   closePeopleModal();
