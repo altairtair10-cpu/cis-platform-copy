@@ -292,6 +292,7 @@ class MaintenanceLog(db.Model):
     description  = db.Column(db.Text, nullable=False)
     parts_used   = db.Column(db.Text, nullable=True)
     cost         = db.Column(db.Numeric(14, 2), nullable=True)
+    kind         = db.Column(db.String(4), nullable=True)   # 'ТО' | 'Р'
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
     equipment    = db.relationship('Equipment', backref='maintenance_logs')
@@ -613,6 +614,19 @@ class MaintenancePolicy(db.Model):
     eq_type  = db.Column(db.String(64), unique=True, nullable=False)  # категория из дэшборда
     mode     = db.Column(db.String(16), nullable=False, default='repair_only')  # hours | km | repair_only
     interval = db.Column(db.Integer, nullable=True)   # 400 (м/ч) or 10000 (км)
+
+
+class MaintenanceTabMap(db.Model):
+    """Manual mapping: register worksheet title -> equipment unit.
+    Takes priority over automatic gos-number matching."""
+    __tablename__ = 'maintenance_tab_map'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    tab_title    = db.Column(db.String(128), unique=True, nullable=False)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=True)
+    is_ignored   = db.Column(db.Boolean, default=False, nullable=False)
+
+    equipment    = db.relationship('Equipment')
 
 
 class ServiceRecord(db.Model):

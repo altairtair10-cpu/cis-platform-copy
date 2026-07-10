@@ -46,6 +46,10 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">{{ {'ru':'Описание работ','en':'Description','kz':'Жұмыс сипаттамасы'}[current_user.language] }} <span class="req">*</span></label>
+        <select name="kind" class="form-input" style="margin-bottom:8px;max-width:220px">
+          <option value="Р">{{ {'ru':'Ремонт (Р)','en':'Repair (Р)','kz':'Жөндеу (Р)'}[current_user.language] }}</option>
+          <option value="ТО">{{ {'ru':'Техобслуживание (ТО)','en':'Service (ТО)','kz':'ТҚ'}[current_user.language] }}</option>
+        </select>
         <textarea name="description" class="form-input" rows="3" required
           placeholder="{{ {'ru':'Что было сделано...','en':'What was done...','kz':'Не істелді...'}[current_user.language] }}"></textarea>
       </div>
@@ -102,7 +106,7 @@
       {% for log in logs %}
       <tr>
         <td class="text-muted">{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-        <td>{{ log.description }}</td>
+        <td>{% if log.kind %}<span class="pill {% if log.kind=='ТО' %}pill-green{% else %}pill-amber{% endif %}" style="margin-right:6px">{{ log.kind }}</span>{% endif %}{{ log.description }}</td>
         <td class="text-muted">{{ log.parts_used or '—' }}</td>
         <td class="text-muted">{{ '%.2f'|format(log.cost) if log.cost is not none else '—' }}</td>
         <td class="text-muted">{{ log.technician.full_name if log.technician else '—' }}</td>

@@ -64,13 +64,51 @@ def fetch_register():
     return result
 
 
-def _match_equipment(tab_title, equipment_list):
-    """Match a worksheet to Equipment by gos_number contained in the title."""
+def _tokens(text):
+    """Candidate registration-number tokens from words and adjacent-word joins.
+
+    «№1 Насос 882AHDE» -> {'882AHDE', ...}; «Насос 882 AHDE» -> {'882AHDE', ...}
+    """
+    words = [w for w in re.split(r'[^0-9A-ZА-ЯЁ]+', (text or '').upper()) if w]
+    cands = set()
+    for i, w in enumerate(words):
+        combos = [w]
+        if i + 1 < len(words):
+            combos.append(w + words[i + 1])
+        if i + 2 < len(words):
+            combos.append(w + words[i + 1] + words[i + 2])
+        for c in combos:
+            if (4 <= len(c) <= 12
+                    and re.search(r'[0-9]', c)
+                    and re.search(r'[A-ZА-ЯЁ]', c)):
+                cands.add(c)
+    return cands
+
+
+def _match_equipment(tab_title, equipment_list, tab_map=None):
+    """Match a worksheet to Equipment: manual map first, then gos-number tokens.
+
+    Tokens tolerate formatting differences: «882 AHDE 06» vs «882AHDE» match
+    because one normalized token is a prefix of the other.
+    """
+    if tab_map:
+        m = tab_map.get(tab_title.strip())
+        if m is not None:
+            return m   # may be an Equipment or 'IGNORE'
+
     t = _norm(tab_title)
+    title_tokens = _tokens(tab_title)
+    best = None
     for eq in equipment_list:
-        if eq.gos_number and _norm(eq.gos_number) and _norm(eq.gos_number) in t:
+        g = _norm(eq.gos_number or '')
+        if not g:
+            continue
+        if g in t:
             return eq
-    return None
+        for tok in title_tokens:
+            if len(tok) >= 4 and (tok.startswith(g) or g.startswith(tok)):
+                best = best or eq
+    return best
 
 
 def sync_maintenance(register=None):
@@ -81,15 +119,21 @@ def sync_maintenance(register=None):
     if register is None:
         register = fetch_register()
 
+    from app.models import MaintenanceTabMap
     equipment_list = Equipment.query.all()
     existing_hashes = {h for (h,) in db.session.query(ServiceRecord.row_hash).all()}
+    tab_map = {}
+    for m in MaintenanceTabMap.query.all():
+        tab_map[m.tab_title.strip()] = 'IGNORE' if m.is_ignored else m.equipment
 
     new_records = 0
     matched = 0
     unmatched = []
 
     for title, rows in register.items():
-        eq = _match_equipment(title, equipment_list)
+        eq = _match_equipment(title, equipment_list, tab_map)
+        if eq == 'IGNORE':
+            continue
         if eq is None:
             unmatched.append(title)
             continue
@@ -138,6 +182,8 @@ def sync_maintenance(register=None):
 
     db.session.flush()
     _update_aggregates(equipment_list)
+    import json as _json
+    AppSetting.set('maintenance_unmatched_tabs', _json.dumps(unmatched, ensure_ascii=False))
     AppSetting.set('maintenance_last_sync', datetime.utcnow().isoformat())
     db.session.commit()
     return new_records, matched, unmatched
