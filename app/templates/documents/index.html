@@ -9,8 +9,8 @@
 
   <div style="flex:1;min-width:0">
     <form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-      <select name="doc_type" class="form-select" style="max-width:220px;font-size:12px" onchange="this.form.submit()">
-        <option value="">{{ {'ru':'Тип: все','en':'Type: all','kz':'Түрі: барлығы'}[current_user.language] }}</option>
+      <select name="doc_type" class="form-select" style="max-width:260px;font-size:13px;font-weight:600" onchange="this.form.submit()">
+        <option value="">{{ {'ru':'Все виды документов','en':'All document types','kz':'Барлық құжат түрлері'}[current_user.language] }}</option>
         {% for k, v in doc_types.items() %}
         <option value="{{ k }}" {% if sel_type == k %}selected{% endif %}>{{ v }}</option>
         {% endfor %}
@@ -48,7 +48,10 @@
       <div class="card-header">
         <div class="card-header-left">
           <div class="card-icon"><i class="ti ti-files"></i></div>
-          <div class="card-title">{{ {'ru':'Реестр документов','en':'Document registry','kz':'Құжаттар тізілімі'}[current_user.language] }}</div>
+          <div class="card-title">
+            {% if sel_type %}{{ doc_types.get(sel_type, sel_type) }}
+            {% else %}{{ {'ru':'Реестр документов','en':'Document registry','kz':'Құжаттар тізілімі'}[current_user.language] }}{% endif %}
+          </div>
         </div>
         <div <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ {'ru':'документов','en':'documents','kz':'құжат'}[current_user.language] }}</div>
       </div>
