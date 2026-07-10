@@ -515,6 +515,7 @@ def submit_defect_act():
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
+    doc.assign_event_code()
     log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
     names = request.form.getlist('part_name[]')
@@ -556,7 +557,9 @@ def submit_defect_act():
         ))
         db.session.commit()
 
-    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    flash(f'Документ {doc.doc_number}'
+          + (f' (учётный код {doc.event_code})' if doc.event_code else '')
+          + f' {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
     return redirect(url_for('documents.view', doc_id=doc.id))
 
 
@@ -565,9 +568,16 @@ def submit_defect_act():
 def new_trebovanie():
     now = datetime.now().strftime('%d.%m.%Y %H:%M')
     linked_defect = request.args.get('from_defect', None)
+    linked_defect_doc = None
+    if linked_defect and str(linked_defect).isdigit():
+        linked_defect_doc = Document.query.filter_by(id=int(linked_defect),
+                                                     doc_type='defect_act').first()
+        if linked_defect_doc:
+            linked_defect = linked_defect_doc.event_code or linked_defect_doc.doc_number
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
     approvers = User.query.filter(User.is_active==True, User.role.in_(['dept_head', 'director', 'it_admin'])).order_by(User.first_name, User.last_name).all()
-    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect, executors=executors, approvers=approvers)
+    return render_template('documents/trebovanie.html', now=now, linked_defect=linked_defect,
+                           linked_defect_doc=linked_defect_doc, executors=executors, approvers=approvers)
 
 
 @documents.route('/trebovanie/submit', methods=['POST'])
@@ -575,6 +585,10 @@ def new_trebovanie():
 def submit_trebovanie():
     executor_id = request.form.get('executor_id', type=int) or current_user.id
     action = request.form.get('action', 'draft')
+    related_defect_id = request.form.get('related_defect_id', type=int)
+    if related_defect_id:
+        rel = Document.query.filter_by(id=related_defect_id, doc_type='defect_act').first()
+        related_defect_id = rel.id if rel else None
     signatory_id = request.form.get('signatory_id', type=int)
 
     if action == 'submit' and not signatory_id:
@@ -590,6 +604,7 @@ def submit_trebovanie():
         justification = request.form.get('note'),
         author_id     = current_user.id,
         executor_id   = executor_id,
+        related_defect_id = related_defect_id,
         status        = 'pending' if action == 'submit' else 'draft',
     )
 
@@ -1257,3 +1272,25 @@ def print_doc(doc_id):
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
     return render_template('documents/print.html', doc=doc, items=items,
                            extras=extras, approvals=approvals)
+
+@documents.route('/<int:doc_id>/close-defect', methods=['POST'])
+@login_required
+def close_defect(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.doc_type != 'defect_act' or doc.defect_closed:
+        flash('Этот документ нельзя закрыть.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    if not (doc.author_id == current_user.id
+            or current_user.can_access('documents')
+            or current_user.can_access('equipment')):
+        abort(403)
+    doc.defect_closed = True
+    doc.defect_closed_at = datetime.utcnow()
+    db.session.add(DocumentComment(
+        document_id=doc.id, author_id=current_user.id,
+        text=f'Дефект {doc.event_code or doc.doc_number} закрыт (ремонт выполнен).',
+        is_system=True))
+    log_action('defect_closed', 'document', doc.id, details=doc.event_code or doc.doc_number)
+    db.session.commit()
+    flash(f'Дефект {doc.event_code or doc.doc_number} закрыт.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc_id))

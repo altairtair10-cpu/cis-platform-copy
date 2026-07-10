@@ -34,56 +34,6 @@
   </div>
 </div>
 
-<div class="card" style="margin-bottom:14px">
-  <div class="card-header">
-    <div class="card-header-left">
-      <div class="card-icon"><i class="ti ti-tool"></i></div>
-      <div class="card-title">{{ {'ru':'Записать ТО','en':'Log maintenance','kz':'ТО жазу'}[current_user.language] }}</div>
-    </div>
-  </div>
-  <div class="card-body">
-    <form method="POST" action="{{ url_for('equipment.add_log', unit_id=unit.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="form-group" style="margin-bottom:14px">
-        <label class="form-label">{{ {'ru':'Описание работ','en':'Description','kz':'Жұмыс сипаттамасы'}[current_user.language] }} <span class="req">*</span></label>
-        <select name="kind" class="form-input" style="margin-bottom:8px;max-width:220px">
-          <option value="Р">{{ {'ru':'Ремонт (Р)','en':'Repair (Р)','kz':'Жөндеу (Р)'}[current_user.language] }}</option>
-          <option value="ТО">{{ {'ru':'Техобслуживание (ТО)','en':'Service (ТО)','kz':'ТҚ'}[current_user.language] }}</option>
-        </select>
-        <textarea name="description" class="form-input" rows="3" required
-          placeholder="{{ {'ru':'Что было сделано...','en':'What was done...','kz':'Не істелді...'}[current_user.language] }}"></textarea>
-      </div>
-      <div class="form-grid-2" style="margin-bottom:14px">
-        <div class="form-group">
-          <label class="form-label">{{ {'ru':'Использованные детали','en':'Parts used','kz':'Қолданылған бөлшектер'}[current_user.language] }}</label>
-          <input type="text" name="parts_used" class="form-input" placeholder="{{ {'ru':'необязательно','en':'optional','kz':'міндетті емес'}[current_user.language] }}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">{{ {'ru':'Стоимость','en':'Cost','kz':'Құны'}[current_user.language] }}</label>
-          <input type="text" name="cost" class="form-input" placeholder="0.00">
-        </div>
-      </div>
-      <div class="form-grid-2" style="margin-bottom:20px">
-        <div class="form-group">
-          <label class="form-label">{{ {'ru':'Новый статус','en':'New status','kz':'Жаңа мәртебе'}[current_user.language] }}</label>
-          <select name="status" class="form-select">
-            <option value="deployed" {% if unit.status == 'deployed' %}selected{% endif %}>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</option>
-            <option value="idle" {% if unit.status == 'idle' %}selected{% endif %}>{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}</option>
-            <option value="maintenance" {% if unit.status == 'maintenance' %}selected{% endif %}>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">{{ {'ru':'Следующее ТО','en':'Next service date','kz':'Келесі ТО күні'}[current_user.language] }}</label>
-          <input type="date" name="next_service" class="form-input">
-        </div>
-      </div>
-      <button type="submit" class="btn btn-primary">
-        <i class="ti ti-device-floppy"></i>{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
-      </button>
-    </form>
-  </div>
-</div>
-
 <div class="card">
   <div class="card-header">
     <div class="card-header-left">
@@ -159,6 +109,24 @@
   </div>
 </div>
 
+{% if open_defects %}
+<div class="card" style="margin-top:14px;border-left:4px solid #A31E08">
+  <div class="card-body">
+    <b style="display:block;margin-bottom:6px"><i class="ti ti-alert-triangle" style="color:#A31E08"></i>
+      {{ {'ru':'Открытые дефекты','en':'Open defects','kz':'Ашық ақаулар'}[current_user.language] }} ({{ open_defects|length }})</b>
+    {% for d in open_defects %}
+    <a href="{{ url_for('documents.view', doc_id=d.id) }}" class="pill pill-red" style="margin:2px 6px 2px 0;text-decoration:none">
+      {{ d.event_code or d.doc_number }}</a>
+    {% endfor %}
+    <div class="text-muted" style="font-size:12px;margin-top:6px">
+      {{ {'ru':'Дефект закрывается записью ремонта с указанием его кода (например «…-Р») или кнопкой в самом акте.',
+          'en':'A defect closes when a repair record mentions its code, or via the button on the act.',
+          'kz':'Ақау коды көрсетілген жөндеу жазбасымен жабылады.'}[current_user.language] }}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if to_state[0] != 'none' %}
 <div class="card" style="margin-top:14px;border-left:4px solid {% if to_state[0]=='due' %}#A31E08{% elif to_state[0]=='soon' %}#B98900{% else %}#0E7A45{% endif %}">
   <div class="card-body" style="display:flex;gap:14px;align-items:center">
@@ -180,7 +148,7 @@
 <div class="card" style="margin-top:14px">
   <div class="card-header"><div class="card-header-left">
     <div class="card-icon"><i class="ti ti-history"></i></div>
-    <div class="card-title">{{ {'ru':'Реестр ТО и ремонтов','en':'Service & repair register','kz':'ТҚ және жөндеу тіркелімі'}[current_user.language] }}</div>
+    <div class="card-title">{{ {'ru':'Последние ТО и ремонты','en':'Recent service & repairs','kz':'Соңғы ТҚ және жөндеулер'}[current_user.language] }}</div>
   </div></div>
   <div class="card-body">
     {% if records %}

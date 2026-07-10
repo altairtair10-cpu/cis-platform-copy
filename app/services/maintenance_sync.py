@@ -182,6 +182,7 @@ def sync_maintenance(register=None):
 
     db.session.flush()
     _update_aggregates(equipment_list)
+    _close_referenced_defects()
     import json as _json
     AppSetting.set('maintenance_unmatched_tabs', _json.dumps(unmatched, ensure_ascii=False))
     AppSetting.set('maintenance_last_sync', datetime.utcnow().isoformat())
@@ -277,3 +278,46 @@ def to_status(eq):
     if used >= pol.interval * 0.85:
         return ('soon', used, pol.interval, pol.mode)
     return ('ok', used, pol.interval, pol.mode)
+
+
+def _defect_ref_norm(text):
+    """Normalize for defect-code matching: drop non-alphanumerics, upper,
+    treat «ДЕФА» as «ДА» (люди пишут и так, и так)."""
+    t = re.sub(r'[^0-9A-ZА-ЯЁ]', '', (text or '').upper())
+    return t.replace('ДЕФА', 'ДА')
+
+
+def _close_referenced_defects():
+    """Close open defect acts whose event code is mentioned in a repair record
+    (e.g. запись Р с текстом «Б1-ДефА1-Р» или «по акту Б1-ДА1»)."""
+    from app import db
+    from app.models import Document, DocumentComment, Notification, ServiceRecord
+    from datetime import datetime as _dt
+
+    open_defects = Document.query.filter_by(doc_type='defect_act',
+                                            defect_closed=False)\
+                                 .filter(Document.event_code.isnot(None)).all()
+    if not open_defects:
+        return
+    for doc in open_defects:
+        code = _defect_ref_norm(doc.event_code)
+        if not code or not doc.equipment_id:
+            continue
+        recs = ServiceRecord.query.filter_by(equipment_id=doc.equipment_id,
+                                             kind='Р').all()
+        hit = next((r for r in recs
+                    if code in _defect_ref_norm((r.description or '') + ' ' + (r.kind_raw or ''))), None)
+        if hit is None:
+            continue
+        doc.defect_closed = True
+        doc.defect_closed_at = _dt.utcnow()
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=doc.author_id,
+            text=f'Дефект {doc.event_code} закрыт автоматически: ремонт от '
+                 f'{hit.date.strftime("%d.%m.%Y") if hit.date else "—"} в реестре.',
+            is_system=True))
+        db.session.add(Notification(
+            user_id=doc.author_id,
+            title=f'Дефект {doc.event_code} закрыт',
+            body=f'В реестре найден ремонт: {(hit.description or "")[:100]}',
+            link=f'/documents/{doc.id}', is_read=False))

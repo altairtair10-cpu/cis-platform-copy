@@ -55,9 +55,13 @@ def view(unit_id):
                          .order_by(Document.created_at.desc()).all()
     from app.models import ServiceRecord
     records = ServiceRecord.query.filter_by(equipment_id=unit.id)\
-                                 .order_by(ServiceRecord.date.desc()).limit(50).all()
+                                 .order_by(ServiceRecord.date.desc()).limit(7).all()
+    open_defects = Document.query.filter_by(equipment_id=unit.id, doc_type='defect_act',
+                                            defect_closed=False)\
+                                 .order_by(Document.created_at.desc()).all()
     return render_template('equipment/view.html', unit=unit, logs=logs, docs=docs,
-                           records=records, to_state=to_status(unit))
+                           records=records, open_defects=open_defects,
+                           to_state=to_status(unit))
 
 @equipment.route('/<int:unit_id>/log', methods=['POST'])
 @login_required
