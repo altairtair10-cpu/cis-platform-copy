@@ -9,7 +9,7 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump database (pg_dump via postgres:17 image)
+      - name: Dump database (pg_dump via postgres:18 image)
         run: |
           docker run --rm -e DATABASE_URL postgres:18 \
             sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner' > backup.dump
