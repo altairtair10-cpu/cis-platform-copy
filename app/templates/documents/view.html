@@ -99,6 +99,8 @@
             <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
             {% elif doc.doc_type == 'trebovanie' %}
             <a href="{{ url_for('documents.edit_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            {% elif doc.doc_type == 'po_trebovanie' %}
+            <a href="{{ url_for('documents.edit_po_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
             {% elif doc.doc_type == 'defect_act' %}
             <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
             {% endif %}
@@ -125,7 +127,7 @@
       <div class="card-body">
         <table style="width:100%;font-size:12px;border-collapse:collapse">
           <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>

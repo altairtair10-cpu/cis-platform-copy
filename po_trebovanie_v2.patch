@@ -1,0 +1,750 @@
+diff --git a/app/blueprints/documents/__init__.py b/app/blueprints/documents/__init__.py
+index 389b038..927a685 100644
+--- a/app/blueprints/documents/__init__.py
++++ b/app/blueprints/documents/__init__.py
+@@ -31,6 +31,7 @@ def _unpack_extras(justification):
+         'Условия оказания услуг': 'service_terms',
+         'Срок оказания услуг': 'service_date',
+         'Статья бюджета': 'budget_line',
++        'Требование на приобретение материалов': 'material_request',
+     }
+     out = {}
+     for line in (justification or '').split('\n'):
+@@ -840,6 +841,187 @@ def update_po_services(doc_id):
+     return redirect(url_for('documents.view', doc_id=doc.id))
+ 
+ 
++@documents.route('/po-trebovanie/new', methods=['GET'])
++@login_required
++def new_po_trebovanie():
++    executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
++    return render_template('documents/po_trebovanie.html', executors=executors)
++
++
++@documents.route('/po-trebovanie/submit', methods=['POST'])
++@login_required
++def submit_po_trebovanie():
++    action = request.form.get('action', 'draft')
++    signatory_id = request.form.get('signatory_id', type=int)
++
++    extras = {
++        'Основание': request.form.get('basis'),
++        'Требование на приобретение материалов': request.form.get('material_request'),
++        'Контрагент': request.form.get('counterparty'),
++        'Плательщик НДС': request.form.get('vat_payer'),
++        'Заказано': request.form.get('ordered_by'),
++        'Валюта': request.form.get('currency'),
++        'Дата оплаты': request.form.get('payment_date'),
++        'Условия оплаты': request.form.get('payment_terms'),
++        'Условия оказания услуг': request.form.get('service_terms'),
++        'Срок оказания услуг': request.form.get('service_date'),
++        'Статья бюджета': request.form.get('budget_line'),
++    }
++    extras_text = '\n'.join(f'{k}: {v}' for k, v in extras.items() if v)
++
++    doc = Document(
++        doc_type      = 'po_trebovanie',
++        title         = request.form.get('summary', 'РО на товары')[:100],
++        department    = request.form.get('department', current_user.department),
++        purpose       = request.form.get('summary'),
++        justification = extras_text,
++        author_id     = current_user.id,
++        status        = 'pending' if action == 'submit' else 'draft',
++        current_step  = 0,
++    )
++
++    payment_date = request.form.get('payment_date')
++    if payment_date:
++        try:
++            doc.needed_by = datetime.strptime(payment_date, '%Y-%m-%d').date()
++        except ValueError:
++            pass
++
++    db.session.add(doc)
++    db.session.flush()
++    doc.generate_number()
++    log_action('document_created', 'document', doc.id, details=doc.doc_number)
++
++    names = request.form.getlist('item_name[]')
++    units = request.form.getlist('item_unit[]')
++    qtys  = request.form.getlist('item_qty[]')
++    costs = request.form.getlist('item_cost[]')
++    codes = request.form.getlist('item_code[]')
++
++    for i, name in enumerate(names):
++        if name.strip():
++            db.session.add(DocumentItem(
++                document_id = doc.id,
++                name        = name.strip(),
++                unit        = units[i] if i < len(units) else '',
++                quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
++                note        = codes[i] if i < len(codes) else '',
++                price       = _to_float(costs[i]) if i < len(costs) else None,
++            ))
++
++    db.session.add(DocumentComment(
++        document_id = doc.id,
++        author_id   = current_user.id,
++        text        = f'РО на товары {"отправлена на согласование" if action == "submit" else "сохранена как черновик"} пользователем {current_user.full_name}.',
++        is_system   = True,
++    ))
++
++    _build_route(doc, action, signatory_id)
++    _save_form_attachments(doc)
++
++    db.session.commit()
++
++    if action == 'submit':
++        _notify_approvers(doc)
++
++    db.session.commit()
++    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
++    return redirect(url_for('documents.view', doc_id=doc.id))
++
++
++@documents.route('/po-trebovanie/<int:doc_id>/edit', methods=['GET'])
++@login_required
++def edit_po_trebovanie(doc_id):
++    doc = Document.query.get_or_404(doc_id)
++    if doc.author_id != current_user.id:
++        abort(403)
++    if doc.doc_type != 'po_trebovanie' or doc.status != 'returned':
++        flash('Этот документ нельзя редактировать.', 'warning')
++        return redirect(url_for('documents.view', doc_id=doc_id))
++    extras = _unpack_extras(doc.justification)
++    items = doc.items.all()
++    return render_template('documents/po_trebovanie_edit.html', doc=doc, extras=extras, items=items)
++
++
++@documents.route('/po-trebovanie/<int:doc_id>/update', methods=['POST'])
++@login_required
++def update_po_trebovanie(doc_id):
++    doc = Document.query.get_or_404(doc_id)
++    if doc.author_id != current_user.id:
++        abort(403)
++    if doc.doc_type != 'po_trebovanie' or doc.status != 'returned':
++        flash('Этот документ нельзя редактировать.', 'warning')
++        return redirect(url_for('documents.view', doc_id=doc_id))
++
++    doc.title      = request.form.get('summary', doc.title)[:100]
++    doc.purpose    = request.form.get('summary')
++    doc.department = request.form.get('department', doc.department)
++
++    extras = {
++        'Основание': request.form.get('basis'),
++        'Требование на приобретение материалов': request.form.get('material_request'),
++        'Контрагент': request.form.get('counterparty'),
++        'Плательщик НДС': request.form.get('vat_payer'),
++        'Заказано': request.form.get('ordered_by'),
++        'Валюта': request.form.get('currency'),
++        'Дата оплаты': request.form.get('payment_date'),
++        'Условия оплаты': request.form.get('payment_terms'),
++        'Условия оказания услуг': request.form.get('service_terms'),
++        'Срок оказания услуг': request.form.get('service_date'),
++        'Статья бюджета': request.form.get('budget_line'),
++    }
++    doc.justification = '\n'.join(f'{k}: {v}' for k, v in extras.items() if v)
++
++    payment_date = request.form.get('payment_date')
++    if payment_date:
++        try:
++            doc.needed_by = datetime.strptime(payment_date, '%Y-%m-%d').date()
++        except ValueError:
++            pass
++
++    for it in doc.items.all():
++        db.session.delete(it)
++    names = request.form.getlist('item_name[]')
++    units = request.form.getlist('item_unit[]')
++    qtys  = request.form.getlist('item_qty[]')
++    costs = request.form.getlist('item_cost[]')
++    codes = request.form.getlist('item_code[]')
++    for i, name in enumerate(names):
++        if name.strip():
++            db.session.add(DocumentItem(
++                document_id=doc.id,
++                name=name.strip(),
++                unit=units[i] if i < len(units) else '',
++                quantity=float(qtys[i]) if i < len(qtys) and qtys[i] else None,
++                note=codes[i] if i < len(codes) else '',
++                price=_to_float(costs[i]) if i < len(costs) else None,
++            ))
++
++    _save_form_attachments(doc)
++
++    action = request.form.get('action', 'save')
++    if action == 'submit':
++        doc.status = 'pending'
++        db.session.add(DocumentComment(
++            document_id=doc.id, author_id=current_user.id,
++            text=f'Документ отредактирован и повторно отправлен на согласование пользователем {current_user.full_name}.',
++            is_system=True,
++        ))
++        _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
++        msg = 'Документ отредактирован и отправлен на согласование.'
++    else:
++        db.session.add(DocumentComment(
++            document_id=doc.id, author_id=current_user.id,
++            text=f'Документ обновлён пользователем {current_user.full_name} (черновик доработки).',
++            is_system=True,
++        ))
++        msg = 'Изменения сохранены. Документ всё ещё на доработке.'
++
++    db.session.commit()
++    flash(msg, 'success')
++    return redirect(url_for('documents.view', doc_id=doc.id))
++
++
+ @documents.route('/trebovanie/<int:doc_id>/edit', methods=['GET'])
+ @login_required
+ def edit_trebovanie(doc_id):
+diff --git a/app/models.py b/app/models.py
+index 280ef7e..f55d489 100644
+--- a/app/models.py
++++ b/app/models.py
+@@ -110,12 +110,16 @@ def load_user(user_id):
+ # ── DOCUMENTS ─────────────────────────────────────────────────────────────────
+ 
+ DOC_TYPES = {
+-    'purchase_req': 'Требование на приобретение',
+-    'memo':         'Служебная записка',
+-    'order':        'Приказ',
+-    'act':          'Акт',
+-    'incoming':     'Входящее письмо',
+-    'outgoing':     'Исходящее письмо',
++    'purchase_req':  'Требование на приобретение',
++    'trebovanie':    'Требование на приобретение материалов',
++    'po_services':   'РО на услуги',
++    'po_trebovanie': 'РО на товары',
++    'defect_act':    'Дефектный акт',
++    'memo':          'Служебная записка',
++    'order':         'Приказ',
++    'act':           'Акт',
++    'incoming':      'Входящее письмо',
++    'outgoing':      'Исходящее письмо',
+ }
+ 
+ DOC_STATUSES = {
+@@ -159,6 +163,7 @@ class Document(db.Model):
+             'purchase_req': 'ТМЦ',
+             'trebovanie':   'ТРБ',
+             'po_services':  'РОУ',
++            'po_trebovanie':'РОТ',
+             'defect_act':   'ДА',
+             'memo':         'СЗ',
+             'order':        'ПР',
+diff --git a/app/templates/documents/new.html b/app/templates/documents/new.html
+index 221564e..603b700 100644
+--- a/app/templates/documents/new.html
++++ b/app/templates/documents/new.html
+@@ -16,6 +16,12 @@
+     <div class="doc-card-sub">Purchase Order — Services</div>
+   </a>
+ 
++  <a href="{{ url_for('documents.new_po_trebovanie') }}" class="doc-card">
++    <div class="doc-card-icon"><i class="ti ti-package"></i></div>
++    <div class="doc-card-title">РО на товары</div>
++    <div class="doc-card-sub">Purchase Order — Goods</div>
++  </a>
++
+   <a href="{{ url_for('documents.new_defect_act') }}" class="doc-card">
+     <div class="doc-card-icon"><i class="ti ti-alert-triangle"></i></div>
+     <div class="doc-card-title">Дефектный акт</div>
+diff --git a/app/templates/documents/po_trebovanie.html b/app/templates/documents/po_trebovanie.html
+new file mode 100644
+index 0000000..6cd010d
+--- /dev/null
++++ b/app/templates/documents/po_trebovanie.html
+@@ -0,0 +1,258 @@
++{% extends "base.html" %}
++{% block title %}PO на товары{% endblock %}
++{% block page_title %}PO на товары{% endblock %}
++
++{% block content %}
++{% include 'documents/_dlog_style.html' %}
++<div style="max-width:1100px;margin:0 auto">
++
++  <!-- ACTION BAR -->
++  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
++    <button type="submit" form="po-treb-form" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Отправить</button>
++    <button type="submit" form="po-treb-form" name="action" value="draft" class="btn"><i class="ti ti-device-floppy"></i> Сохранить</button>
++    <a href="{{ url_for('documents.index') }}" class="btn"><i class="ti ti-x"></i> Отменить</a>
++    <div style="margin-left:auto;text-align:right;font-size:11px;color:var(--text-3)">Версия 1<br>Не контрольный</div>
++  </div>
++
++  <!-- TITLE + STEPPER -->
++  <div class="dlg-title">РО на товары</div>
++  <div class="dlg-steps">
++    <div class="dlg-step active">Создание</div>
++    <div class="dlg-step">Согласование</div>
++    <div class="dlg-step">Подпись</div>
++    <div class="dlg-step">Архив</div>
++  </div>
++
++  <form id="po-treb-form" method="POST" action="{{ url_for('documents.submit_po_trebovanie') }}" enctype="multipart/form-data">
++    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
++
++    <!-- TWO-COLUMN REQUISITES -->
++    <div class="dlg-cols" style="margin-top:20px">
++      <div>
++        <div class="dlg-h">Регистрационные реквизиты</div>
++        <div class="dlg-row">
++          <div class="dlg-label">Основание (№ WO):<span class="dlg-req">*</span></div>
++          <div><input name="basis" type="text" class="dlg-input" required></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Краткое содержание:<span class="dlg-req">*</span></div>
++          <div><textarea name="summary" class="dlg-textarea" required></textarea></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Требование на приобретение материалов:</div>
++          <div><input name="material_request" type="text" class="dlg-input"></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Контрагент:<span class="dlg-req">*</span></div>
++          <div><input name="counterparty" type="text" class="dlg-input" required></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Плательщик НДС:</div>
++          <div>
++            <select name="vat_payer" class="dlg-select">
++              <option value="no">Нет</option>
++              <option value="yes">Да</option>
++            </select>
++          </div>
++        </div>
++      </div>
++
++      <div>
++        <div class="dlg-h">Реквизиты присвоенные отправителем</div>
++        <div class="dlg-row">
++          <div class="dlg-label">Автор:</div>
++          <div class="dlg-static"><i class="ti ti-user" style="font-size:12px;color:var(--text-3);margin-right:4px"></i>{{ current_user.full_name }}</div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Заказано:</div>
++          <div><input name="ordered_by" type="text" class="dlg-input"></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Подразделение:<span class="dlg-req">*</span></div>
++          <div>
++            <select name="department" class="dlg-select" required>
++              <option value="">— Выберите —</option>
++              <option value="mechanic">Механический</option>
++              <option value="transport">Транспорт</option>
++              <option value="hse">ОТ и ТБ</option>
++              <option value="engineering">Инженерный</option>
++              <option value="admin">Административный</option>
++              <option value="it">IT</option>
++            </select>
++          </div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Валюта:<span class="dlg-req">*</span></div>
++          <div>
++            <select name="currency" class="dlg-select" required>
++              <option value="KZT">₸ Тенге (KZT)</option>
++              <option value="USD">$ Доллар (USD)</option>
++              <option value="EUR">€ Евро (EUR)</option>
++              <option value="RUB">₽ Рубль (RUB)</option>
++            </select>
++          </div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Дата оплаты:<span class="dlg-req">*</span></div>
++          <div><input name="payment_date" type="date" class="dlg-input" required></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Вложения:</div>
++          <div>
++            <label class="dlg-upl" for="attachments">
++              <i class="ti ti-upload" style="font-size:14px"></i> Загрузить
++              <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv" style="display:none" onchange="showAttachments(this)">
++            </label>
++            <div class="dlg-chips" id="attachment-list"></div>
++          </div>
++        </div>
++      </div>
++    </div>
++
++    <!-- ROUTE (Documentolog-style) -->
++    {% include 'documents/_dlog_route.html' %}
++
++    <!-- ПРОЧИЕ УСЛОВИЯ SECTION -->
++    <div class="dlg-h">Прочие условия</div>
++    <div class="dlg-cols" style="gap:20px">
++      <div>
++        <div class="dlg-row">
++          <div class="dlg-label">Условия оплаты:</div>
++          <div><input name="payment_terms" type="text" class="dlg-input" placeholder="напр. 100% предоплата"></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Условия оказания услуг:</div>
++          <div><input name="service_terms" type="text" class="dlg-input"></div>
++        </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Срок оказания услуг:</div>
++          <div><input name="service_date" type="date" class="dlg-input"></div>
++        </div>
++      </div>
++      <div>
++        <div class="dlg-row">
++          <div class="dlg-label">Статья бюджета:</div>
++          <div><input name="budget_line" type="text" class="dlg-input"></div>
++        </div>
++      </div>
++    </div>
++
++    <!-- ГРУППА МАТЕРИАЛОВ TABLE -->
++    <div class="dlg-h">Прочие условия</div>
++    <div style="overflow-x:auto">
++      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px" id="group-table">
++        <thead>
++          <tr style="border-bottom:1px solid var(--border)">
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:30px"></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Группа материалов</th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Без договора <span class="dlg-req">*</span></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Договор</th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:100px">Условия оплаты</th>
++          </tr>
++        </thead>
++        <tbody id="group-body">
++          <tr>
++            <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_name[]" type="text" class="dlg-input"></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="group_no_contract[]" class="dlg-select"><option value="">Нет</option><option value="yes">Да</option></select></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_contract[]" type="text" class="dlg-input"></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_payment[]" type="text" class="dlg-input"></td>
++          </tr>
++        </tbody>
++      </table>
++    </div>
++    <button type="button" onclick="addGroupRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ Добавить строку</button>
++
++    <!-- ТОВАРЫ TABLE -->
++    <div class="dlg-h" style="margin-top:20px">Таблица по товарам</div>
++    <div style="overflow-x:auto">
++      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px" id="items-table">
++        <thead>
++          <tr style="border-bottom:1px solid var(--border)">
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:30px"></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Описание <span class="dlg-req">*</span></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:80px">Ед. изм. <span class="dlg-req">*</span></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:70px">Кол-во <span class="dlg-req">*</span></th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:110px">Код ТНВЭД</th>
++            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:110px">Цена за единицу</th>
++            <th style="padding:8px 6px;text-align:right;font-weight:600;color:var(--text-2);width:100px">Сумма</th>
++          </tr>
++        </thead>
++        <tbody id="items-body">
++          <tr>
++            <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_unit[]" type="text" class="dlg-input"></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" class="dlg-input"></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_code[]" type="text" class="dlg-input"></td>
++            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" class="dlg-input"></td>
++            <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border)"><span class="row-sum" style="font-weight:500">0.00</span></td>
++          </tr>
++        </tbody>
++        <tfoot>
++          <tr>
++            <td colspan="6" style="padding:10px 6px;font-weight:600;text-align:right">Итого:</td>
++            <td style="padding:10px 6px;font-weight:600;text-align:right"><span id="grand-total">0.00</span></td>
++          </tr>
++        </tfoot>
++      </table>
++    </div>
++    <button type="button" onclick="addItemRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ Добавить строку</button>
++
++  </form>
++</div>
++
++{% include 'documents/_dlog_modal.html' %}
++
++<script>
++function addGroupRow(){
++  const tbody = document.getElementById('group-body');
++  const tr = document.createElement('tr');
++  tr.innerHTML = `
++    <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_name[]" type="text" class="dlg-input"></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="group_no_contract[]" class="dlg-select"><option value="">Нет</option><option value="yes">Да</option></select></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_contract[]" type="text" class="dlg-input"></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_payment[]" type="text" class="dlg-input"></td>
++  `;
++  tbody.appendChild(tr);
++}
++function addItemRow(){
++  const tbody = document.getElementById('items-body');
++  const tr = document.createElement('tr');
++  tr.innerHTML = `
++    <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_unit[]" type="text" class="dlg-input"></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" class="dlg-input"></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_code[]" type="text" class="dlg-input"></td>
++    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" class="dlg-input"></td>
++    <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border)"><span class="row-sum" style="font-weight:500">0.00</span></td>
++  `;
++  tbody.appendChild(tr);
++  recalc();
++}
++function recalc(){
++  let g = 0;
++  document.querySelectorAll('#items-body tr').forEach(tr => {
++    const q = parseFloat(tr.querySelector('input[name="item_qty[]"]')?.value) || 0;
++    const p = parseFloat(tr.querySelector('input[name="item_cost[]"]')?.value) || 0;
++    const s = q * p;
++    tr.querySelector('.row-sum').textContent = s.toFixed(2);
++    g += s;
++  });
++  document.getElementById('grand-total').textContent = g.toFixed(2);
++}
++window.addEventListener('load', recalc);
++function showAttachments(input){
++  const list = document.getElementById('attachment-list');
++  list.innerHTML = '';
++  Array.from(input.files).forEach(f=>{
++    const chip = document.createElement('div');
++    chip.className = 'dlg-chip';
++    chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${f.name}</span><span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
++    list.appendChild(chip);
++  });
++}
++</script>
++{% endblock %}
+diff --git a/app/templates/documents/po_trebovanie_edit.html b/app/templates/documents/po_trebovanie_edit.html
+new file mode 100644
+index 0000000..11f07d0
+--- /dev/null
++++ b/app/templates/documents/po_trebovanie_edit.html
+@@ -0,0 +1,191 @@
++{% extends "base.html" %}
++{% block title %}Редактирование {{ doc.doc_number }}{% endblock %}
++{% block page_title %}Редактирование · {{ doc.doc_number }}{% endblock %}
++{% block content %}
++{% include 'documents/_dlog_style.html' %}
++
++<form method="POST" action="{{ url_for('documents.update_po_trebovanie', doc_id=doc.id) }}" enctype="multipart/form-data">
++  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
++
++<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
++  <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Сохранить и отправить</button>
++  <button type="submit" name="action" value="save" class="btn"><i class="ti ti-device-floppy"></i> Сохранить черновик</button>
++  <a href="{{ url_for('documents.view', doc_id=doc.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
++  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">{{ doc.doc_number }} · Доработка</div>
++</div>
++
++<div class="dlg-steps">
++  <div class="dlg-step done">Создание</div>
++  <div class="dlg-step active">Согласование</div>
++  <div class="dlg-step">Подпись</div>
++  <div class="dlg-step">Архив</div>
++</div>
++
++<div class="form-section">
++  <div class="form-section-header"><i class="ti ti-file-text"></i><span class="form-section-title">Регистрационные реквизиты</span></div>
++  <div class="form-section-body">
++    <div class="form-grid-2" style="gap:16px">
++      <div class="form-group" style="grid-column:1/-1">
++        <label class="form-label">Основание (№ WO)<span class="req">*</span></label>
++        <input name="basis" type="text" class="form-input" value="{{ extras.get('basis','') }}" required>
++      </div>
++      <div class="form-group" style="grid-column:1/-1">
++        <label class="form-label">Краткое содержание<span class="req">*</span></label>
++        <textarea name="summary" class="form-textarea" required style="min-height:60px">{{ doc.purpose or '' }}</textarea>
++      </div>
++      <div class="form-group"><label class="form-label">Требование на материалы</label><input name="material_request" type="text" class="form-input" value="{{ extras.get('material_request','') }}"></div>
++      <div class="form-group"><label class="form-label">Контрагент</label><input name="counterparty" type="text" class="form-input" value="{{ extras.get('counterparty','') }}"></div>
++      <div class="form-group">
++        <label class="form-label">Плательщик НДС</label>
++        <select name="vat_payer" class="form-select">
++          <option value="no" {% if extras.get('vat_payer') == 'no' %}selected{% endif %}>Нет</option>
++          <option value="yes" {% if extras.get('vat_payer') == 'yes' %}selected{% endif %}>Да</option>
++        </select>
++      </div>
++      <div class="form-group"><label class="form-label">Заказано</label><input name="ordered_by" type="text" class="form-input" value="{{ extras.get('ordered_by','') }}"></div>
++      <div class="form-group"><label class="form-label">Подразделение</label><input name="department" type="text" class="form-input" value="{{ doc.department or '' }}"></div>
++      <div class="form-group">
++        <label class="form-label">Валюта</label>
++        <select name="currency" class="form-select">
++          <option value="KZT" {% if extras.get('currency','KZT') == 'KZT' %}selected{% endif %}>₸ Тенге (KZT)</option>
++          <option value="USD" {% if extras.get('currency') == 'USD' %}selected{% endif %}>$ Доллар (USD)</option>
++          <option value="EUR" {% if extras.get('currency') == 'EUR' %}selected{% endif %}>€ Евро (EUR)</option>
++          <option value="RUB" {% if extras.get('currency') == 'RUB' %}selected{% endif %}>₽ Рубль (RUB)</option>
++        </select>
++      </div>
++      <div class="form-group"><label class="form-label">Дата оплаты</label><input name="payment_date" type="date" class="form-input" value="{{ extras.get('payment_date','') }}"></div>
++    </div>
++  </div>
++</div>
++
++<div class="form-section">
++  <div class="form-section-header"><i class="ti ti-table"></i><span class="form-section-title">Таблица по товарам</span></div>
++  <div class="form-section-body" style="padding:0">
++    <div style="overflow-x:auto">
++      <table class="data-table" id="items-table">
++        <thead>
++          <tr>
++            <th style="width:30px">№</th>
++            <th>Описание<span class="req">*</span></th>
++            <th style="width:80px">Ед. изм.</th>
++            <th style="width:70px">Кол-во</th>
++            <th style="width:100px">Код ТНВЭД</th>
++            <th style="width:110px">Цена за единицу</th>
++            <th style="width:110px;text-align:right">Сумма</th>
++            <th style="width:30px"></th>
++          </tr>
++        </thead>
++        <tbody id="items-body">
++          {% for it in items %}
++          <tr>
++            <td style="text-align:center;color:var(--text-3)">{{ loop.index }}</td>
++            <td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none">{{ it.name }}</textarea></td>
++            <td><input name="item_unit[]" type="text" value="{{ it.unit or '' }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
++            <td><input name="item_qty[]" type="number" min="0" value="{{ it.quantity if it.quantity is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
++            <td><input name="item_code[]" type="text" value="{{ it.note or '' }}" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
++            <td><input name="item_cost[]" type="number" min="0" step="0.01" value="{{ it.price if it.price is not none else '' }}" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
++            <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
++            <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0">✕</button></td>
++          </tr>
++          {% endfor %}
++        </tbody>
++        <tfoot>
++          <tr>
++            <td colspan="6" style="text-align:right;font-weight:600">Итого</td>
++            <td style="text-align:right;font-weight:600"><span id="grand-total">0.00</span></td>
++            <td></td>
++          </tr>
++        </tfoot>
++      </table>
++    </div>
++    <div style="padding:12px 18px;border-top:1px solid var(--border)">
++      <button type="button" onclick="addRow()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить строку</button>
++    </div>
++  </div>
++</div>
++
++<div class="form-section">
++  <div class="form-section-header"><i class="ti ti-list-details"></i><span class="form-section-title">Прочие условия</span></div>
++  <div class="form-section-body">
++    <div class="form-grid-2" style="gap:16px">
++      <div class="form-group"><label class="form-label">Условия оплаты</label><input name="payment_terms" type="text" class="form-input" value="{{ extras.get('payment_terms','') }}"></div>
++      <div class="form-group"><label class="form-label">Условия оказания услуг</label><input name="service_terms" type="text" class="form-input" value="{{ extras.get('service_terms','') }}"></div>
++      <div class="form-group"><label class="form-label">Срок оказания услуг</label><input name="service_date" type="date" class="form-input" value="{{ extras.get('service_date','') }}"></div>
++      <div class="form-group"><label class="form-label">Статья бюджета</label><input name="budget_line" type="text" class="form-input" value="{{ extras.get('budget_line','') }}"></div>
++    </div>
++  </div>
++</div>
++
++<div class="form-section">
++  <div class="form-section-header"><i class="ti ti-paperclip"></i><span class="form-section-title">Вложения</span></div>
++  <div class="form-section-body">
++    <div class="dlg-chips" style="margin:0 0 10px">
++      {% for a in doc.attachments %}
++      <div class="dlg-chip">
++        <i class="ti ti-menu-2"></i>
++        <a class="dlg-chip-name" href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="color:var(--text-1)">{{ a.original_filename }}</a>
++        <span style="font-size:10px;color:var(--text-3);flex-shrink:0">{{ ((a.size_bytes or 0) / 1024)|round(0)|int }} KB</span>
++        <button type="submit" form="del-att-{{ a.id }}" class="dlg-chip-x" onclick="return confirm('Удалить файл?')">×</button>
++      </div>
++      {% else %}
++      <div style="font-size:11px;color:var(--text-3)">Нет вложений</div>
++      {% endfor %}
++    </div>
++    <label class="dlg-upl" for="attachments">
++      <i class="ti ti-upload" style="font-size:14px"></i> Загрузить
++      <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv" style="display:none" onchange="showNewAttachments(this)">
++    </label>
++    <div class="dlg-chips" id="attachment-list"></div>
++    <div style="font-size:10px;color:var(--text-3);margin-top:6px">Новые файлы будут загружены при сохранении.</div>
++  </div>
++</div>
++
++</form>
++
++{% for a in doc.attachments %}
++<form id="del-att-{{ a.id }}" method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}">
++  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
++</form>
++{% endfor %}
++
++<script>
++function addRow() {
++  const tb = document.getElementById('items-body');
++  const n = tb.rows.length + 1;
++  const tr = document.createElement('tr');
++  tr.innerHTML = `
++    <td style="text-align:center;color:var(--text-3)">${n}</td>
++    <td><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
++    <td><input name="item_unit[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
++    <td><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:center"></td>
++    <td><input name="item_code[]" type="text" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none"></td>
++    <td><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;outline:none;text-align:right"></td>
++    <td style="text-align:right;font-weight:500"><span class="row-sum" style="font-size:11px">0.00</span></td>
++    <td style="text-align:center"><button type="button" onclick="this.closest('tr').remove();recalc()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0">✕</button></td>
++  `;
++  tb.appendChild(tr);
++}
++function recalc() {
++  let g = 0;
++  document.querySelectorAll('#items-body tr').forEach(tr => {
++    const q = parseFloat(tr.querySelector('input[name="item_qty[]"]')?.value) || 0;
++    const p = parseFloat(tr.querySelector('input[name="item_cost[]"]')?.value) || 0;
++    const s = q * p;
++    tr.querySelector('.row-sum').textContent = s.toFixed(2);
++    g += s;
++  });
++  document.getElementById('grand-total').textContent = g.toFixed(2);
++}
++window.addEventListener('load', recalc);
++function showNewAttachments(input){
++  const list = document.getElementById('attachment-list');
++  list.innerHTML = '';
++  Array.from(input.files).forEach(f=>{
++    const chip = document.createElement('div');
++    chip.className = 'dlg-chip';
++    chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${f.name}</span><span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
++    list.appendChild(chip);
++  });
++}
++</script>
++{% endblock %}
+diff --git a/app/templates/documents/trebovanie.html b/app/templates/documents/trebovanie.html
+index dc33763..a309172 100644
+--- a/app/templates/documents/trebovanie.html
++++ b/app/templates/documents/trebovanie.html
+@@ -41,6 +41,10 @@
+           <div class="dlg-label">Вид документа:</div>
+           <div class="dlg-static">Требование на приобретение материалов</div>
+         </div>
++        <div class="dlg-row">
++          <div class="dlg-label">Форма документа:</div>
++          <div class="dlg-static">Электронный документ</div>
++        </div>
+         <div class="dlg-row">
+           <div class="dlg-label">Краткое содержание:<span class="dlg-req">*</span></div>
+           <div><textarea name="summary" class="dlg-textarea" required></textarea></div>
+diff --git a/app/templates/documents/view.html b/app/templates/documents/view.html
+index b947438..cdea0df 100644
+--- a/app/templates/documents/view.html
++++ b/app/templates/documents/view.html
+@@ -99,6 +99,8 @@
+             <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+             {% elif doc.doc_type == 'trebovanie' %}
+             <a href="{{ url_for('documents.edit_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
++            {% elif doc.doc_type == 'po_trebovanie' %}
++            <a href="{{ url_for('documents.edit_po_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+             {% elif doc.doc_type == 'defect_act' %}
+             <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+             {% endif %}
+@@ -125,7 +127,7 @@
+       <div class="card-body">
+         <table style="width:100%;font-size:12px;border-collapse:collapse">
+           <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
+-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
++          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
+           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
+           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>

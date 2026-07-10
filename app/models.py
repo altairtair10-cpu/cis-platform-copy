@@ -110,12 +110,16 @@ def load_user(user_id):
 # ── DOCUMENTS ─────────────────────────────────────────────────────────────────
 
 DOC_TYPES = {
-    'purchase_req': 'Требование на приобретение',
-    'memo':         'Служебная записка',
-    'order':        'Приказ',
-    'act':          'Акт',
-    'incoming':     'Входящее письмо',
-    'outgoing':     'Исходящее письмо',
+    'purchase_req':  'Требование на приобретение',
+    'trebovanie':    'Требование на приобретение материалов',
+    'po_services':   'РО на услуги',
+    'po_trebovanie': 'РО на товары',
+    'defect_act':    'Дефектный акт',
+    'memo':          'Служебная записка',
+    'order':         'Приказ',
+    'act':           'Акт',
+    'incoming':      'Входящее письмо',
+    'outgoing':      'Исходящее письмо',
 }
 
 DOC_STATUSES = {
@@ -159,6 +163,7 @@ class Document(db.Model):
             'purchase_req': 'ТМЦ',
             'trebovanie':   'ТРБ',
             'po_services':  'РОУ',
+            'po_trebovanie':'РОТ',
             'defect_act':   'ДА',
             'memo':         'СЗ',
             'order':        'ПР',

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}PO на товары{% endblock %}
+{% block page_title %}PO на товары{% endblock %}
+
+{% block content %}
+{% include 'documents/_dlog_style.html' %}
+<div style="max-width:1100px;margin:0 auto">
+
+  <!-- ACTION BAR -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+    <button type="submit" form="po-treb-form" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Отправить</button>
+    <button type="submit" form="po-treb-form" name="action" value="draft" class="btn"><i class="ti ti-device-floppy"></i> Сохранить</button>
+    <a href="{{ url_for('documents.index') }}" class="btn"><i class="ti ti-x"></i> Отменить</a>
+    <div style="margin-left:auto;text-align:right;font-size:11px;color:var(--text-3)">Версия 1<br>Не контрольный</div>
+  </div>
+
+  <!-- TITLE + STEPPER -->
+  <div class="dlg-title">РО на товары</div>
+  <div class="dlg-steps">
+    <div class="dlg-step active">Создание</div>
+    <div class="dlg-step">Согласование</div>
+    <div class="dlg-step">Подпись</div>
+    <div class="dlg-step">Архив</div>
+  </div>
+
+  <form id="po-treb-form" method="POST" action="{{ url_for('documents.submit_po_trebovanie') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- TWO-COLUMN REQUISITES -->
+    <div class="dlg-cols" style="margin-top:20px">
+      <div>
+        <div class="dlg-h">Регистрационные реквизиты</div>
+        <div class="dlg-row">
+          <div class="dlg-label">Основание (№ WO):<span class="dlg-req">*</span></div>
+          <div><input name="basis" type="text" class="dlg-input" required></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Краткое содержание:<span class="dlg-req">*</span></div>
+          <div><textarea name="summary" class="dlg-textarea" required></textarea></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Требование на приобретение материалов:</div>
+          <div><input name="material_request" type="text" class="dlg-input"></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Контрагент:<span class="dlg-req">*</span></div>
+          <div><input name="counterparty" type="text" class="dlg-input" required></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Плательщик НДС:</div>
+          <div>
+            <select name="vat_payer" class="dlg-select">
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="dlg-h">Реквизиты присвоенные отправителем</div>
+        <div class="dlg-row">
+          <div class="dlg-label">Автор:</div>
+          <div class="dlg-static"><i class="ti ti-user" style="font-size:12px;color:var(--text-3);margin-right:4px"></i>{{ current_user.full_name }}</div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Заказано:</div>
+          <div><input name="ordered_by" type="text" class="dlg-input"></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Подразделение:<span class="dlg-req">*</span></div>
+          <div>
+            <select name="department" class="dlg-select" required>
+              <option value="">— Выберите —</option>
+              <option value="mechanic">Механический</option>
+              <option value="transport">Транспорт</option>
+              <option value="hse">ОТ и ТБ</option>
+              <option value="engineering">Инженерный</option>
+              <option value="admin">Административный</option>
+              <option value="it">IT</option>
+            </select>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Валюта:<span class="dlg-req">*</span></div>
+          <div>
+            <select name="currency" class="dlg-select" required>
+              <option value="KZT">₸ Тенге (KZT)</option>
+              <option value="USD">$ Доллар (USD)</option>
+              <option value="EUR">€ Евро (EUR)</option>
+              <option value="RUB">₽ Рубль (RUB)</option>
+            </select>
+          </div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Дата оплаты:<span class="dlg-req">*</span></div>
+          <div><input name="payment_date" type="date" class="dlg-input" required></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Вложения:</div>
+          <div>
+            <label class="dlg-upl" for="attachments">
+              <i class="ti ti-upload" style="font-size:14px"></i> Загрузить
+              <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv" style="display:none" onchange="showAttachments(this)">
+            </label>
+            <div class="dlg-chips" id="attachment-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTE (Documentolog-style) -->
+    {% include 'documents/_dlog_route.html' %}
+
+    <!-- ПРОЧИЕ УСЛОВИЯ SECTION -->
+    <div class="dlg-h">Прочие условия</div>
+    <div class="dlg-cols" style="gap:20px">
+      <div>
+        <div class="dlg-row">
+          <div class="dlg-label">Условия оплаты:</div>
+          <div><input name="payment_terms" type="text" class="dlg-input" placeholder="напр. 100% предоплата"></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Условия оказания услуг:</div>
+          <div><input name="service_terms" type="text" class="dlg-input"></div>
+        </div>
+        <div class="dlg-row">
+          <div class="dlg-label">Срок оказания услуг:</div>
+          <div><input name="service_date" type="date" class="dlg-input"></div>
+        </div>
+      </div>
+      <div>
+        <div class="dlg-row">
+          <div class="dlg-label">Статья бюджета:</div>
+          <div><input name="budget_line" type="text" class="dlg-input"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ГРУППА МАТЕРИАЛОВ TABLE -->
+    <div class="dlg-h">Прочие условия</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px" id="group-table">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:30px"></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Группа материалов</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Без договора <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Договор</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:100px">Условия оплаты</th>
+          </tr>
+        </thead>
+        <tbody id="group-body">
+          <tr>
+            <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_name[]" type="text" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="group_no_contract[]" class="dlg-select"><option value="">Нет</option><option value="yes">Да</option></select></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_contract[]" type="text" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_payment[]" type="text" class="dlg-input"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button type="button" onclick="addGroupRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ Добавить строку</button>
+
+    <!-- ТОВАРЫ TABLE -->
+    <div class="dlg-h" style="margin-top:20px">Таблица по товарам</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px" id="items-table">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:30px"></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Описание <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:80px">Ед. изм. <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:70px">Кол-во <span class="dlg-req">*</span></th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:110px">Код ТНВЭД</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:110px">Цена за единицу</th>
+            <th style="padding:8px 6px;text-align:right;font-weight:600;color:var(--text-2);width:100px">Сумма</th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          <tr>
+            <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_unit[]" type="text" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_code[]" type="text" class="dlg-input"></td>
+            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" class="dlg-input"></td>
+            <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border)"><span class="row-sum" style="font-weight:500">0.00</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="padding:10px 6px;font-weight:600;text-align:right">Итого:</td>
+            <td style="padding:10px 6px;font-weight:600;text-align:right"><span id="grand-total">0.00</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button type="button" onclick="addItemRow()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;font-family:inherit">+ Добавить строку</button>
+
+  </form>
+</div>
+
+{% include 'documents/_dlog_modal.html' %}
+
+<script>
+function addGroupRow(){
+  const tbody = document.getElementById('group-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_name[]" type="text" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="group_no_contract[]" class="dlg-select"><option value="">Нет</option><option value="yes">Да</option></select></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_contract[]" type="text" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_payment[]" type="text" class="dlg-input"></td>
+  `;
+  tbody.appendChild(tr);
+}
+function addItemRow(){
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:6px;text-align:center;border-bottom:1px solid var(--border)"><span class="dlg-drag">≡</span></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><textarea name="item_name[]" rows="2" required style="width:100%;background:transparent;border:none;font-size:11px;color:var(--text-1);font-family:inherit;resize:none;outline:none"></textarea></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_unit[]" type="text" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_qty[]" type="number" min="0" value="1" oninput="recalc()" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_code[]" type="text" class="dlg-input"></td>
+    <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="item_cost[]" type="number" min="0" step="0.01" oninput="recalc()" class="dlg-input"></td>
+    <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border)"><span class="row-sum" style="font-weight:500">0.00</span></td>
+  `;
+  tbody.appendChild(tr);
+  recalc();
+}
+function recalc(){
+  let g = 0;
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const q = parseFloat(tr.querySelector('input[name="item_qty[]"]')?.value) || 0;
+    const p = parseFloat(tr.querySelector('input[name="item_cost[]"]')?.value) || 0;
+    const s = q * p;
+    tr.querySelector('.row-sum').textContent = s.toFixed(2);
+    g += s;
+  });
+  document.getElementById('grand-total').textContent = g.toFixed(2);
+}
+window.addEventListener('load', recalc);
+function showAttachments(input){
+  const list = document.getElementById('attachment-list');
+  list.innerHTML = '';
+  Array.from(input.files).forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'dlg-chip';
+    chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${f.name}</span><span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
+    list.appendChild(chip);
+  });
+}
+</script>
+{% endblock %}

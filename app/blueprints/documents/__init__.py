@@ -31,6 +31,7 @@ def _unpack_extras(justification):
         'Условия оказания услуг': 'service_terms',
         'Срок оказания услуг': 'service_date',
         'Статья бюджета': 'budget_line',
+        'Требование на приобретение материалов': 'material_request',
     }
     out = {}
     for line in (justification or '').split('\n'):
@@ -812,6 +813,187 @@ def update_po_services(doc_id):
                 unit=units[i] if i < len(units) else '',
                 quantity=float(qtys[i]) if i < len(qtys) and qtys[i] else None,
                 note='',
+                price=_to_float(costs[i]) if i < len(costs) else None,
+            ))
+
+    _save_form_attachments(doc)
+
+    action = request.form.get('action', 'save')
+    if action == 'submit':
+        doc.status = 'pending'
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ отредактирован и повторно отправлен на согласование пользователем {current_user.full_name}.',
+            is_system=True,
+        ))
+        _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+        msg = 'Документ отредактирован и отправлен на согласование.'
+    else:
+        db.session.add(DocumentComment(
+            document_id=doc.id, author_id=current_user.id,
+            text=f'Документ обновлён пользователем {current_user.full_name} (черновик доработки).',
+            is_system=True,
+        ))
+        msg = 'Изменения сохранены. Документ всё ещё на доработке.'
+
+    db.session.commit()
+    flash(msg, 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/po-trebovanie/new', methods=['GET'])
+@login_required
+def new_po_trebovanie():
+    executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
+    return render_template('documents/po_trebovanie.html', executors=executors)
+
+
+@documents.route('/po-trebovanie/submit', methods=['POST'])
+@login_required
+def submit_po_trebovanie():
+    action = request.form.get('action', 'draft')
+    signatory_id = request.form.get('signatory_id', type=int)
+
+    extras = {
+        'Основание': request.form.get('basis'),
+        'Требование на приобретение материалов': request.form.get('material_request'),
+        'Контрагент': request.form.get('counterparty'),
+        'Плательщик НДС': request.form.get('vat_payer'),
+        'Заказано': request.form.get('ordered_by'),
+        'Валюта': request.form.get('currency'),
+        'Дата оплаты': request.form.get('payment_date'),
+        'Условия оплаты': request.form.get('payment_terms'),
+        'Условия оказания услуг': request.form.get('service_terms'),
+        'Срок оказания услуг': request.form.get('service_date'),
+        'Статья бюджета': request.form.get('budget_line'),
+    }
+    extras_text = '\n'.join(f'{k}: {v}' for k, v in extras.items() if v)
+
+    doc = Document(
+        doc_type      = 'po_trebovanie',
+        title         = request.form.get('summary', 'РО на товары')[:100],
+        department    = request.form.get('department', current_user.department),
+        purpose       = request.form.get('summary'),
+        justification = extras_text,
+        author_id     = current_user.id,
+        status        = 'pending' if action == 'submit' else 'draft',
+        current_step  = 0,
+    )
+
+    payment_date = request.form.get('payment_date')
+    if payment_date:
+        try:
+            doc.needed_by = datetime.strptime(payment_date, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
+    db.session.add(doc)
+    db.session.flush()
+    doc.generate_number()
+    log_action('document_created', 'document', doc.id, details=doc.doc_number)
+
+    names = request.form.getlist('item_name[]')
+    units = request.form.getlist('item_unit[]')
+    qtys  = request.form.getlist('item_qty[]')
+    costs = request.form.getlist('item_cost[]')
+    codes = request.form.getlist('item_code[]')
+
+    for i, name in enumerate(names):
+        if name.strip():
+            db.session.add(DocumentItem(
+                document_id = doc.id,
+                name        = name.strip(),
+                unit        = units[i] if i < len(units) else '',
+                quantity    = float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note        = codes[i] if i < len(codes) else '',
+                price       = _to_float(costs[i]) if i < len(costs) else None,
+            ))
+
+    db.session.add(DocumentComment(
+        document_id = doc.id,
+        author_id   = current_user.id,
+        text        = f'РО на товары {"отправлена на согласование" if action == "submit" else "сохранена как черновик"} пользователем {current_user.full_name}.',
+        is_system   = True,
+    ))
+
+    _build_route(doc, action, signatory_id)
+    _save_form_attachments(doc)
+
+    db.session.commit()
+
+    if action == 'submit':
+        _notify_approvers(doc)
+
+    db.session.commit()
+    flash(f'Документ {doc.doc_number} {"отправлен на согласование" if action == "submit" else "сохранён как черновик"}.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/po-trebovanie/<int:doc_id>/edit', methods=['GET'])
+@login_required
+def edit_po_trebovanie(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'po_trebovanie' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    extras = _unpack_extras(doc.justification)
+    items = doc.items.all()
+    return render_template('documents/po_trebovanie_edit.html', doc=doc, extras=extras, items=items)
+
+
+@documents.route('/po-trebovanie/<int:doc_id>/update', methods=['POST'])
+@login_required
+def update_po_trebovanie(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.author_id != current_user.id:
+        abort(403)
+    if doc.doc_type != 'po_trebovanie' or doc.status != 'returned':
+        flash('Этот документ нельзя редактировать.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+
+    doc.title      = request.form.get('summary', doc.title)[:100]
+    doc.purpose    = request.form.get('summary')
+    doc.department = request.form.get('department', doc.department)
+
+    extras = {
+        'Основание': request.form.get('basis'),
+        'Требование на приобретение материалов': request.form.get('material_request'),
+        'Контрагент': request.form.get('counterparty'),
+        'Плательщик НДС': request.form.get('vat_payer'),
+        'Заказано': request.form.get('ordered_by'),
+        'Валюта': request.form.get('currency'),
+        'Дата оплаты': request.form.get('payment_date'),
+        'Условия оплаты': request.form.get('payment_terms'),
+        'Условия оказания услуг': request.form.get('service_terms'),
+        'Срок оказания услуг': request.form.get('service_date'),
+        'Статья бюджета': request.form.get('budget_line'),
+    }
+    doc.justification = '\n'.join(f'{k}: {v}' for k, v in extras.items() if v)
+
+    payment_date = request.form.get('payment_date')
+    if payment_date:
+        try:
+            doc.needed_by = datetime.strptime(payment_date, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
+    for it in doc.items.all():
+        db.session.delete(it)
+    names = request.form.getlist('item_name[]')
+    units = request.form.getlist('item_unit[]')
+    qtys  = request.form.getlist('item_qty[]')
+    costs = request.form.getlist('item_cost[]')
+    codes = request.form.getlist('item_code[]')
+    for i, name in enumerate(names):
+        if name.strip():
+            db.session.add(DocumentItem(
+                document_id=doc.id,
+                name=name.strip(),
+                unit=units[i] if i < len(units) else '',
+                quantity=float(qtys[i]) if i < len(qtys) and qtys[i] else None,
+                note=codes[i] if i < len(codes) else '',
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
 
