@@ -3,7 +3,7 @@
 {% block page_title %}Требование на приобретение материалов{% endblock %}
 {% block content %}
 
-<form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie_new') }}">
+<form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie_new') }}" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <!-- STICKY TOP TOOLBAR -->
