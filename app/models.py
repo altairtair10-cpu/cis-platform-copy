@@ -74,7 +74,9 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def has_permission(self, module):
-        perms = PERMISSIONS.get(self.role, [])
+        if self.role == 'it_admin':
+            return True   # hardcoded so admins can never lock themselves out
+        perms = get_role_permissions(self.role)
         return '*' in perms or module in perms
 
     def can_access(self, module):
@@ -541,3 +543,48 @@ class DocNumberSetting(db.Model):
     id       = db.Column(db.Integer, primary_key=True)
     doc_type = db.Column(db.String(32), unique=True, nullable=False)
     prefix   = db.Column(db.String(16), nullable=True)
+
+
+# ── EDITABLE ROLE PERMISSIONS ─────────────────────────────────────────────────
+
+class RolePermission(db.Model):
+    """One row = role X may access module Y. Seeded from PERMISSIONS defaults;
+    editable in the admin panel. it_admin is hardcoded to full access."""
+    __tablename__ = 'role_permissions'
+
+    id     = db.Column(db.Integer, primary_key=True)
+    role   = db.Column(db.String(32), nullable=False, index=True)
+    module = db.Column(db.String(64), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('role', 'module', name='uq_roleperm_role_module'),
+    )
+
+
+def all_permission_modules():
+    """Union of every module used in the default permission map (excl. '*')."""
+    mods = set()
+    for perms in PERMISSIONS.values():
+        mods.update(p for p in perms if p != '*')
+    return sorted(mods)
+
+
+def get_role_permissions(role):
+    """Effective permission set for a role: DB rows if the table is populated
+    for that role, otherwise code defaults. Cached per request."""
+    from flask import g, has_app_context
+    if has_app_context():
+        cache = getattr(g, '_role_perms_cache', None)
+        if cache is None:
+            cache = g._role_perms_cache = {}
+        if role in cache:
+            return cache[role]
+    try:
+        rows = RolePermission.query.filter_by(role=role).all()
+        perms = ({r.module for r in rows} - {'__none__'}) if rows else set(PERMISSIONS.get(role, []))
+    except Exception:
+        # table missing (pre-migration) — fall back to defaults
+        perms = set(PERMISSIONS.get(role, []))
+    if has_app_context():
+        g._role_perms_cache[role] = perms
+    return perms
