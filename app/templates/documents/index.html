@@ -9,24 +9,23 @@
 
   <div style="flex:1;min-width:0">
     <form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-      <select name="doc_type" class="form-select" style="max-width:260px;font-size:13px;font-weight:600" onchange="this.form.submit()">
+      <div style="position:relative;display:inline-block">
+      <select name="doc_type" class="form-select" onchange="this.form.submit()"
+              style="max-width:280px;min-width:240px;font-size:13px;font-weight:600;padding:9px 34px 9px 12px;border:1.5px solid var(--color-border-primary, #C9C4BA);border-radius:8px;background:var(--color-background-primary,#fff);appearance:none;-webkit-appearance:none;cursor:pointer">
         <option value="">{{ {'ru':'Все виды документов','en':'All document types','kz':'Барлық құжат түрлері'}[current_user.language] }}</option>
         {% for k, v in doc_types.items() %}
         <option value="{{ k }}" {% if sel_type == k %}selected{% endif %}>{{ v }}</option>
         {% endfor %}
       </select>
+      <i class="ti ti-chevron-down" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:14px;color:var(--color-text-secondary,#8a857c)"></i>
+      </div>
       <select name="year" class="form-select" style="max-width:130px;font-size:12px" onchange="this.form.submit()">
         <option value="">{{ {'ru':'Год: все','en':'Year: all','kz':'Жыл: барлығы'}[current_user.language] }}</option>
         {% for y in years %}
         <option value="{{ y|int }}" {% if sel_year == y|int %}selected{% endif %}>{{ y|int }}</option>
         {% endfor %}
       </select>
-      <select name="status" class="form-select" style="max-width:190px;font-size:12px" onchange="this.form.submit()">
-        <option value="">{{ {'ru':'Статус: все','en':'Status: all','kz':'Мәртебе: барлығы'}[current_user.language] }}</option>
-        {% for k, v in statuses.items() %}
-        <option value="{{ k }}" {% if request.args.get('status') == k %}selected{% endif %}>{{ v }}</option>
-        {% endfor %}
-      </select>
+      
       {% if current_user.can_access('documents') or current_user.can_access('documents_read') or current_user.can_access('documents_procurement') %}
       <a href="{{ url_for('documents.export_xlsx', year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
         <i class="ti ti-file-spreadsheet"></i> {{ {'ru':'Экспорт в Excel','en':'Export to Excel','kz':'Excel-ге экспорт'}[current_user.language] }}
