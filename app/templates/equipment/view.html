@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ unit.unit_id }}{% endblock %}
+{% block page_title %}{{ unit.unit_id }} — {{ unit.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:14px">
+  <a href="{{ url_for('equipment.index') }}" class="btn btn-sm">
+    <i class="ti ti-arrow-left"></i>{{ {'ru':'Назад к списку','en':'Back to list','kz':'Тізімге оралу'}[current_user.language] }}
+  </a>
+</div>
+
+<div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-tag"></i>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ unit.eq_type or '—' }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-map-pin"></i>{{ {'ru':'Местонахождение','en':'Location','kz':'Орналасқан жері'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ unit.location or '—' }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</div>
+    <div class="kpi-value">
+      <span class="pill {% if unit.status == 'deployed' %}pill-green{% elif unit.status == 'maintenance' %}pill-amber{% else %}pill-gray{% endif %}">
+        {% if unit.status == 'deployed' %}{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}
+        {% elif unit.status == 'maintenance' %}{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}
+        {% else %}{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}{% endif %}
+      </span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-calendar"></i>{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</div>
+    <div class="kpi-value">{{ unit.next_service.strftime('%d.%m.%Y') if unit.next_service else '—' }}</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-tool"></i></div>
+      <div class="card-title">{{ {'ru':'Записать ТО','en':'Log maintenance','kz':'ТО жазу'}[current_user.language] }}</div>
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('equipment.add_log', unit_id=unit.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">{{ {'ru':'Описание работ','en':'Description','kz':'Жұмыс сипаттамасы'}[current_user.language] }} <span class="req">*</span></label>
+        <textarea name="description" class="form-input" rows="3" required
+          placeholder="{{ {'ru':'Что было сделано...','en':'What was done...','kz':'Не істелді...'}[current_user.language] }}"></textarea>
+      </div>
+      <div class="form-grid-2" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">{{ {'ru':'Использованные детали','en':'Parts used','kz':'Қолданылған бөлшектер'}[current_user.language] }}</label>
+          <input type="text" name="parts_used" class="form-input" placeholder="{{ {'ru':'необязательно','en':'optional','kz':'міндетті емес'}[current_user.language] }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ {'ru':'Стоимость','en':'Cost','kz':'Құны'}[current_user.language] }}</label>
+          <input type="text" name="cost" class="form-input" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-grid-2" style="margin-bottom:20px">
+        <div class="form-group">
+          <label class="form-label">{{ {'ru':'Новый статус','en':'New status','kz':'Жаңа мәртебе'}[current_user.language] }}</label>
+          <select name="status" class="form-select">
+            <option value="deployed" {% if unit.status == 'deployed' %}selected{% endif %}>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</option>
+            <option value="idle" {% if unit.status == 'idle' %}selected{% endif %}>{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}</option>
+            <option value="maintenance" {% if unit.status == 'maintenance' %}selected{% endif %}>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ {'ru':'Следующее ТО','en':'Next service date','kz':'Келесі ТО күні'}[current_user.language] }}</label>
+          <input type="date" name="next_service" class="form-input">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="ti ti-device-floppy"></i>{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-history"></i></div>
+      <div class="card-title">{{ {'ru':'История ТО','en':'Maintenance history','kz':'ТО тарихы'}[current_user.language] }}</div>
+    </div>
+  </div>
+  {% if logs %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Детали','en':'Parts','kz':'Бөлшектер'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Стоимость','en':'Cost','kz':'Құны'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Исполнитель','en':'Technician','kz':'Орындаушы'}[current_user.language] }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td class="text-muted">{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        <td>{{ log.description }}</td>
+        <td class="text-muted">{{ log.parts_used or '—' }}</td>
+        <td class="text-muted">{{ '%.2f'|format(log.cost) if log.cost is not none else '—' }}</td>
+        <td class="text-muted">{{ log.technician.full_name if log.technician else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body" style="text-align:center;padding:60px 20px">
+    <i class="ti ti-history" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
+    <div style="font-size:13px;font-weight:500;color:var(--text-2)">{{ {'ru':'Записей ТО пока нет','en':'No maintenance logged yet','kz':'ТО жазбалары жоқ'}[current_user.language] }}</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

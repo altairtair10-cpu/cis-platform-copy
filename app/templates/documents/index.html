@@ -25,7 +25,7 @@
           <div class="card-icon"><i class="ti ti-files"></i></div>
           <div class="card-title">{{ {'ru':'Реестр документов','en':'Document registry','kz':'Құжаттар тізілімі'}[current_user.language] }}</div>
         </div>
-        <div style="font-size:11px;color:var(--text-3)">{{ docs|length }} {{ {'ru':'документов','en':'documents','kz':'құжат'}[current_user.language] }}</div>
+        <div <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ {'ru':'документов','en':'documents','kz':'құжат'}[current_user.language] }}</div>
       </div>
       {% if docs %}
       <table class="data-table">
@@ -69,6 +69,7 @@
           {% endfor %}
         </tbody>
       </table>
+      {% include '_pagination.html' %}
       {% else %}
       <div class="card-body" style="text-align:center;padding:60px 20px">
         <i class="ti ti-files" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>

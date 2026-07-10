@@ -15,7 +15,7 @@
       <div class="card-icon"><i class="ti ti-users"></i></div>
       <div class="card-title">{{ {'ru':'Все пользователи','en':'All users','kz':'Барлық пайдаланушылар'}[current_user.language] }}</div>
     </div>
-    <div style="font-size:11px;color:var(--text-3)">{{ users|length }} {{ {'ru':'пользователей','en':'users','kz':'пайдаланушы'}[current_user.language] }}</div>
+    <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ {'ru':'пользователей','en':'users','kz':'пайдаланушы'}[current_user.language] }}</div>
   </div>
   <table class="data-table">
     <thead>
@@ -68,5 +68,6 @@
       {% endfor %}
     </tbody>
   </table>
+  {% include '_pagination.html' %}
 </div>
 {% endblock %}

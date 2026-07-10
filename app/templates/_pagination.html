@@ -1,0 +1,26 @@
+<!-- Reusable pager. Include with: {% include '_pagination.html' %}
+     Requires a `pagination` object (Flask-SQLAlchemy Pagination) in context. -->
+{% if pagination and pagination.pages > 1 %}
+<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border-top:1px solid var(--border)">
+  {% set args = request.args.to_dict() %}
+
+  {% if pagination.has_prev %}
+  {% set _ = args.update({'page': pagination.prev_num}) %}
+  <a href="{{ url_for(request.endpoint, **args) }}" class="btn btn-sm"><i class="ti ti-chevron-left"></i></a>
+  {% else %}
+  <span class="btn btn-sm" style="opacity:.4;pointer-events:none"><i class="ti ti-chevron-left"></i></span>
+  {% endif %}
+
+  <span class="text-muted text-small" style="padding:0 8px">
+    {{ {'ru':'Стр.','en':'Page','kz':'Бет'}[current_user.language] }} {{ pagination.page }} / {{ pagination.pages }}
+    <span style="color:var(--text-4)">({{ pagination.total }} {{ {'ru':'всего','en':'total','kz':'барлығы'}[current_user.language] }})</span>
+  </span>
+
+  {% if pagination.has_next %}
+  {% set _ = args.update({'page': pagination.next_num}) %}
+  <a href="{{ url_for(request.endpoint, **args) }}" class="btn btn-sm"><i class="ti ti-chevron-right"></i></a>
+  {% else %}
+  <span class="btn btn-sm" style="opacity:.4;pointer-events:none"><i class="ti ti-chevron-right"></i></span>
+  {% endif %}
+</div>
+{% endif %}

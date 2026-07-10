@@ -189,8 +189,10 @@ def users():
     if current_user.role != 'it_admin':
         flash('Access denied.', 'danger')
         return redirect(url_for('dashboard.index'))
-    all_users = User.query.order_by(User.id).all()
-    return render_template('auth/users.html', users=all_users)
+    page = request.args.get('page', 1, type=int)
+    pagination = User.query.order_by(User.id).paginate(page=page, per_page=25, error_out=False)
+    all_users = pagination.items
+    return render_template('auth/users.html', users=all_users, pagination=pagination)
 
 @auth.route('/users/new', methods=['GET', 'POST'])
 @login_required

@@ -6,7 +6,7 @@
 <div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-truck"></i>{{ {'ru':'Всего рейсов','en':'Total runs','kz':'Барлық сапар'}[current_user.language] }}</div>
-    <div class="kpi-value">{{ runs|length }}</div>
+    <div class="kpi-value">{{ pagination.total }}</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-route"></i>{{ {'ru':'Активных маршрутов','en':'Active routes','kz':'Белсенді маршрут'}[current_user.language] }}</div>
@@ -55,6 +55,7 @@
       {% endfor %}
     </tbody>
   </table>
+  {% include '_pagination.html' %}
   {% else %}
   <div class="card-body" style="text-align:center;padding:60px 20px">
     <i class="ti ti-truck" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>

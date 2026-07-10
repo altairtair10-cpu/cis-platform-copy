@@ -5,19 +5,19 @@
 <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-tool"></i>{{ {'ru':'Всего','en':'Total','kz':'Барлығы'}[current_user.language] }}</div>
-    <div class="kpi-value">{{ units|length }}</div>
+    <div class="kpi-value">{{ counts.total }}</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</div>
-    <div class="kpi-value success">{{ units|selectattr('status','eq','deployed')|list|length }}</div>
+    <div class="kpi-value success">{{ counts.deployed }}</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-circle-pause"></i>{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}</div>
-    <div class="kpi-value">{{ units|selectattr('status','eq','idle')|list|length }}</div>
+    <div class="kpi-value">{{ counts.idle }}</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</div>
-    <div class="kpi-value warning">{{ units|selectattr('status','eq','maintenance')|list|length }}</div>
+    <div class="kpi-value warning">{{ counts.maintenance }}</div>
   </div>
 </div>
 <div class="card">
@@ -40,7 +40,7 @@
     </thead>
     <tbody>
       {% for unit in units %}
-      <tr>
+      <tr onclick="window.location='{{ url_for('equipment.view', unit_id=unit.id) }}'" style="cursor:pointer">
         <td style="font-weight:600;color:var(--red)">{{ unit.unit_id }}</td>
         <td>{{ unit.name }}</td>
         <td class="text-muted">{{ unit.location or '—' }}</td>
@@ -57,5 +57,6 @@
       {% endfor %}
     </tbody>
   </table>
+  {% include '_pagination.html' %}
 </div>
 {% endblock %}

@@ -105,13 +105,23 @@ def _notify_current_approvers(doc, title):
 @login_required
 def index():
     status = request.args.get('status')
-    docs = _panel_docs()
-    panel_docs = docs
-    if status:
-        docs = [d for d in docs if d.status == status]
-    return render_template('documents/index.html', docs=docs, panel_docs=panel_docs,
-                           doc_types=DOC_TYPES, statuses=DOC_STATUSES)
+    page = request.args.get('page', 1, type=int)
 
+    panel_docs = _panel_docs()
+
+    query = Document.query
+    if current_user.can_access('documents_own'):
+        query = query.filter_by(author_id=current_user.id)
+    if status:
+        query = query.filter_by(status=status)
+    query = query.order_by(Document.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=25, error_out=False)
+    docs = pagination.items
+
+    return render_template('documents/index.html', docs=docs, panel_docs=panel_docs,
+                           pagination=pagination,
+                           doc_types=DOC_TYPES, statuses=DOC_STATUSES)
 
 @documents.route('/new')
 @login_required
