@@ -34,44 +34,6 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header">
-    <div class="card-header-left">
-      <div class="card-icon"><i class="ti ti-history"></i></div>
-      <div class="card-title">{{ {'ru':'История ТО','en':'Maintenance history','kz':'ТО тарихы'}[current_user.language] }}</div>
-    </div>
-  </div>
-  {% if logs %}
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Детали','en':'Parts','kz':'Бөлшектер'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Стоимость','en':'Cost','kz':'Құны'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Исполнитель','en':'Technician','kz':'Орындаушы'}[current_user.language] }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in logs %}
-      <tr>
-        <td class="text-muted">{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-        <td>{% if log.kind %}<span class="pill {% if log.kind=='ТО' %}pill-green{% else %}pill-amber{% endif %}" style="margin-right:6px">{{ log.kind }}</span>{% endif %}{{ log.description }}</td>
-        <td class="text-muted">{{ log.parts_used or '—' }}</td>
-        <td class="text-muted">{{ '%.2f'|format(log.cost) if log.cost is not none else '—' }}</td>
-        <td class="text-muted">{{ log.technician.full_name if log.technician else '—' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <div class="card-body" style="text-align:center;padding:60px 20px">
-    <i class="ti ti-history" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
-    <div style="font-size:13px;font-weight:500;color:var(--text-2)">{{ {'ru':'Записей ТО пока нет','en':'No maintenance logged yet','kz':'ТО жазбалары жоқ'}[current_user.language] }}</div>
-  </div>
-  {% endif %}
-</div>
-
 <div class="card" style="margin-top:14px">
   <div class="card-header">
     <div class="card-header-left">
