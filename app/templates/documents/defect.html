@@ -67,6 +67,7 @@
   </div>
 
   <form id="defect-form" method="POST" action="{{ url_for('documents.submit_defect_act') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <!-- SECTION 1: REGISTRATION DETAILS -->
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">

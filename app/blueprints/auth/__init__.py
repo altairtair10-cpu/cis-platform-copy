@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db
+import secrets
+from app import db, limiter
+from app.audit import log_action
 from app.models import User, DEPARTMENTS, Document
 from wtforms import StringField, PasswordField, SelectField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, Optional
@@ -50,6 +52,7 @@ class SignupForm(FlaskForm):
     password  = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
 
 @auth.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute; 60 per hour', methods=['POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
@@ -60,9 +63,15 @@ def login():
             login_user(user, remember=form.remember.data)
             from datetime import datetime
             user.last_login = datetime.utcnow()
+            log_action('login', 'user', user.id)
             db.session.commit()
             next_page = request.args.get('next')
+            # only allow same-site relative redirects (prevents open redirect)
+            if not next_page or not next_page.startswith('/') or next_page.startswith('//'):
+                next_page = None
             return redirect(next_page or url_for('dashboard.index'))
+        log_action('login_failed', details=form.email.data.lower()[:120])
+        db.session.commit()
         flash('Invalid email or password.', 'danger')
     return render_template('login.html', form=form)
 
@@ -95,6 +104,8 @@ def signup():
         )
         user.password_hash = generate_password_hash(form.password.data, method='pbkdf2:sha256')
         db.session.add(user)
+        db.session.flush()
+        log_action('signup', 'user', user.id, details=email)
         db.session.commit()
         flash('Account created. An admin will review and activate your account soon.', 'success')
         return redirect(url_for('auth.login'))
@@ -154,6 +165,8 @@ def settings_password():
         flash('New passwords do not match.', 'danger')
         return redirect(url_for('auth.settings'))
     current_user.set_password(new)
+    current_user.must_change_password = False
+    log_action('password_changed', 'user', current_user.id)
     db.session.commit()
     flash('Password changed successfully.', 'success')
     return redirect(url_for('auth.settings'))
@@ -202,10 +215,18 @@ def new_user():
             language   = form.language.data,
             is_active  = form.is_active.data,
         )
-        user.set_password(form.password.data or 'changeme123')
+        temp_password = form.password.data or secrets.token_urlsafe(9)
+        user.set_password(temp_password)
+        user.must_change_password = True
         db.session.add(user)
+        db.session.flush()
+        log_action('user_created', 'user', user.id, details=user.email)
         db.session.commit()
-        flash(f'User {user.full_name} created.', 'success')
+        if form.password.data:
+            flash(f'User {user.full_name} created. They must set a new password at first login.', 'success')
+        else:
+            flash(f'User {user.full_name} created. Temporary password: {temp_password} '
+                  f'(share it securely — they must change it at first login).', 'success')
         return redirect(url_for('auth.users'))
     return render_template('auth/user_form.html', form=form, title='New user')
 
@@ -230,6 +251,8 @@ def edit_user(user_id):
         user.is_active  = form.is_active.data
         if form.password.data:
             user.set_password(form.password.data)
+            user.must_change_password = True
+        log_action('user_updated', 'user', user.id, details=user.email)
         db.session.commit()
         flash(f'User {user.full_name} updated.', 'success')
         return redirect(url_for('auth.users'))
@@ -246,7 +269,8 @@ def deactivate_user(user_id):
         flash('Cannot deactivate yourself.', 'danger')
         return redirect(url_for('auth.users'))
     user.is_active = not user.is_active
-    db.session.commit()
     status = 'activated' if user.is_active else 'deactivated'
+    log_action(f'user_{status}', 'user', user.id, details=user.email)
+    db.session.commit()
     flash(f'User {user.full_name} {status}.', 'success')
     return redirect(url_for('auth.users'))

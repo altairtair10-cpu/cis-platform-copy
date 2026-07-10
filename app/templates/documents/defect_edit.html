@@ -4,6 +4,7 @@
 {% block content %}
 
 <form method="POST" action="{{ url_for('documents.update_defect_act', doc_id=doc.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
   <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Сохранить и отправить</button>

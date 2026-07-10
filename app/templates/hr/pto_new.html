@@ -13,6 +13,7 @@
 
   <div style="padding:20px;">
     <form method="post" action="{{ url_for('hr.pto_new') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:500;color:var(--text-1);">
           {{ {'ru':'Тип отпуска','en':'Leave Type','kz':'Демалыс түрі'}[current_user.language] }}

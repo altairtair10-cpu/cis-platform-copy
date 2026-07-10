@@ -22,6 +22,7 @@
   </div>
 
   <form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     {% if linked_defect %}
     <div style="background:#eaf3de;border:0.5px solid #97c459;border-radius:var(--border-radius-sm);padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px">

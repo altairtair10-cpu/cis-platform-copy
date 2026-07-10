@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Document, DocumentItem, DocumentComment, DocumentApproval, DOC_TYPES, DOC_STATUSES, User, Notification
 from app.decorators import requires_permission
+from app.audit import log_action
 from datetime import datetime
 
 documents = Blueprint('documents', __name__, url_prefix='/documents',
@@ -139,6 +140,7 @@ def new_purchase_req():
         db.session.add(doc)
         db.session.flush()
         doc.generate_number()
+        log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
         names = request.form.getlist('item_name[]')
         units = request.form.getlist('item_unit[]')
@@ -234,6 +236,7 @@ def approve(doc_id):
                 link=f'/documents/{doc.id}',
                 is_read=False,
             ))
+            log_action('document_returned', 'document', doc.id, details=doc.doc_number)
             db.session.commit()
             flash('Документ возвращён автору на доработку.', 'success')
             return redirect(url_for('documents.view', doc_id=doc_id))
@@ -280,6 +283,8 @@ def approve(doc_id):
             is_read=False,
         ))
 
+        log_action(f'document_{"approved" if action == "approve" else "rejected"}',
+                   'document', doc.id, details=doc.doc_number)
         db.session.commit()
         flash(f'Документ {"согласован" if action == "approve" else "отклонён"}.', 'success')
 
@@ -315,6 +320,7 @@ def resubmit(doc_id):
         is_system=True,
     ))
     _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+    log_action('document_resubmitted', 'document', doc.id, details=doc.doc_number)
     db.session.commit()
     flash('Документ повторно отправлен на согласование.', 'success')
     return redirect(url_for('documents.view', doc_id=doc_id))
@@ -349,6 +355,7 @@ def submit_defect_act():
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
+    log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
     names = request.form.getlist('part_name[]')
     specs = request.form.getlist('part_spec[]')
@@ -429,6 +436,7 @@ def submit_trebovanie():
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
+    log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
     names = request.form.getlist('item_name[]')
     specs = request.form.getlist('item_spec[]')
@@ -506,6 +514,7 @@ def submit_trebovanie_new():
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
+    log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
     names = request.form.getlist('item_name[]')
     specs = request.form.getlist('item_spec[]')
@@ -593,6 +602,7 @@ def submit_po_services():
     db.session.add(doc)
     db.session.flush()
     doc.generate_number()
+    log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
     names = request.form.getlist('item_name[]')
     units = request.form.getlist('item_unit[]')

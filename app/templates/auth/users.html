@@ -54,6 +54,7 @@
               <i class="ti ti-edit"></i>{{ {'ru':'Ред.','en':'Edit','kz':'Өзг.'}[current_user.language] }}
             </a>
             <form method="POST" action="{{ url_for('auth.deactivate_user', user_id=user.id) }}" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-sm {% if user.is_active %}btn-danger{% endif %}"
                 onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.full_name }}?')">
                 <i class="ti ti-{% if user.is_active %}user-off{% else %}user-check{% endif %}"></i>
