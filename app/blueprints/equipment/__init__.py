@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from app.models import Equipment, MaintenanceLog, Document, AppSetting, db
 from app.audit import log_action
 from app.services.equipment_sync import sync_equipment, sync_if_stale, last_sync_dt
+from app.services.maintenance_sync import (sync_maintenance, check_maintenance_due,
+                                            to_status)
 from app.decorators import requires_permission
 from datetime import datetime
 
@@ -51,7 +53,11 @@ def view(unit_id):
                                .order_by(MaintenanceLog.created_at.desc()).all()
     docs = Document.query.filter_by(equipment_id=unit.id)\
                          .order_by(Document.created_at.desc()).all()
-    return render_template('equipment/view.html', unit=unit, logs=logs, docs=docs)
+    from app.models import ServiceRecord
+    records = ServiceRecord.query.filter_by(equipment_id=unit.id)\
+                                 .order_by(ServiceRecord.date.desc()).limit(50).all()
+    return render_template('equipment/view.html', unit=unit, logs=logs, docs=docs,
+                           records=records, to_state=to_status(unit))
 
 @equipment.route('/<int:unit_id>/log', methods=['POST'])
 @login_required
@@ -109,5 +115,18 @@ def sync():
         db.session.commit()
         flash(f'Синхронизировано с таблицей: новых {created}, обновлено {updated}.', 'success')
     except Exception as exc:
-        flash(f'Не удалось синхронизировать: {exc}', 'danger')
+        flash(f'Не удалось синхронизировать статусы: {exc}', 'danger')
+    if AppSetting.get('maintenance_spreadsheet_id'):
+        try:
+            new_recs, matched, unmatched = sync_maintenance()
+            due = check_maintenance_due()
+            log_action('maintenance_synced',
+                       details=f'+{new_recs} records, {matched} tabs, {len(due)} due')
+            db.session.commit()
+            msg = f'Реестр ТО: новых записей {new_recs}, вкладок сопоставлено {matched}.'
+            if unmatched:
+                msg += f' Не сопоставлено: {", ".join(unmatched[:5])}' + ('…' if len(unmatched) > 5 else '')
+            flash(msg, 'success' if not unmatched else 'warning')
+        except Exception as exc:
+            flash(f'Не удалось синхронизировать реестр ТО: {exc}', 'danger')
     return redirect(url_for('equipment.index'))

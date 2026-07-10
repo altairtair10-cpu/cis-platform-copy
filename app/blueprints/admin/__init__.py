@@ -255,6 +255,8 @@ def integrations():
         sheet_name = (request.form.get('equipment_sheet_name') or '').strip()
         AppSetting.set('equipment_spreadsheet_id', sheet_id or None)
         AppSetting.set('equipment_sheet_name', sheet_name or None)
+        maint_id = (request.form.get('maintenance_spreadsheet_id') or '').strip()
+        AppSetting.set('maintenance_spreadsheet_id', maint_id or None)
         log_action('integration_equipment_sheet', details=sheet_id or '(cleared)')
         db.session.commit()
         flash('Integrations saved.', 'success')
@@ -263,7 +265,8 @@ def integrations():
     return render_template('admin/integrations.html',
                            equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''),
                            equipment_spreadsheet_id=AppSetting.get('equipment_spreadsheet_id', ''),
-                           equipment_sheet_name=AppSetting.get('equipment_sheet_name', 'База'))
+                           equipment_sheet_name=AppSetting.get('equipment_sheet_name', 'База'),
+                           maintenance_spreadsheet_id=AppSetting.get('maintenance_spreadsheet_id', ''))
 
 
 # ── ROLE PERMISSIONS ──────────────────────────────────────────────────────────
@@ -301,3 +304,44 @@ def permissions():
     return render_template('admin/permissions.html',
                            roles=ROLES, editable_roles=editable_roles,
                            modules=modules, current=current)
+
+
+# ── MAINTENANCE POLICIES & ALERT RECIPIENTS ──────────────────────────────────
+
+@admin.route('/maintenance', methods=['GET', 'POST'])
+@login_required
+@requires_role('it_admin')
+def maintenance():
+    from app.models import MaintenancePolicy, Equipment, User
+
+    eq_types = sorted({e.eq_type for e in Equipment.query.all() if e.eq_type})
+    for p in MaintenancePolicy.query.all():
+        if p.eq_type not in eq_types:
+            eq_types.append(p.eq_type)
+
+    if request.method == 'POST':
+        for i, et in enumerate(request.form.getlist('eq_type[]')):
+            mode = request.form.getlist('mode[]')[i]
+            interval_raw = request.form.getlist('interval[]')[i]
+            interval = int(interval_raw) if interval_raw.strip().isdigit() else None
+            if mode not in ('hours', 'km', 'repair_only'):
+                continue
+            pol = MaintenancePolicy.query.filter_by(eq_type=et).first()
+            if pol is None:
+                pol = MaintenancePolicy(eq_type=et)
+                db.session.add(pol)
+            pol.mode = mode
+            pol.interval = interval if mode != 'repair_only' else None
+        ids = [i for i in request.form.getlist('notify_user') if i.isdigit()]
+        AppSetting.set('maintenance_notify_user_ids', ','.join(ids))
+        log_action('maintenance_policies_updated')
+        db.session.commit()
+        flash('Настройки ТО сохранены.', 'success')
+        return redirect(url_for('admin.maintenance'))
+
+    policies = {p.eq_type: p for p in MaintenancePolicy.query.all()}
+    users = User.query.filter_by(is_active=True).order_by(User.first_name).all()
+    notify_ids = {int(x) for x in (AppSetting.get('maintenance_notify_user_ids', '') or '').split(',')
+                  if x.strip().isdigit()}
+    return render_template('admin/maintenance.html', eq_types=eq_types,
+                           policies=policies, users=users, notify_ids=notify_ids)

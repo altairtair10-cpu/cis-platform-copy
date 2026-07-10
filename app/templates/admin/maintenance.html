@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start">
+  <div class="card">
+    <div class="card-header"><div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-settings-check"></i></div>
+      <div class="card-title">{{ {'ru':'Правила ТО по категориям','en':'Service rules per category','kz':'Санат бойынша ТҚ ережелері'}[current_user.language] }}</div>
+    </div></div>
+    <div class="card-body">
+      {% if not eq_types %}
+      <p class="text-muted">{{ {'ru':'Сначала синхронизируйте технику из таблицы — категории появятся здесь.','en':'Sync equipment from the sheet first — categories will appear here.','kz':'Алдымен техниканы синхрондаңыз.'}[current_user.language] }}</p>
+      {% endif %}
+      <table class="data-table">
+        <thead><tr>
+          <th>{{ {'ru':'Категория','en':'Category','kz':'Санат'}[current_user.language] }}</th>
+          <th>{{ {'ru':'Режим','en':'Mode','kz':'Режим'}[current_user.language] }}</th>
+          <th>{{ {'ru':'Интервал','en':'Interval','kz':'Аралық'}[current_user.language] }}</th>
+        </tr></thead>
+        <tbody>
+          {% for et in eq_types %}
+          {% set pol = policies.get(et) %}
+          <tr>
+            <td>{{ et }}<input type="hidden" name="eq_type[]" value="{{ et }}"></td>
+            <td>
+              <select name="mode[]" class="form-input" style="max-width:220px">
+                <option value="repair_only" {% if not pol or pol.mode=='repair_only' %}selected{% endif %}>{{ {'ru':'Только ремонт','en':'Repair only','kz':'Тек жөндеу'}[current_user.language] }}</option>
+                <option value="hours" {% if pol and pol.mode=='hours' %}selected{% endif %}>{{ {'ru':'ТО по моточасам','en':'Service by motohours','kz':'Мотосағат бойынша'}[current_user.language] }}</option>
+                <option value="km" {% if pol and pol.mode=='km' %}selected{% endif %}>{{ {'ru':'ТО по пробегу (км)','en':'Service by mileage (km)','kz':'Жүріс бойынша (км)'}[current_user.language] }}</option>
+              </select>
+            </td>
+            <td><input type="text" name="interval[]" class="form-input" style="max-width:110px"
+                       value="{{ pol.interval if pol and pol.interval else '' }}" placeholder="400 / 10000"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-bell-ringing"></i></div>
+      <div class="card-title">{{ {'ru':'Кому слать уведомления о ТО','en':'Who receives service alerts','kz':'Кімге хабарлама жіберу'}[current_user.language] }}</div>
+    </div></div>
+    <div class="card-body">
+      <p class="text-muted" style="font-size:12px;margin-bottom:10px">
+        {{ {'ru':'Все активные механики получают уведомления всегда. Ниже — дополнительные получатели.','en':'All active mechanics always receive alerts. Below — extra recipients.','kz':'Барлық белсенді механиктер әрқашан алады. Төменде — қосымша.'}[current_user.language] }}
+      </p>
+      {% for u in users %}
+      <label style="display:flex;gap:8px;align-items:center;padding:4px 0;font-size:13px">
+        <input type="checkbox" name="notify_user" value="{{ u.id }}"
+               {% if u.id in notify_ids %}checked{% endif %}>
+        {{ u.full_name }} <span class="text-muted">({{ u.role_display }})</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<button type="submit" class="btn btn-primary" style="margin-top:14px">
+  {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+</button>
+</form>
+{% endblock %}

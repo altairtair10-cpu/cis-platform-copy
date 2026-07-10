@@ -29,6 +29,14 @@
       <input type="text" name="equipment_sheet_name" class="form-input"
              value="{{ equipment_sheet_name }}" placeholder="База" style="margin-bottom:16px">
 
+      <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
+        {{ {'ru':'ID Google-таблицы реестра ТО и ремонтов (вкладки по каждой машине). Не забудьте расшарить её на сервисный аккаунт.',
+            'en':'Maintenance register Google Sheet ID (one tab per unit). Remember to share it with the service account.',
+            'kz':'ТҚ тіркелімінің Google-кесте ID'}[current_user.language] }}
+      </label>
+      <input type="text" name="maintenance_spreadsheet_id" class="form-input"
+             value="{{ maintenance_spreadsheet_id }}" placeholder="1xnEY...F7M4" style="margin-bottom:16px">
+
       <button type="submit" class="btn btn-primary">
         {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
       </button>

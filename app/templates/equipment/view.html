@@ -154,4 +154,57 @@
     {% endif %}
   </div>
 </div>
+
+{% if to_state[0] != 'none' %}
+<div class="card" style="margin-top:14px;border-left:4px solid {% if to_state[0]=='due' %}#A31E08{% elif to_state[0]=='soon' %}#B98900{% else %}#0E7A45{% endif %}">
+  <div class="card-body" style="display:flex;gap:14px;align-items:center">
+    <i class="ti ti-engine" style="font-size:26px"></i>
+    <div>
+      <b>{% if to_state[0]=='due' %}{{ {'ru':'ТО просрочено','en':'Service overdue','kz':'ТҚ мерзімі өтті'}[current_user.language] }}
+         {% elif to_state[0]=='soon' %}{{ {'ru':'ТО скоро','en':'Service due soon','kz':'ТҚ жақын'}[current_user.language] }}
+         {% else %}{{ {'ru':'ТО в норме','en':'Service on schedule','kz':'ТҚ қалыпты'}[current_user.language] }}{% endif %}</b>
+      <div class="text-muted" style="font-size:13px">
+        {{ {'ru':'Наработка с последнего ТО','en':'Since last service','kz':'Соңғы ТҚ-дан бері'}[current_user.language] }}:
+        {{ '%.0f' % to_state[1] }} / {{ to_state[2] }} {{ 'км' if to_state[3]=='km' else 'м/ч' }}
+        {% if unit.last_to_date %} · {{ {'ru':'последнее ТО','en':'last service','kz':'соңғы ТҚ'}[current_user.language] }} {{ unit.last_to_date.strftime('%d.%m.%Y') }}{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top:14px">
+  <div class="card-header"><div class="card-header-left">
+    <div class="card-icon"><i class="ti ti-history"></i></div>
+    <div class="card-title">{{ {'ru':'Реестр ТО и ремонтов','en':'Service & repair register','kz':'ТҚ және жөндеу тіркелімі'}[current_user.language] }}</div>
+  </div></div>
+  <div class="card-body">
+    {% if records %}
+    <table class="data-table">
+      <thead><tr>
+        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Вид','en':'Kind','kz':'Түрі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Наработка','en':'Reading','kz':'Жұмыс уақыты'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Исполнитель','en':'Executor','kz':'Орындаушы'}[current_user.language] }}</th>
+      </tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.date.strftime('%d.%m.%Y') if r.date else '—' }}</td>
+          <td><span class="pill {% if r.kind=='ТО' %}pill-green{% else %}pill-amber{% endif %}">{{ r.kind_raw or r.kind }}</span></td>
+          <td style="max-width:420px">{{ r.description or '—' }}</td>
+          <td>{{ '%.0f' % r.reading if r.reading is not none else '—' }}</td>
+          <td>{{ r.executor or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="text-align:center;padding:16px">
+      {{ {'ru':'Записей из реестра пока нет — либо реестр не подключён (Админ-панель → Интеграции), либо вкладка этой машины не сопоставлена по гос. номеру.','en':'No register records yet — either the register is not connected (Admin → Integrations) or this unit\'s tab was not matched by gos number.','kz':'Жазбалар әзірге жоқ.'}[current_user.language] }}
+    </p>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
