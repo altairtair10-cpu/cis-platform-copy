@@ -255,6 +255,11 @@ class Equipment(db.Model):
     condition    = db.Column(db.Text, nullable=True)          # текущее состояние
     sheet_status = db.Column(db.String(64), nullable=True)    # статус из таблицы, как есть
     synced_at    = db.Column(db.DateTime, nullable=True)      # последняя синхронизация
+    current_reading = db.Column(db.Float, nullable=True)      # моточасы/км, последнее известное
+    last_to_date    = db.Column(db.Date, nullable=True)
+    last_to_reading = db.Column(db.Float, nullable=True)      # наработка на момент последнего ТО
+    last_repair_date = db.Column(db.Date, nullable=True)
+    to_notified_at  = db.Column(db.DateTime, nullable=True)   # когда отправляли «ТО пора»
     last_service = db.Column(db.Date, nullable=True)
     next_service = db.Column(db.Date, nullable=True)
     notes        = db.Column(db.Text, nullable=True)
@@ -596,3 +601,34 @@ def get_role_permissions(role):
     if has_app_context():
         g._role_perms_cache[role] = perms
     return perms
+
+
+# ── MAINTENANCE (ТО / РЕМОНТ) ─────────────────────────────────────────────────
+
+class MaintenancePolicy(db.Model):
+    """Per-category service rule: ТО every N motohours / N km, or repair-only."""
+    __tablename__ = 'maintenance_policies'
+
+    id       = db.Column(db.Integer, primary_key=True)
+    eq_type  = db.Column(db.String(64), unique=True, nullable=False)  # категория из дэшборда
+    mode     = db.Column(db.String(16), nullable=False, default='repair_only')  # hours | km | repair_only
+    interval = db.Column(db.Integer, nullable=True)   # 400 (м/ч) or 10000 (км)
+
+
+class ServiceRecord(db.Model):
+    """One row of the maintenance register (Реестр учёта ТО и ремонтных работ)."""
+    __tablename__ = 'service_records'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=False, index=True)
+    date         = db.Column(db.Date, nullable=True)
+    kind         = db.Column(db.String(4), nullable=False)      # 'ТО' | 'Р'
+    kind_raw     = db.Column(db.String(16), nullable=True)      # 'ТО 1', 'ТО2', 'Р'...
+    description  = db.Column(db.Text, nullable=True)
+    reading      = db.Column(db.Float, nullable=True)           # пробег/моточасы в строке
+    executor     = db.Column(db.String(128), nullable=True)
+    row_hash     = db.Column(db.String(40), unique=True, nullable=False)  # дедупликация
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    equipment    = db.relationship('Equipment',
+                                   backref=db.backref('service_records', lazy='dynamic'))

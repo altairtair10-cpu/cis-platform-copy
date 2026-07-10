@@ -49,6 +49,16 @@
     </div>
   </a>
 
+  <a href="{{ url_for('admin.maintenance') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-settings-check"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Интервалы ТО и получатели уведомлений','en':'Service intervals and alert recipients','kz':'ТҚ аралықтары және алушылар'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
   <a href="{{ url_for('admin.integrations') }}" class="card" style="text-decoration:none">
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-plug"></i></div>
