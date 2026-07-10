@@ -26,6 +26,7 @@
   <form id="treb-form" method="POST" action="{{ url_for('documents.submit_trebovanie') }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+    {% if linked_defect_doc %}<input type="hidden" name="related_defect_id" value="{{ linked_defect_doc.id }}">{% endif %}
     {% if linked_defect %}
     <div style="background:#eaf3de;border:1px solid #97c459;border-radius:6px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin:14px 0">
       <i class="ti ti-link" style="font-size:16px;color:#3b6d11"></i>

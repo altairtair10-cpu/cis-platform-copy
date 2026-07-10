@@ -150,6 +150,10 @@ class Document(db.Model):
     author_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     executor_id   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     equipment_id  = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=True)
+    event_code    = db.Column(db.String(64), unique=True, nullable=True)   # Б1-ДА1
+    defect_closed = db.Column(db.Boolean, nullable=False, default=False)
+    defect_closed_at = db.Column(db.DateTime, nullable=True)
+    related_defect_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -162,6 +166,19 @@ class Document(db.Model):
                                     lazy='dynamic', cascade='all, delete-orphan')
     equipment     = db.relationship('Equipment', backref=db.backref('documents', lazy='dynamic'),
                                     foreign_keys=[equipment_id])
+    related_defect = db.relationship('Document', remote_side='Document.id',
+                                     foreign_keys=[related_defect_id])
+
+    def assign_event_code(self):
+        """Per-unit sequential code for defect acts: <unit_id>-ДА<n>."""
+        if self.doc_type != 'defect_act' or not self.equipment_id or self.event_code:
+            return
+        from app.models import Equipment
+        eq = db.session.get(Equipment, self.equipment_id)
+        if eq is None:
+            return
+        seq = DocumentSequence.next_value(f'defda:{eq.unit_id}', 0)
+        self.event_code = f'{eq.unit_id}-ДА{seq}'
 
     def generate_number(self):
         prefix_map = {

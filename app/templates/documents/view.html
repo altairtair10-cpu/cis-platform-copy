@@ -77,6 +77,51 @@
     </div>
   </div>
 
+  {% if doc.doc_type == 'defect_act' and doc.event_code %}
+  <div class="card" style="margin-bottom:14px;border-left:4px solid {% if doc.defect_closed %}#0E7A45{% else %}#A31E08{% endif %}">
+    <div class="card-body" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <b>{{ {'ru':'Учётный код','en':'Event code','kz':'Есеп коды'}[current_user.language] }}:
+          <span class="doc-number">{{ doc.event_code }}</span></b>
+        <span class="pill {% if doc.defect_closed %}pill-green{% else %}pill-red{% endif %}" style="margin-left:8px">
+          {% if doc.defect_closed %}{{ {'ru':'Дефект закрыт','en':'Defect closed','kz':'Ақау жабылды'}[current_user.language] }}{% if doc.defect_closed_at %} · {{ doc.defect_closed_at.strftime('%d.%m.%Y') }}{% endif %}
+          {% else %}{{ {'ru':'Дефект открыт','en':'Defect open','kz':'Ақау ашық'}[current_user.language] }}{% endif %}
+        </span>
+        {% if doc.equipment %}
+        <div class="text-muted" style="font-size:12px;margin-top:4px">
+          <a href="{{ url_for('equipment.view', unit_id=doc.equipment.id) }}">{{ doc.equipment.unit_id }} — {{ doc.equipment.name }}</a>
+        </div>
+        {% endif %}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <a href="{{ url_for('documents.new_trebovanie', from_defect=doc.id) }}" class="btn btn-sm">
+          <i class="ti ti-shopping-cart"></i> {{ {'ru':'Создать требование по акту','en':'Create requisition','kz':'Талаптама жасау'}[current_user.language] }}
+        </a>
+        {% if not doc.defect_closed %}
+        <form method="POST" action="{{ url_for('documents.close_defect', doc_id=doc.id) }}"
+              onsubmit="return confirm('{{ {'ru':'Закрыть дефект? Обычно это делается записью ремонта.','en':'Close the defect?','kz':'Ақауды жабу керек пе?'}[current_user.language] }}')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm"><i class="ti ti-circle-check"></i>
+            {{ {'ru':'Закрыть дефект','en':'Close defect','kz':'Ақауды жабу'}[current_user.language] }}</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.related_defect %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-body" style="font-size:13px">
+      <i class="ti ti-link"></i> {{ {'ru':'Связано с дефектным актом','en':'Linked to defect act','kz':'Ақаулық актісімен байланысты'}[current_user.language] }}:
+      <a href="{{ url_for('documents.view', doc_id=doc.related_defect.id) }}">
+        {{ doc.related_defect.event_code or doc.related_defect.doc_number }}</a>
+      <span class="pill {% if doc.related_defect.defect_closed %}pill-green{% else %}pill-red{% endif %}" style="margin-left:6px">
+        {% if doc.related_defect.defect_closed %}{{ {'ru':'закрыт','en':'closed','kz':'жабық'}[current_user.language] }}{% else %}{{ {'ru':'открыт','en':'open','kz':'ашық'}[current_user.language] }}{% endif %}</span>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- RETURNED-FOR-REVISION BANNER (author only) -->
   {% if doc.status == 'returned' and doc.author_id == current_user.id %}
   <div class="card" style="margin-bottom:14px;border-left:4px solid var(--amber)">
