@@ -33,7 +33,7 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-SESSION_COOKIE_SECURE  = True              # https only in production (Railway)
+    SESSION_COOKIE_SECURE  = True              # https only in production (Railway)
     REMEMBER_COOKIE_SECURE = True
     PREFERRED_URL_SCHEME = 'https'
     db_url = os.environ.get('DATABASE_URL', '')
