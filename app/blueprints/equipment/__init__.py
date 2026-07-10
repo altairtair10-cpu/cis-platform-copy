@@ -75,12 +75,14 @@ def add_log(unit_id):
     new_status = request.form.get('status') or unit.status
     next_service_raw = request.form.get('next_service', '').strip()
 
+    kind = request.form.get('kind')
     log = MaintenanceLog(
         equipment_id = unit.id,
         logged_by    = current_user.id,
         description  = description,
         parts_used   = parts_used,
         cost         = cost,
+        kind         = kind if kind in ('ТО', 'Р') else None,
     )
     db.session.add(log)
 

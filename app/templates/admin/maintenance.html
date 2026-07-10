@@ -61,6 +61,34 @@
     </div>
   </div>
 </div>
+{% if unmatched %}
+<div class="card" style="margin-top:16px">
+  <div class="card-header"><div class="card-header-left">
+    <div class="card-icon"><i class="ti ti-link"></i></div>
+    <div class="card-title">{{ {'ru':'Несопоставленные вкладки реестра','en':'Unmatched register tabs','kz':'Сәйкестендірілмеген қойындылар'}[current_user.language] }}</div>
+  </div></div>
+  <div class="card-body">
+    <p class="text-muted" style="font-size:12px;margin-bottom:10px">
+      {{ {'ru':'Эти вкладки реестра не удалось привязать к технике автоматически. Выберите машину вручную — привязка запомнится навсегда.',
+          'en':'These register tabs could not be matched automatically. Pick the unit manually — the mapping is remembered permanently.',
+          'kz':'Қолмен таңдаңыз — сәйкестік мәңгі сақталады.'}[current_user.language] }}
+    </p>
+    {% for tab in unmatched %}
+    <div style="display:flex;gap:10px;align-items:center;padding:5px 0">
+      <span style="min-width:220px;font-family:ui-monospace,monospace;font-size:13px">{{ tab }}</span>
+      <input type="hidden" name="map_tab[]" value="{{ tab }}">
+      <select name="map_to_{{ tab }}" class="form-input" style="max-width:320px">
+        <option value="">— {{ {'ru':'не привязывать пока','en':'leave unmapped','kz':'қалдыру'}[current_user.language] }} —</option>
+        <option value="ignore">{{ {'ru':'игнорировать эту вкладку','en':'ignore this tab','kz':'елемеу'}[current_user.language] }}</option>
+        {% for u in all_units %}
+        <option value="{{ u.id }}">{{ u.unit_id }} — {{ u.name }}{% if u.gos_number %} ({{ u.gos_number }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 <button type="submit" class="btn btn-primary" style="margin-top:14px">
   {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
 </button>

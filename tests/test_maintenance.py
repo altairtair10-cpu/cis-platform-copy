@@ -103,3 +103,53 @@ def test_unit_page_shows_register(client, app):
     body = client.get(f'/equipment/{eq_id}').get_data(as_text=True)
     assert 'Замена масла' in body and 'Замена форсунок' in body
     assert 'ТО просрочено' in body   # 453 из 400
+
+
+def test_matching_tolerates_region_suffix(app):
+    """Tab «№1 Насос 882AHDE» must match gos «882 AHDE 06»."""
+    from app.services.maintenance_sync import sync_maintenance
+    with app.app_context():
+        eq = Equipment(unit_id='A1', name='SPM', eq_type='Насос ГРП',
+                       gos_number='882 AHDE 06')
+        db.session.add(eq); db.session.commit()
+        new, matched, unmatched = sync_maintenance(register=REGISTER)
+        assert matched == 1 and new == 3
+
+
+def test_manual_tab_map_overrides(app):
+    from app.services.maintenance_sync import sync_maintenance
+    from app.models import MaintenanceTabMap
+    with app.app_context():
+        eq = Equipment(unit_id='BL1', name='Блендер BL380', eq_type='Блендер')
+        db.session.add(eq); db.session.commit()
+        register = {'Блендер': REGISTER['№1 Насос 882AHDE ']}
+        # unmatched without mapping
+        _, matched, unmatched = sync_maintenance(register=register)
+        assert matched == 0 and unmatched == ['Блендер']
+        # manual mapping fixes it
+        db.session.add(MaintenanceTabMap(tab_title='Блендер', equipment_id=eq.id))
+        db.session.commit()
+        new, matched, unmatched = sync_maintenance(register=register)
+        assert matched == 1 and unmatched == [] and new == 3
+
+
+def test_ignored_tab_skipped(app):
+    from app.services.maintenance_sync import sync_maintenance
+    from app.models import MaintenanceTabMap
+    with app.app_context():
+        db.session.add(MaintenanceTabMap(tab_title='Неизвестная машина', is_ignored=True))
+        db.session.commit()
+        _, matched, unmatched = sync_maintenance(register={'Неизвестная машина': [HEADER]})
+        assert matched == 0 and unmatched == []
+
+
+def test_site_log_kind_saved(client, app):
+    eq_id = _make_pump(app)
+    login(client, 'mech@test.kz', 'mechpass123')
+    client.post(f'/equipment/{eq_id}/log', data={
+        'description': 'Замена ремня', 'kind': 'ТО', 'status': 'idle',
+    })
+    from app.models import MaintenanceLog
+    with app.app_context():
+        log = MaintenanceLog.query.first()
+        assert log is not None and log.kind == 'ТО'

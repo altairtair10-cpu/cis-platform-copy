@@ -320,6 +320,23 @@ def maintenance():
             eq_types.append(p.eq_type)
 
     if request.method == 'POST':
+        from app.models import MaintenanceTabMap
+        # manual tab mapping
+        for title in request.form.getlist('map_tab[]'):
+            choice = (request.form.get(f'map_to_{title}') or '').strip()
+            if not choice:
+                continue
+            m = MaintenanceTabMap.query.filter_by(tab_title=title.strip()).first()
+            if m is None:
+                m = MaintenanceTabMap(tab_title=title.strip())
+                db.session.add(m)
+            if choice == 'ignore':
+                m.is_ignored = True
+                m.equipment_id = None
+            elif choice.isdigit():
+                m.is_ignored = False
+                m.equipment_id = int(choice)
+            log_action('maintenance_tab_mapped', details=f'{title} -> {choice}')
         for i, et in enumerate(request.form.getlist('eq_type[]')):
             mode = request.form.getlist('mode[]')[i]
             interval_raw = request.form.getlist('interval[]')[i]
@@ -343,5 +360,15 @@ def maintenance():
     users = User.query.filter_by(is_active=True).order_by(User.first_name).all()
     notify_ids = {int(x) for x in (AppSetting.get('maintenance_notify_user_ids', '') or '').split(',')
                   if x.strip().isdigit()}
+    import json as _json
+    from app.models import MaintenanceTabMap
+    try:
+        unmatched = _json.loads(AppSetting.get('maintenance_unmatched_tabs', '[]') or '[]')
+    except ValueError:
+        unmatched = []
+    mapped_titles = {m.tab_title for m in MaintenanceTabMap.query.all()}
+    unmatched = [t for t in unmatched if t.strip() not in mapped_titles]
+    all_units = Equipment.query.order_by(Equipment.unit_id).all()
     return render_template('admin/maintenance.html', eq_types=eq_types,
-                           policies=policies, users=users, notify_ids=notify_ids)
+                           policies=policies, users=users, notify_ids=notify_ids,
+                           unmatched=unmatched, all_units=all_units)
