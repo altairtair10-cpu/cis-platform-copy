@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from app import db
 from app.models import Document, DocumentItem, DocumentComment, DocumentApproval, DOC_TYPES, DOC_STATUSES, User, Notification, DocumentAttachment
 from app.decorators import requires_permission
@@ -43,11 +44,31 @@ def _unpack_extras(justification):
     return out
 
 
+def _assigned_doc_ids_subquery(user):
+    """Document IDs where this user is (or was) an assigned approver at any step —
+    regardless of their role's blanket permissions. Being routed to a document
+    as a reviewer/signatory is its own authorization to see and act on it."""
+    return db.session.query(DocumentApproval.document_id).filter_by(approver_id=user.id)
+
+
+def _is_assigned_approver(doc, user):
+    return DocumentApproval.query.filter_by(document_id=doc.id, approver_id=user.id).first() is not None
+
+
+def _visible_docs_query(user):
+    """Documents a user may see: everything (broad 'documents' permission),
+    or their own + anything they're routed to approve/review."""
+    query = Document.query
+    if user.can_access('documents'):
+        return query
+    return query.filter(or_(
+        Document.author_id == user.id,
+        Document.id.in_(_assigned_doc_ids_subquery(user)),
+    ))
+
+
 def _panel_docs():
-    if current_user.can_access('documents_own'):
-        return Document.query.filter_by(author_id=current_user.id)\
-                             .order_by(Document.created_at.desc()).all()
-    return Document.query.order_by(Document.created_at.desc()).all()
+    return _visible_docs_query(current_user).order_by(Document.created_at.desc()).all()
 
 
 def _build_route(doc, action, signatory_id):
@@ -136,9 +157,7 @@ def index():
 
     panel_docs = _panel_docs()
 
-    query = Document.query
-    if current_user.can_access('documents_own'):
-        query = query.filter_by(author_id=current_user.id)
+    query = _visible_docs_query(current_user)
     if status:
         query = query.filter_by(status=status)
     query = query.order_by(Document.created_at.desc())
@@ -216,7 +235,9 @@ def new_purchase_req():
 @login_required
 def view(doc_id):
     doc = Document.query.get_or_404(doc_id)
-    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+    if (not current_user.can_access('documents')
+            and doc.author_id != current_user.id
+            and not _is_assigned_approver(doc, current_user)):
         abort(403)
     items     = doc.items.all()
     comments  = doc.comments.order_by('created_at').all()
@@ -268,7 +289,9 @@ def upload_attachment(doc_id):
 @login_required
 def download_attachment(doc_id, attachment_id):
     doc = Document.query.get_or_404(doc_id)
-    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+    if (not current_user.can_access('documents')
+            and doc.author_id != current_user.id
+            and not _is_assigned_approver(doc, current_user)):
         abort(403)
     attachment = DocumentAttachment.query.filter_by(id=attachment_id, document_id=doc.id).first_or_404()
     return send_attachment(attachment)
@@ -304,9 +327,11 @@ def approve(doc_id):
     comment_text = request.form.get('comment', '').strip()
 
     if action in ['approve', 'reject', 'return']:
-        if not current_user.can_access('documents'):
-            abort(403)
-
+        # No blanket role check here on purpose: being the assigned approver for
+        # this document's current step (checked just below) is the real
+        # authorization, regardless of the approver's role. A finance/HR/mechanic
+        # user who was specifically routed to review this document must be able
+        # to act on it even though their role has no broad 'documents' permission.
         if doc.status != 'pending':
             flash('Этот документ уже обработан и больше не ожидает согласования.', 'warning')
             return redirect(url_for('documents.view', doc_id=doc_id))
@@ -411,7 +436,9 @@ def approve(doc_id):
         flash(f'Документ {"согласован" if action == "approve" else "отклонён"}.', 'success')
 
     elif action == 'comment' and comment_text:
-        if doc.author_id != current_user.id and not current_user.can_access('documents'):
+        if (doc.author_id != current_user.id
+                and not current_user.can_access('documents')
+                and not _is_assigned_approver(doc, current_user)):
             abort(403)
         db.session.add(DocumentComment(
             document_id=doc.id,
