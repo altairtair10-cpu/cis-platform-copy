@@ -230,6 +230,37 @@
   </div>
   {% endif %}
 
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-paperclip"></i></div>
+        <div class="card-title">{{ {'ru':'Вложения','en':'Attachments','kz':'Тіркемелер'}[current_user.language] }}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      {% for a in doc.attachments %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <a href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="display:flex;align-items:center;gap:8px;color:var(--text-1)">
+          <i class="ti ti-file"></i>
+          <span>{{ a.original_filename }}</span>
+          <span class="text-muted text-small">({{ (a.size_bytes / 1024)|round(1) }} KB)</span>
+        </a>
+        <form method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}" onsubmit="return confirm('{{ {'ru':'Удалить файл?','en':'Delete file?','kz':'Файлды жою керек пе?'}[current_user.language] }}')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm"><i class="ti ti-trash"></i></button>
+        </form>
+      </div>
+      {% else %}
+      <div class="text-muted text-small" style="padding:8px 0">{{ {'ru':'Нет вложений','en':'No attachments yet','kz':'Тіркемелер жоқ'}[current_user.language] }}</div>
+      {% endfor %}
+      <form method="POST" action="{{ url_for('documents.upload_attachment', doc_id=doc.id) }}" enctype="multipart/form-data" style="display:flex;gap:8px;margin-top:10px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="file" class="form-input" required>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-upload"></i>{{ {'ru':'Загрузить','en':'Upload','kz':'Жүктеу'}[current_user.language] }}</button>
+      </form>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <div class="card-header-left">

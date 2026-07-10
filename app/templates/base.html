@@ -73,7 +73,7 @@
       {% if current_user.is_authenticated and current_user.role == 'it_admin' %}
       <div class="sb-section">{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}</div>
       <a href="{{ url_for('auth.users') }}" class="sb-item {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}"><i class="ti ti-users-cog"></i><span>{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}</span></a>
-      <a href="{{ url_for('auth.settings') }}" class="sb-item {% if request.endpoint == 'auth.settings' %}active{% endif %}"><i class="ti ti-settings"></i><span>{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[current_user.language] }}</span></a>
+      <a href="{{ url_for('admin.reference_data') }}" class="sb-item {% if request.endpoint and 'reference_data' in request.endpoint %}active{% endif %}"><i class="ti ti-list-details"></i><span>{{ {'ru':'Справочники','en':'Reference data','kz':'Анықтамалықтар'}[current_user.language] }}</span></a>
       {% endif %}
     </nav>
     <div class="sb-bottom">

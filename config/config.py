@@ -14,6 +14,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'instance/uploads')
+    MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20 MB max upload
 
     # ── Session / cookie hardening ──────────────────────────────
     SESSION_COOKIE_HTTPONLY  = True            # JavaScript cannot read the login cookie

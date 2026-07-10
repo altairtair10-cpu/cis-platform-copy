@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import Document, DocumentItem, DocumentComment, DocumentApproval, DOC_TYPES, DOC_STATUSES, User, Notification
+from app.models import Document, DocumentItem, DocumentComment, DocumentApproval, DOC_TYPES, DOC_STATUSES, User, Notification, DocumentAttachment
 from app.decorators import requires_permission
 from app.audit import log_action
+from app.storage import save_upload, send_attachment, allowed_file, MAX_FILE_SIZE_MB
 from datetime import datetime
 
 documents = Blueprint('documents', __name__, url_prefix='/documents',
@@ -197,6 +198,67 @@ def view(doc_id):
     panel_docs = _panel_docs()
     return render_template('documents/view.html', doc=doc, items=items,
                            comments=comments, approvals=approvals, panel_docs=panel_docs)
+
+
+@documents.route('/<int:doc_id>/attachments/upload', methods=['POST'])
+@login_required
+def upload_attachment(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+        abort(403)
+
+    file = request.files.get('file')
+    if not file or not file.filename:
+        flash('Please choose a file.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc.id))
+
+    if not allowed_file(file.filename):
+        flash('That file type is not allowed.', 'danger')
+        return redirect(url_for('documents.view', doc_id=doc.id))
+
+    stored_filename, backend, size_bytes = save_upload(file)
+    if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
+        flash(f'File is larger than {MAX_FILE_SIZE_MB} MB.', 'danger')
+        return redirect(url_for('documents.view', doc_id=doc.id))
+
+    from werkzeug.utils import secure_filename
+    attachment = DocumentAttachment(
+        document_id=doc.id,
+        original_filename=secure_filename(file.filename),
+        stored_filename=stored_filename,
+        storage_backend=backend,
+        content_type=file.content_type,
+        size_bytes=size_bytes,
+        uploaded_by=current_user.id,
+    )
+    db.session.add(attachment)
+    db.session.commit()
+    log_action('attachment_uploaded', 'document', doc.id, details=attachment.original_filename)
+    flash('File attached.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
+@documents.route('/<int:doc_id>/attachments/<int:attachment_id>/download')
+@login_required
+def download_attachment(doc_id, attachment_id):
+    doc = Document.query.get_or_404(doc_id)
+    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+        abort(403)
+    attachment = DocumentAttachment.query.filter_by(id=attachment_id, document_id=doc.id).first_or_404()
+    return send_attachment(attachment)
+
+
+@documents.route('/<int:doc_id>/attachments/<int:attachment_id>/delete', methods=['POST'])
+@login_required
+def delete_attachment(doc_id, attachment_id):
+    doc = Document.query.get_or_404(doc_id)
+    if not current_user.can_access('documents') and doc.author_id != current_user.id:
+        abort(403)
+    attachment = DocumentAttachment.query.filter_by(id=attachment_id, document_id=doc.id).first_or_404()
+    db.session.delete(attachment)
+    db.session.commit()
+    flash('Attachment removed.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
 
 
 @documents.route('/<int:doc_id>/approve', methods=['POST'])

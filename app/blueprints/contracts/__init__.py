@@ -1,54 +1,73 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from app.models import Contract, ContractSummaryRow, db
 
 contracts = Blueprint('contracts', __name__,
                       url_prefix='/contracts',
                       template_folder='../../app/templates/contracts')
 
+
+def _build_context(contract):
+    """Reshape the DB rows into the same dict structure the template already
+    expects, so no template changes were needed for this migration off of the
+    hardcoded dict."""
+    summary = []
+    for row in contract.summary_rows:
+        deviation = row.fact_q - row.plan_q
+        pct = round(row.fact_q / row.plan_q * 100) if row.plan_q > 0 else 0
+        summary.append({
+            'name': row.name, 'plan_year': row.plan_year, 'plan_q': row.plan_q,
+            'fact_q': row.fact_q, 'unit': row.unit, 'color': row.color,
+            'deviation': deviation, 'pct': pct, 'id': row.id,
+        })
+
+    detail = []
+    for group in contract.detail_groups:
+        rows = []
+        for row in group.rows:
+            pct = round(row.done / row.contract_qty * 100) if row.contract_qty > 0 else 0
+            rows.append({
+                'name': row.name, 'contract': row.contract_qty, 'done': row.done,
+                'remainder': row.remainder, 'pct': pct,
+            })
+        detail.append({'group': group.name, 'rows': rows})
+
+    return {
+        'client': contract.client,
+        'period': contract.period,
+        'updated': contract.updated_at.strftime('%d.%m.%Y') if contract.updated_at else '—',
+        'summary': summary,
+        'detail': detail,
+    }
+
+
 @contracts.route('/')
 @login_required
 def index():
-    contract_data = {
-        'client': 'ЭМГ',
-        'period': 'Q1 2026 · Январь — Март',
-        'updated': '15.04.2026',
-        'summary': [
-            {'name': 'ГРП (всего)', 'plan_year': 131, 'plan_q': 51, 'fact_q': 23, 'unit': 'скв.', 'color': 'red'},
-            {'name': 'ОГРП', 'plan_year': 37, 'plan_q': 18, 'fact_q': 12, 'unit': 'скв.', 'color': 'amber'},
-            {'name': 'Малотонн. ГРП', 'plan_year': 60, 'plan_q': 30, 'fact_q': 9, 'unit': 'скв.', 'color': 'red'},
-            {'name': 'МГРП', 'plan_year': 9, 'plan_q': 3, 'fact_q': 2, 'unit': 'скв.', 'color': 'amber'},
-            {'name': 'ПЗР к ОГРП', 'plan_year': 37, 'plan_q': 16, 'fact_q': 10, 'unit': 'скв.', 'color': 'blue'},
-            {'name': 'Освоение после ОГРП', 'plan_year': 37, 'plan_q': 16, 'fact_q': 9, 'unit': 'скв.', 'color': 'blue'},
-        ],
-        'detail': [
-            {
-                'group': 'ОГРП',
-                'rows': [
-                    {'name': 'ЭМГ ОГРП', 'contract': 30, 'done': 9, 'remainder': -6},
-                    {'name': 'С.Нуржанов, Досмухамбетова, ЮВН Подкарниз', 'contract': 18, 'done': 4, 'remainder': -14},
-                    {'name': 'Западная Прорва, Актобе', 'contract': 6, 'done': 2, 'remainder': -4},
-                    {'name': 'ЮВН Подкарниз', 'contract': 3, 'done': 3, 'remainder': 0},
-                    {'name': 'ЮВН Надкарниз, С.Балгымбаева, Акуудук', 'contract': 3, 'done': 0, 'remainder': -3},
-                ]
-            },
-            {
-                'group': 'Малотонн. ГРП / МГРП',
-                'rows': [
-                    {'name': 'Малотонн. ГРП', 'contract': 40, 'done': 9, 'remainder': -5},
-                    {'name': 'МГРП', 'contract': 8, 'done': 1, 'remainder': -7},
-                    {'name': 'МГРП КТМ', 'contract': 1, 'done': 1, 'remainder': 0},
-                    {'name': 'ППК', 'contract': 1, 'done': 1, 'remainder': 0},
-                ]
-            },
-        ]
-    }
+    contract = Contract.query.order_by(Contract.id.desc()).first()
+    if not contract:
+        return render_template('contracts/index.html', data=None)
+    return render_template('contracts/index.html', data=_build_context(contract), contract=contract)
 
-    for row in contract_data['summary']:
-        row['deviation'] = row['fact_q'] - row['plan_q']
-        row['pct'] = round(row['fact_q'] / row['plan_q'] * 100) if row['plan_q'] > 0 else 0
 
-    for group in contract_data['detail']:
-        for row in group['rows']:
-            row['pct'] = round(row['done'] / row['contract'] * 100) if row['contract'] > 0 else 0
+@contracts.route('/<int:row_id>/update-fact', methods=['POST'])
+@login_required
+def update_fact(row_id):
+    """Lets an authorized user update the quarterly 'done' figure — the one
+    number that actually changes week to week — without touching anything
+    else about the contract."""
+    if not current_user.can_access('kpi') and current_user.role != 'it_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('contracts.index'))
 
-    return render_template('contracts/index.html', data=contract_data)
+    row = ContractSummaryRow.query.get_or_404(row_id)
+    try:
+        new_value = int(request.form.get('fact_q', row.fact_q))
+    except (TypeError, ValueError):
+        flash('Invalid number.', 'warning')
+        return redirect(url_for('contracts.index'))
+
+    row.fact_q = new_value
+    db.session.commit()
+    flash('Updated.', 'success')
+    return redirect(url_for('contracts.index'))

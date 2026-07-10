@@ -37,6 +37,16 @@
         <span style="font-size:11px;color:var(--text-3)">{{ {'ru':'План год','en':'Year plan','kz':'Жыл жоспары'}[current_user.language] }}: <strong style="color:var(--text-1)">{{ row.plan_year }}</strong></span>
         <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:{{ c.pill_bg }};color:{{ c.pill_text }}">{{ row.deviation }} · {{ row.pct }}%</span>
       </div>
+      {% if current_user.role == 'it_admin' or current_user.can_access('kpi') %}
+      <details style="margin-top:8px">
+        <summary style="font-size:10px;color:var(--text-3);cursor:pointer">{{ {'ru':'Изменить факт','en':'Edit actual','kz':'Дерексіз өзгерту'}[current_user.language] }}</summary>
+        <form method="POST" action="{{ url_for('contracts.update_fact', row_id=row.id) }}" style="display:flex;gap:6px;margin-top:6px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="number" name="fact_q" class="form-input" value="{{ row.fact_q }}" style="padding:4px 8px;font-size:12px">
+          <button type="submit" class="btn btn-sm"><i class="ti ti-check"></i></button>
+        </form>
+      </details>
+      {% endif %}
     </div>
   </div>
   {% endfor %}

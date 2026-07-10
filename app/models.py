@@ -390,3 +390,103 @@ class DocumentSequence(db.Model):
                            .with_for_update().first()
         row.counter += 1
         return row.counter
+    # ── ADMIN: REFERENCE DATA ──────────────────────────────────────────────────────
+# Editable lists that used to be hardcoded constants. Both models share the
+# same simple shape (name + active flag) on purpose, so the admin CRUD screens
+# can reuse one template.
+
+class EquipmentType(db.Model):
+    __tablename__ = 'equipment_types'
+
+    id        = db.Column(db.Integer, primary_key=True)
+    name      = db.Column(db.String(64), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+
+class ReferenceDepartment(db.Model):
+    """DB-backed department list. Existing code keeps using the DEPARTMENTS
+    constant for now; this table is what the new admin panel manages and is
+    meant to replace it once every screen that reads DEPARTMENTS is migrated."""
+    __tablename__ = 'reference_departments'
+
+    id        = db.Column(db.Integer, primary_key=True)
+    name      = db.Column(db.String(64), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+
+# ── DOCUMENT ATTACHMENTS ────────────────────────────────────────────────────────
+
+class DocumentAttachment(db.Model):
+    __tablename__ = 'document_attachments'
+
+    id               = db.Column(db.Integer, primary_key=True)
+    document_id      = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
+    original_filename = db.Column(db.String(256), nullable=False)
+    stored_filename  = db.Column(db.String(256), nullable=False)  # disk name or Azure blob name
+    storage_backend  = db.Column(db.String(16), nullable=False, default='local')  # 'local' or 'azure'
+    content_type     = db.Column(db.String(128), nullable=True)
+    size_bytes       = db.Column(db.Integer, nullable=True)
+    uploaded_by      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    uploaded_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    document  = db.relationship('Document', backref=db.backref('attachments', cascade='all, delete-orphan'))
+    uploader  = db.relationship('User', foreign_keys=[uploaded_by])
+
+
+# ── CONTRACTS ─────────────────────────────────────────────────────────────────
+# Was a hardcoded dict in the contracts blueprint; now real, editable rows.
+
+class Contract(db.Model):
+    __tablename__ = 'contracts'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    client     = db.Column(db.String(128), nullable=False)
+    period     = db.Column(db.String(128), nullable=False)   # display string, e.g. "Q1 2026 · Январь — Март"
+    updated_at = db.Column(db.Date, nullable=True)
+
+    summary_rows = db.relationship('ContractSummaryRow', backref='contract',
+                                   lazy='dynamic', cascade='all, delete-orphan',
+                                   order_by='ContractSummaryRow.sort_order')
+    detail_groups = db.relationship('ContractDetailGroup', backref='contract',
+                                    lazy='dynamic', cascade='all, delete-orphan',
+                                    order_by='ContractDetailGroup.sort_order')
+
+
+class ContractSummaryRow(db.Model):
+    __tablename__ = 'contract_summary_rows'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    contract_id = db.Column(db.Integer, db.ForeignKey('contracts.id'), nullable=False)
+    name        = db.Column(db.String(128), nullable=False)
+    plan_year   = db.Column(db.Integer, nullable=False, default=0)
+    plan_q      = db.Column(db.Integer, nullable=False, default=0)
+    fact_q      = db.Column(db.Integer, nullable=False, default=0)
+    unit        = db.Column(db.String(32), nullable=True)
+    color       = db.Column(db.String(16), nullable=False, default='blue')  # red/amber/blue
+    sort_order  = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ContractDetailGroup(db.Model):
+    __tablename__ = 'contract_detail_groups'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    contract_id = db.Column(db.Integer, db.ForeignKey('contracts.id'), nullable=False)
+    name        = db.Column(db.String(128), nullable=False)
+    sort_order  = db.Column(db.Integer, nullable=False, default=0)
+
+    rows = db.relationship('ContractDetailRow', backref='group',
+                           lazy='dynamic', cascade='all, delete-orphan',
+                           order_by='ContractDetailRow.sort_order')
+
+
+class ContractDetailRow(db.Model):
+    __tablename__ = 'contract_detail_rows'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    group_id   = db.Column(db.Integer, db.ForeignKey('contract_detail_groups.id'), nullable=False)
+    name       = db.Column(db.String(256), nullable=False)
+    contract_qty = db.Column(db.Integer, nullable=False, default=0)
+    done       = db.Column(db.Integer, nullable=False, default=0)
+    remainder  = db.Column(db.Integer, nullable=False, default=0)
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    
