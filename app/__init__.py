@@ -78,6 +78,18 @@ def create_app(config_name='default'):
             return redirect(url_for('auth.settings'))
 
     @app.context_processor
+    def inject_branding():
+        from app.models import AppSetting
+        try:
+            return dict(branding=dict(
+                company_name=AppSetting.get('company_name', 'CIS Platform'),
+                has_logo=bool(AppSetting.get('logo_filename')),
+            ))
+        except Exception:
+            # table may not exist yet (fresh DB before migration)
+            return dict(branding=dict(company_name='CIS Platform', has_logo=False))
+
+    @app.context_processor
     def inject_notifications():
         from flask_login import current_user
         from app.models import Notification
