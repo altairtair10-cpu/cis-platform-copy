@@ -33,8 +33,11 @@
       </a>
       <div class="sb-section">{{ {'ru':'Операции','en':'Operations','kz':'Операциялар'}[current_user.language] }}</div>
       {% if current_user.is_authenticated and (current_user.can_access('equipment') or current_user.can_access('equipment_read')) %}
-      <a href="{{ url_for('equipment.index') }}" class="sb-item {% if request.endpoint and 'equipment' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('equipment.index') }}" class="sb-item {% if request.endpoint in ('equipment.index', 'equipment.view') %}active{% endif %}">
         <i class="ti ti-tool"></i><span>{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}</span>
+      </a>
+      <a href="{{ url_for('equipment.dashboard') }}" class="sb-item {% if request.endpoint == 'equipment.dashboard' %}active{% endif %}">
+        <i class="ti ti-layout-dashboard"></i><span>{{ {'ru':'Дэшборд техники','en':'Equipment dashboard','kz':'Техника дэшборды'}[current_user.language] }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.can_access('transport') %}

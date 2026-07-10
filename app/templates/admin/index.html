@@ -39,6 +39,16 @@
     </div>
   </a>
 
+  <a href="{{ url_for('admin.integrations') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-plug"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Интеграции','en':'Integrations','kz':'Интеграциялар'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Дэшборд техники и внешние сервисы','en':'Equipment dashboard and external services','kz':'Дэшборд және сыртқы сервистер'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
   <a href="{{ url_for('auth.users') }}" class="card" style="text-decoration:none">
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-users"></i></div>
