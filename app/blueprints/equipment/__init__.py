@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.models import Equipment, MaintenanceLog, AppSetting, db
+from app.models import Equipment, MaintenanceLog, Document, AppSetting, db
+from app.audit import log_action
+from app.services.equipment_sync import sync_equipment, sync_if_stale, last_sync_dt
 from app.decorators import requires_permission
 from datetime import datetime
 
@@ -23,6 +25,7 @@ def _to_float(value):
 @login_required
 @requires_permission('equipment')
 def index():
+    sync_if_stale()   # refresh from the Google Sheet if data is older than 10 min
     page = request.args.get('page', 1, type=int)
     pagination = Equipment.query.order_by(Equipment.unit_id)\
                                  .paginate(page=page, per_page=25, error_out=False)
@@ -35,7 +38,9 @@ def index():
         'idle':        Equipment.query.filter_by(status='idle').count(),
         'maintenance': Equipment.query.filter_by(status='maintenance').count(),
     }
-    return render_template('equipment/index.html', units=units, pagination=pagination, counts=counts)
+    return render_template('equipment/index.html', units=units, pagination=pagination,
+                           counts=counts, last_sync=last_sync_dt(),
+                           sync_configured=bool(AppSetting.get('equipment_spreadsheet_id')))
 
 @equipment.route('/<int:unit_id>')
 @login_required
@@ -44,7 +49,9 @@ def view(unit_id):
     unit = Equipment.query.get_or_404(unit_id)
     logs = MaintenanceLog.query.filter_by(equipment_id=unit.id)\
                                .order_by(MaintenanceLog.created_at.desc()).all()
-    return render_template('equipment/view.html', unit=unit, logs=logs)
+    docs = Document.query.filter_by(equipment_id=unit.id)\
+                         .order_by(Document.created_at.desc()).all()
+    return render_template('equipment/view.html', unit=unit, logs=logs, docs=docs)
 
 @equipment.route('/<int:unit_id>/log', methods=['POST'])
 @login_required
@@ -90,3 +97,17 @@ def dashboard():
     """Embedded external equipment dashboard (URL managed in the admin panel)."""
     dashboard_url = AppSetting.get('equipment_dashboard_url')
     return render_template('equipment/dashboard.html', dashboard_url=dashboard_url)
+
+
+@equipment.route('/sync', methods=['POST'])
+@login_required
+@requires_permission('equipment')
+def sync():
+    try:
+        created, updated = sync_equipment()
+        log_action('equipment_synced', details=f'+{created} new, {updated} updated')
+        db.session.commit()
+        flash(f'Синхронизировано с таблицей: новых {created}, обновлено {updated}.', 'success')
+    except Exception as exc:
+        flash(f'Не удалось синхронизировать: {exc}', 'danger')
+    return redirect(url_for('equipment.index'))

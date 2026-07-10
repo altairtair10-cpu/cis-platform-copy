@@ -250,12 +250,20 @@ def integrations():
             return redirect(url_for('admin.integrations'))
         AppSetting.set('equipment_dashboard_url', url or None)
         log_action('integration_dashboard_url', details=url or '(cleared)')
+
+        sheet_id = (request.form.get('equipment_spreadsheet_id') or '').strip()
+        sheet_name = (request.form.get('equipment_sheet_name') or '').strip()
+        AppSetting.set('equipment_spreadsheet_id', sheet_id or None)
+        AppSetting.set('equipment_sheet_name', sheet_name or None)
+        log_action('integration_equipment_sheet', details=sheet_id or '(cleared)')
         db.session.commit()
         flash('Integrations saved.', 'success')
         return redirect(url_for('admin.integrations'))
 
     return render_template('admin/integrations.html',
-                           equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''))
+                           equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''),
+                           equipment_spreadsheet_id=AppSetting.get('equipment_spreadsheet_id', ''),
+                           equipment_sheet_name=AppSetting.get('equipment_sheet_name', 'База'))
 
 
 # ── ROLE PERMISSIONS ──────────────────────────────────────────────────────────

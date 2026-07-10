@@ -45,7 +45,6 @@
         <i class="ti ti-truck"></i><span>{{ {'ru':'Транспорт','en':'Transport','kz':'Көлік'}[current_user.language] }}</span>
       </a>
       {% endif %}
-      <a href="#" class="sb-item"><i class="ti ti-briefcase"></i><span>{{ {'ru':'Работы','en':'Jobs','kz':'Жұмыстар'}[current_user.language] }}</span></a>
       <a href="{{ url_for('inventory.index') }}" class="sb-item {% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}"><i class="ti ti-packages"></i><span>{{ {'ru':'Склад','en':'Inventory','kz':'Қойма'}[current_user.language] }}</span></a>
       <a href="{{ url_for('documents.index') }}" class="sb-item {% if request.endpoint == 'documents.index' %}active{% endif %}">
         <i class="ti ti-files"></i><span>{{ {'ru':'Все документы','en':'All documents','kz':'Барлық құжаттар'}[current_user.language] }}</span>

@@ -117,4 +117,41 @@
   </div>
   {% endif %}
 </div>
+
+<div class="card" style="margin-top:14px">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-file-text"></i></div>
+      <div class="card-title">{{ {'ru':'Документы по этой технике','en':'Documents for this unit','kz':'Осы техника бойынша құжаттар'}[current_user.language] }}</div>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if docs %}
+    <table class="data-table">
+      <thead><tr>
+        <th>№</th>
+        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Название','en':'Title','kz':'Атауы'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+      </tr></thead>
+      <tbody>
+        {% for d in docs %}
+        <tr>
+          <td><a href="{{ url_for('documents.view', doc_id=d.id) }}">{{ d.doc_number or '—' }}</a></td>
+          <td>{{ {'defect_act':'Дефектный акт','purchase_req':'Требование','po_services':'ПО услуг'}.get(d.doc_type, d.doc_type) }}</td>
+          <td>{{ d.title }}</td>
+          <td><span class="pill {% if d.status=='approved' %}pill-green{% elif d.status in ('rejected',) %}pill-red{% elif d.status=='pending' %}pill-amber{% else %}pill-gray{% endif %}">{{ d.status }}</span></td>
+          <td>{{ d.created_at.strftime('%d.%m.%Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="text-align:center;padding:16px">
+      {{ {'ru':'Документов по этой технике пока нет. Дефектные акты, созданные с выбором этой единицы, появятся здесь.','en':'No documents for this unit yet. Defect acts created for it will appear here.','kz':'Әзірге құжаттар жоқ.'}[current_user.language] }}
+    </p>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
