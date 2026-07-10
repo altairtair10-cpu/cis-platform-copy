@@ -2,9 +2,8 @@
 {% block title %}Редактирование {{ doc.doc_number }}{% endblock %}
 {% block page_title %}Редактирование · {{ doc.doc_number }}{% endblock %}
 {% block content %}
-{% include 'documents/_dlog_style.html' %}
 
-<form method="POST" action="{{ url_for('documents.update_po_services', doc_id=doc.id) }}" enctype="multipart/form-data">
+<form method="POST" action="{{ url_for('documents.update_po_services', doc_id=doc.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
@@ -12,13 +11,6 @@
   <button type="submit" name="action" value="save" class="btn"><i class="ti ti-device-floppy"></i> Сохранить черновик</button>
   <a href="{{ url_for('documents.view', doc_id=doc.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
   <div style="margin-left:auto;font-size:11px;color:var(--text-3)">{{ doc.doc_number }} · Доработка</div>
-</div>
-
-<div class="dlg-steps">
-  <div class="dlg-step done">Создание</div>
-  <div class="dlg-step active">Согласование</div>
-  <div class="dlg-step">Подпись</div>
-  <div class="dlg-step">Архив</div>
 </div>
 
 <div class="form-section">
@@ -110,37 +102,7 @@
   </div>
 </div>
 
-<div class="form-section">
-  <div class="form-section-header"><i class="ti ti-paperclip"></i><span class="form-section-title">Вложения</span></div>
-  <div class="form-section-body">
-    <div class="dlg-chips" style="margin:0 0 10px">
-      {% for a in doc.attachments %}
-      <div class="dlg-chip">
-        <i class="ti ti-menu-2"></i>
-        <a class="dlg-chip-name" href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="color:var(--text-1)">{{ a.original_filename }}</a>
-        <span style="font-size:10px;color:var(--text-3);flex-shrink:0">{{ ((a.size_bytes or 0) / 1024)|round(0)|int }} KB</span>
-        <button type="submit" form="del-att-{{ a.id }}" class="dlg-chip-x" onclick="return confirm('Удалить файл?')">×</button>
-      </div>
-      {% else %}
-      <div style="font-size:11px;color:var(--text-3)">Нет вложений</div>
-      {% endfor %}
-    </div>
-    <label class="dlg-upl" for="attachments">
-      <i class="ti ti-upload" style="font-size:14px"></i> Загрузить
-      <input id="attachments" name="attachments" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv" style="display:none" onchange="showNewAttachments(this)">
-    </label>
-    <div class="dlg-chips" id="attachment-list"></div>
-    <div style="font-size:10px;color:var(--text-3);margin-top:6px">Новые файлы будут загружены при сохранении.</div>
-  </div>
-</div>
-
 </form>
-
-{% for a in doc.attachments %}
-<form id="del-att-{{ a.id }}" method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-</form>
-{% endfor %}
 
 <script>
 function addRow() {
@@ -170,15 +132,5 @@ function recalc() {
   document.getElementById('grand-total').textContent = g.toFixed(2);
 }
 window.addEventListener('load', recalc);
-function showNewAttachments(input){
-  const list = document.getElementById('attachment-list');
-  list.innerHTML = '';
-  Array.from(input.files).forEach(f=>{
-    const chip = document.createElement('div');
-    chip.className = 'dlg-chip';
-    chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${f.name}</span><span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
-    list.appendChild(chip);
-  });
-}
 </script>
 {% endblock %}
