@@ -2,20 +2,25 @@
 <aside style="width:210px;flex-shrink:0;position:sticky;top:70px;align-self:flex-start">
   <div class="card" style="margin-bottom:0">
     <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-      <span style="font-size:12px;font-weight:600;color:var(--text-1)">Документы</span>
+      <span style="font-size:12px;font-weight:600;color:var(--text-1)">{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[current_user.language] }}</span>
     </div>
     <div style="padding:6px 0">
       {% set cur_type = request.args.get('doc_type') or '' %}
       {% set cur_status = request.args.get('status') or '' %}
       <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status %}active{% endif %}">
-        <span>Все</span><span class="dl-count">{{ panel_docs|length }}</span>
+        <span>{{ {'ru':'Все','en':'All','kz':'Барлығы'}[current_user.language] }}</span><span class="dl-count">{{ panel_docs|length }}</span>
       </a>
 
-      <div class="dl-section">По статусу</div>
-      {% for st, label in [('pending','На согласовании'), ('approved','Согласован'),
-                           ('in_execution','На исполнении'), ('executed','Исполнен'),
-                           ('rejected','Отклонён'), ('draft','Создание'),
-                           ('returned','Возвращён')] %}
+      <div class="dl-section">{{ {'ru':'По статусу','en':'By status','kz':'Мәртебе бойынша'}[current_user.language] }}</div>
+      {% set L = current_user.language %}
+      {% for st, label in [
+          ('pending',      {'ru':'На согласовании','en':'Pending approval','kz':'Келісімде'}[L]),
+          ('approved',     {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[L]),
+          ('in_execution', {'ru':'На исполнении','en':'In execution','kz':'Орындалуда'}[L]),
+          ('executed',     {'ru':'Исполнен','en':'Executed','kz':'Орындалды'}[L]),
+          ('rejected',     {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[L]),
+          ('draft',        {'ru':'Создание','en':'Draft','kz':'Жоба'}[L]),
+          ('returned',     {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[L])] %}
       <a href="{{ url_for('documents.index', status=st, doc_type=cur_type or None) }}" class="dl-item {% if cur_status == st %}active{% endif %}">
         <span>{{ label }}</span><span class="dl-count">{{ panel_docs|selectattr('status','equalto',st)|list|length }}</span>
       </a>
