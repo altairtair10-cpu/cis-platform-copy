@@ -1,0 +1,181 @@
+diff --git a/app/blueprints/documents/__init__.py b/app/blueprints/documents/__init__.py
+index 927a685..235c0d5 100644
+--- a/app/blueprints/documents/__init__.py
++++ b/app/blueprints/documents/__init__.py
+@@ -290,7 +290,16 @@ def delete_attachment(doc_id, attachment_id):
+ @documents.route('/<int:doc_id>/approve', methods=['POST'])
+ @login_required
+ def approve(doc_id):
+-    doc = Document.query.get_or_404(doc_id)
++    # Lock the document row for the duration of this decision so two approvers
++    # acting on the same parallel stage at the same instant can't both see
++    # "I'm the last pending one" and double-advance current_step. Row locking
++    # is a Postgres-only concern here (production); SQLite (used in tests)
++    # doesn't support FOR UPDATE, so skip it there rather than fail loudly.
++    _lockable = db.session.get_bind().dialect.name == 'postgresql'
++    doc_query = Document.query.filter_by(id=doc_id)
++    doc = (doc_query.with_for_update().first() if _lockable else doc_query.first())
++    if doc is None:
++        abort(404)
+     action = request.form.get('action')
+     comment_text = request.form.get('comment', '').strip()
+ 
+@@ -298,28 +307,38 @@ def approve(doc_id):
+         if not current_user.can_access('documents'):
+             abort(403)
+ 
+-        approval = DocumentApproval.query.filter_by(
++        if doc.status != 'pending':
++            flash('Этот документ уже обработан и больше не ожидает согласования.', 'warning')
++            return redirect(url_for('documents.view', doc_id=doc_id))
++
++        approval_query = DocumentApproval.query.filter_by(
+             document_id=doc_id,
+             approver_id=current_user.id,
+             step=doc.current_step,
+             status='pending'
+-        ).first()
++        )
++        approval = (approval_query.with_for_update().first() if _lockable else approval_query.first())
+ 
+         if not approval and current_user.role == 'it_admin':
+-            approval = DocumentApproval.query.filter_by(
++            fallback_query = DocumentApproval.query.filter_by(
+                 document_id=doc_id,
+                 step=doc.current_step,
+                 status='pending'
+-            ).first()
++            )
++            approval = (fallback_query.with_for_update().first() if _lockable else fallback_query.first())
+ 
+         if not approval:
+             flash('Вы не можете выполнить это действие для данного документа.', 'warning')
+             return redirect(url_for('documents.view', doc_id=doc_id))
+ 
++        if action == 'return' and not comment_text:
++            flash('Укажите причину возврата документа.', 'warning')
++            return redirect(url_for('documents.view', doc_id=doc_id))
++        if action == 'reject' and not comment_text:
++            flash('Укажите причину отклонения документа.', 'warning')
++            return redirect(url_for('documents.view', doc_id=doc_id))
++
+         if action == 'return':
+-            if not comment_text:
+-                flash('Укажите причину возврата документа.', 'warning')
+-                return redirect(url_for('documents.view', doc_id=doc_id))
+             doc.status = 'returned'
+             db.session.add(DocumentComment(
+                 document_id=doc.id,
+@@ -347,6 +366,11 @@ def approve(doc_id):
+         if action == 'reject':
+             doc.status = 'rejected'
+             doc.current_step = -1
++            # Close out any other still-pending approvals (other reviewers in this
++            # stage, or later stages/signatory) so the trail doesn't show phantom
++            # "awaiting approval" items on a document that's already dead.
++            DocumentApproval.query.filter_by(document_id=doc_id, status='pending')\
++                .update({'status': 'skipped'}, synchronize_session=False)
+         else:
+             pending_at_step = DocumentApproval.query.filter_by(
+                 document_id=doc_id,
+@@ -438,6 +462,15 @@ def new_defect_act():
+ def submit_defect_act():
+     action = request.form.get('action', 'draft')
+ 
++    # Auto-assign the approving signatory: department head, else director, else IT admin
++    signatory = (User.query.filter_by(role='dept_head', is_active=True).first()
++                 or User.query.filter_by(role='director', is_active=True).first()
++                 or User.query.filter_by(role='it_admin', is_active=True).first())
++
++    if action == 'submit' and not signatory:
++        action = 'draft'
++        flash('Документ сохранён как черновик: не найден ответственный для согласования (нет активного руководителя подразделения, директора или IT-админа). Обратитесь к администратору.', 'warning')
++
+     doc = Document(
+         doc_type      = 'defect_act',
+         title         = request.form.get('description', 'Дефектный акт')[:100],
+@@ -472,11 +505,6 @@ def submit_defect_act():
+                 price       = _to_float(costs[i]) if i < len(costs) else None,
+             ))
+ 
+-    # Auto-assign the approving signatory: department head, else director, else IT admin
+-    signatory = (User.query.filter_by(role='dept_head', is_active=True).first()
+-                 or User.query.filter_by(role='director', is_active=True).first()
+-                 or User.query.filter_by(role='it_admin', is_active=True).first())
+-
+     if action == 'submit' and signatory:
+         db.session.add(DocumentApproval(document_id=doc.id, approver_id=signatory.id, step=0, status='pending'))
+ 
+@@ -518,6 +546,11 @@ def new_trebovanie():
+ def submit_trebovanie():
+     executor_id = request.form.get('executor_id', type=int) or current_user.id
+     action = request.form.get('action', 'draft')
++    signatory_id = request.form.get('signatory_id', type=int)
++
++    if action == 'submit' and not signatory_id:
++        action = 'draft'
++        flash('Документ сохранён как черновик: не выбран Утверждающий. Укажите утверждающего и отправьте документ ещё раз.', 'warning')
+ 
+     doc = Document(
+         doc_type      = 'purchase_req',
+@@ -569,7 +602,7 @@ def submit_trebovanie():
+         is_system   = True,
+     ))
+ 
+-    _build_route(doc, action, request.form.get('signatory_id', type=int))
++    _build_route(doc, action, signatory_id)
+ 
+     approvers = User.query.filter(
+         User.role.in_(['dept_head', 'director', 'it_admin']),
+@@ -605,6 +638,10 @@ def submit_trebovanie_new():
+     executor_id = request.form.get('executor_id', type=int) or current_user.id
+     signatory_id = request.form.get('signatory_id', type=int)
+ 
++    if action == 'submit' and not signatory_id:
++        action = 'draft'
++        flash('Документ сохранён как черновик: не выбран Утверждающий. Укажите утверждающего и отправьте документ ещё раз.', 'warning')
++
+     doc = Document(
+         doc_type      = 'trebovanie',
+         title         = request.form.get('summary', 'Требование на приобретение материалов')[:100],
+@@ -677,6 +714,10 @@ def submit_po_services():
+     action = request.form.get('action', 'draft')
+     signatory_id = request.form.get('signatory_id', type=int)
+ 
++    if action == 'submit' and not signatory_id:
++        action = 'draft'
++        flash('Документ сохранён как черновик: не выбран Утверждающий. Укажите утверждающего и отправьте документ ещё раз.', 'warning')
++
+     extras = {
+         'Заказано': request.form.get('ordered_by'),
+         'Плательщик НДС': request.form.get('vat_payer'),
+@@ -854,6 +895,10 @@ def submit_po_trebovanie():
+     action = request.form.get('action', 'draft')
+     signatory_id = request.form.get('signatory_id', type=int)
+ 
++    if action == 'submit' and not signatory_id:
++        action = 'draft'
++        flash('Документ сохранён как черновик: не выбран Утверждающий. Укажите утверждающего и отправьте документ ещё раз.', 'warning')
++
+     extras = {
+         'Основание': request.form.get('basis'),
+         'Требование на приобретение материалов': request.form.get('material_request'),
+diff --git a/app/templates/documents/view.html b/app/templates/documents/view.html
+index cdea0df..485075a 100644
+--- a/app/templates/documents/view.html
++++ b/app/templates/documents/view.html
+@@ -184,11 +184,12 @@
+         {% if approvals %}
+         {% for appr in approvals %}
+         <div class="approver-row" {% if loop.last %}style="border-bottom:none"{% endif %}>
+-          <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
++          <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.status == 'skipped' %}pending{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
+           <div style="flex:1"><div class="approver-name">{{ appr.approver.full_name }}</div><div class="approver-role">{% if appr.step == 0 %}{{ {'ru':'Подписывающий','en':'Signatory','kz':'Қол қоюшы'}[current_user.language] }}{% else %}{{ {'ru':'Этап','en':'Stage','kz':'Кезең'}[current_user.language] }} {{ appr.step }}{% endif %}</div></div>
+-          <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
++          <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.status == 'skipped' %}pill-gray{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
+             {% if appr.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
+             {% elif appr.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
++            {% elif appr.status == 'skipped' %}{{ {'ru':'Не потребовалось','en':'Not needed','kz':'Қажет болмады'}[current_user.language] }}
+             {% elif appr.step == doc.current_step %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
+             {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
+           </span>

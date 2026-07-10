@@ -184,11 +184,12 @@
         {% if approvals %}
         {% for appr in approvals %}
         <div class="approver-row" {% if loop.last %}style="border-bottom:none"{% endif %}>
-          <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
+          <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.status == 'skipped' %}pending{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
           <div style="flex:1"><div class="approver-name">{{ appr.approver.full_name }}</div><div class="approver-role">{% if appr.step == 0 %}{{ {'ru':'Подписывающий','en':'Signatory','kz':'Қол қоюшы'}[current_user.language] }}{% else %}{{ {'ru':'Этап','en':'Stage','kz':'Кезең'}[current_user.language] }} {{ appr.step }}{% endif %}</div></div>
-          <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
+          <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.status == 'skipped' %}pill-gray{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
             {% if appr.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
             {% elif appr.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
+            {% elif appr.status == 'skipped' %}{{ {'ru':'Не потребовалось','en':'Not needed','kz':'Қажет болмады'}[current_user.language] }}
             {% elif appr.step == doc.current_step %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
             {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
           </span>
