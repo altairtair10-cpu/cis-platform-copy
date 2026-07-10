@@ -149,6 +149,7 @@ class Document(db.Model):
     current_step  = db.Column(db.Integer, default=0)
     author_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     executor_id   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    equipment_id  = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -159,6 +160,8 @@ class Document(db.Model):
                                     lazy='dynamic', cascade='all, delete-orphan')
     comments      = db.relationship('DocumentComment', backref='document',
                                     lazy='dynamic', cascade='all, delete-orphan')
+    equipment     = db.relationship('Equipment', backref=db.backref('documents', lazy='dynamic'),
+                                    foreign_keys=[equipment_id])
 
     def generate_number(self):
         prefix_map = {
@@ -247,6 +250,11 @@ class Equipment(db.Model):
     location     = db.Column(db.String(128), nullable=True)
     status       = db.Column(db.String(32), default='idle')
     horsepower   = db.Column(db.Integer, nullable=True)
+    gos_number   = db.Column(db.String(32), nullable=True)    # гос. номер
+    project      = db.Column(db.String(64), nullable=True)    # ЭМГ / CIS / КРС / Простой
+    condition    = db.Column(db.Text, nullable=True)          # текущее состояние
+    sheet_status = db.Column(db.String(64), nullable=True)    # статус из таблицы, как есть
+    synced_at    = db.Column(db.DateTime, nullable=True)      # последняя синхронизация
     last_service = db.Column(db.Date, nullable=True)
     next_service = db.Column(db.Date, nullable=True)
     notes        = db.Column(db.Text, nullable=True)

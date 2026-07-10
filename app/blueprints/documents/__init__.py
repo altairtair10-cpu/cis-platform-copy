@@ -498,8 +498,10 @@ def submit_defect_act():
         action = 'draft'
         flash('Документ сохранён как черновик: не найден ответственный для согласования (нет активного руководителя подразделения, директора или IT-админа). Обратитесь к администратору.', 'warning')
 
+    equipment_id = request.form.get('equipment_id', type=int)
     doc = Document(
         doc_type      = 'defect_act',
+        equipment_id  = equipment_id,
         title         = request.form.get('description', 'Дефектный акт')[:100],
         department    = request.form.get('department', current_user.department),
         urgency       = request.form.get('urgency', 'critical'),

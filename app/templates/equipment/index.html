@@ -26,6 +26,25 @@
       <div class="card-icon"><i class="ti ti-tool"></i></div>
       <div class="card-title">{{ {'ru':'Все единицы оборудования','en':'All equipment units','kz':'Барлық жабдық бірліктері'}[current_user.language] }}</div>
     </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      {% if last_sync %}
+      <span class="text-muted" style="font-size:12px">
+        {{ {'ru':'Таблица синхр.','en':'Sheet synced','kz':'Кесте синхр.'}[current_user.language] }} {{ last_sync.strftime('%d.%m %H:%M') }} UTC
+      </span>
+      {% endif %}
+      {% if sync_configured %}
+      <form method="POST" action="{{ url_for('equipment.sync') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm"><i class="ti ti-refresh"></i>
+          {{ {'ru':'Обновить из таблицы','en':'Sync from sheet','kz':'Кестеден жаңарту'}[current_user.language] }}
+        </button>
+      </form>
+      {% elif current_user.role == 'it_admin' %}
+      <a href="{{ url_for('admin.integrations') }}" class="btn btn-sm">
+        {{ {'ru':'Подключить таблицу','en':'Connect sheet','kz':'Кестені қосу'}[current_user.language] }}
+      </a>
+      {% endif %}
+    </div>
   </div>
   <table class="data-table">
     <thead>

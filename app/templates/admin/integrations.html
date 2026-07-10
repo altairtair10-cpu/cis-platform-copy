@@ -15,6 +15,20 @@
       <input type="url" name="equipment_dashboard_url" class="form-input"
              value="{{ equipment_dashboard_url }}" placeholder="https://..."
              style="margin-bottom:16px">
+      <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
+        {{ {'ru':'ID Google-таблицы учёта техники (из адреса таблицы: /spreadsheets/d/<ID>/...). Не забудьте открыть таблице доступ на чтение для сервисного аккаунта.',
+            'en':'Equipment Google Sheet ID (from the sheet URL: /spreadsheets/d/<ID>/...). Remember to share the sheet with the service account.',
+            'kz':'Техника есебінің Google-кесте ID'}[current_user.language] }}
+      </label>
+      <input type="text" name="equipment_spreadsheet_id" class="form-input"
+             value="{{ equipment_spreadsheet_id }}" placeholder="1AbC...xyz" style="margin-bottom:16px">
+
+      <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
+        {{ {'ru':'Название вкладки с базой техники','en':'Sheet tab with the equipment base','kz':'Техника базасы бар қойынды'}[current_user.language] }}
+      </label>
+      <input type="text" name="equipment_sheet_name" class="form-input"
+             value="{{ equipment_sheet_name }}" placeholder="База" style="margin-bottom:16px">
+
       <button type="submit" class="btn btn-primary">
         {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
       </button>
