@@ -21,17 +21,6 @@
       </a>
       {% endfor %}
 
-      <div class="dl-section">По типу</div>
-      <a href="{{ url_for('documents.index', status=cur_status or None) }}" class="dl-item {% if not cur_type %}active{% endif %}">
-        <span>Все типы</span>
-      </a>
-      {% for tp, label in [('purchase_req','Требования'), ('po_services','ПО на услуги'),
-                           ('po_goods','ПО на товары'), ('defect_act','Дефектные акты'),
-                           ('memo','Служебные записки')] %}
-      <a href="{{ url_for('documents.index', doc_type=tp, status=cur_status or None) }}" class="dl-item {% if cur_type == tp %}active{% endif %}">
-        <span>{{ label }}</span><span class="dl-count">{{ panel_docs|selectattr('doc_type','equalto',tp)|list|length }}</span>
-      </a>
-      {% endfor %}
     </div>
   </div>
 

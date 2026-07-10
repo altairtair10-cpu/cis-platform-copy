@@ -85,8 +85,11 @@ def _visible_docs_query(user):
     return query.filter(or_(*conditions))
 
 
-def _panel_docs():
-    return _visible_docs_query(current_user).order_by(Document.created_at.desc()).all()
+def _panel_docs(doc_type=None):
+    query = _visible_docs_query(current_user)
+    if doc_type:
+        query = query.filter_by(doc_type=doc_type)
+    return query.order_by(Document.created_at.desc()).all()
 
 
 def _build_route(doc, action, signatory_id):
@@ -175,7 +178,7 @@ def index():
     doc_type = request.args.get('doc_type')
     page = request.args.get('page', 1, type=int)
 
-    panel_docs = _panel_docs()
+    panel_docs = _panel_docs(doc_type)
 
     query = _visible_docs_query(current_user)
     if status:
