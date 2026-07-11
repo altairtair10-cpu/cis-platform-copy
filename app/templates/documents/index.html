@@ -9,6 +9,12 @@
 
   <div style="flex:1;min-width:0">
     <form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <div style="position:relative;flex:1;min-width:220px;max-width:420px">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-text-secondary,#8a857c);font-size:14px"></i>
+        <input type="text" name="q" value="{{ q or '' }}" class="form-input"
+               placeholder="{{ _('Поиск: номер, содержание, автор...') }}"
+               style="width:100%;padding-left:32px;border:1.5px solid var(--color-border-primary,#C9C4BA);border-radius:8px">
+      </div>
       
       <select name="year" class="form-select" style="max-width:130px;font-size:12px" onchange="this.form.submit()">
         <option value="">{{ _('Год: все') }}</option>
