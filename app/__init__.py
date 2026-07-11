@@ -93,7 +93,9 @@ def create_app(config_name='default'):
         from flask_login import current_user
         allowed = ('auth.settings', 'auth.settings_password', 'auth.logout',
                    'auth.set_language', 'static')
+        from flask import session as _sess
         if (current_user.is_authenticated
+                and not _sess.get('impersonator_id')
                 and getattr(current_user, 'must_change_password', False)
                 and request.endpoint
                 and request.endpoint not in allowed):

@@ -1287,3 +1287,15 @@ msgstr "Payments Google Sheet ID (finance adds paid PO numbers; the system marks
 msgid "Название вкладки (пусто = первая)"
 msgstr "Tab name (empty = first)"
 
+msgid "Режим просмотра"
+msgstr "View mode"
+
+msgid "Вернуться в свою учётную запись"
+msgstr "Return to your account"
+
+msgid "Войти как"
+msgstr "View as"
+
+msgid "Посмотреть платформу глазами этого сотрудника"
+msgstr "See the platform through this employee's eyes"
+
