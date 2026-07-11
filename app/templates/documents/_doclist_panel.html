@@ -4,8 +4,20 @@
     <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
       <span style="font-size:12px;font-weight:600;color:var(--text-1)">{{ _('Документы') }}</span>
     </div>
-    <div style="padding:6px 0">
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
       {% set cur_type = request.args.get('doc_type') or '' %}
+      <div style="position:relative">
+        <select class="form-select" onchange="window.location='{{ url_for('documents.index') }}' + (this.value ? '?doc_type=' + this.value : '')"
+                style="width:100%;font-size:12px;font-weight:600;padding:8px 30px 8px 10px;border:1.5px solid var(--border);border-radius:8px;appearance:none;-webkit-appearance:none;cursor:pointer;background:var(--bg-input,#fff)">
+          <option value="">{{ _('Все виды документов') }}</option>
+          {% for k, v in doc_types_all.items() %}
+          <option value="{{ k }}" {% if cur_type == k %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+        <i class="ti ti-chevron-down" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:13px;color:var(--text-3)"></i>
+      </div>
+    </div>
+    <div style="padding:6px 0">
       {% set cur_status = request.args.get('status') or '' %}
       <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status %}active{% endif %}">
         <span>Все</span><span class="dl-count">{{ panel_counts.get('_total', 0) }}</span>
@@ -20,7 +32,10 @@
           ('executed',     _('Исполнен')),
           ('rejected',     _('Отклонён')),
           ('draft',        _('Создание')),
-          ('returned',     _('Возвращён'))] %}
+          ('returned',     _('Возвращён')),
+          ('awaiting_payment', _('На оплате')),
+          ('closing_docs', _('Закрывающие документы')),
+          ('closed',       _('Закрыт'))] %}
       <a href="{{ url_for('documents.index', status=st, doc_type=cur_type or None) }}" class="dl-item {% if cur_status == st %}active{% endif %}">
         <span>{{ label }}</span><span class="dl-count">{{ panel_counts.get(st, 0) }}</span>
       </a>

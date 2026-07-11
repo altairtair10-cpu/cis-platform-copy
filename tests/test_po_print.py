@@ -29,7 +29,7 @@ def test_po_services_print_layout(client, app):
     assert 'Услуги питания (обед)' in body
     assert '76 125.00' in body                      # 29 × 2625
     assert 'Итого: 76 125.00' in body
-    assert 'НДС / VAT 16%: 10 500.00' in body       # 76125*16/116
+    assert 'В том числе НДС 16%: 12 180.00' in body   # 76125 * 0.16
     # согласований ещё нет — подписывающий в ожидании, это видно на распечатке
     assert 'Ожидает утверждения' in body
 

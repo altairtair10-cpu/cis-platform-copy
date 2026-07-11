@@ -68,6 +68,7 @@
     <table class="bordered letterhead">
       <tr>
         <td class="logo-cell">
+          {% if branding.has_logo %}<img src="{{ url_for('admin.logo') }}" alt="CIS" style="max-height:46px;max-width:85%"><br>{% endif %}
           <div class="company">CASPIAN INTEGRATED SERVICES</div>
           <div class="sub">ТОО «Caspian Integrated Services»</div>
         </td>

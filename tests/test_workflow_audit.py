@@ -221,5 +221,6 @@ def test_po_services_and_po_trebovanie_chains(client, app):
     for did in ids:
         _approve(client, did)
     with app.app_context():
-        assert db.session.get(Document, ids[0]).status == 'approved'
-        assert db.session.get(Document, ids[1]).status == 'approved'
+        # оба вида ПО после подписи уходят на оплату
+        assert db.session.get(Document, ids[0]).status == 'awaiting_payment'
+        assert db.session.get(Document, ids[1]).status == 'awaiting_payment'

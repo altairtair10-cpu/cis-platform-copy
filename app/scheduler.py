@@ -48,6 +48,9 @@ def _sync_job(app):
             if AppSetting.get('maintenance_spreadsheet_id'):
                 sync_maintenance()
                 check_maintenance_due()
+            if AppSetting.get('payments_spreadsheet_id'):
+                from app.services.payments_sync import sync_payments
+                sync_payments()
             db.session.commit()
             log.info('scheduled sync completed')
         except Exception:

@@ -123,6 +123,15 @@ def approve(doc_id):
                     _notify_current_approvers(doc, f'Документ на согласование: {doc.doc_number}')
                 else:
                     doc.status = 'approved'
+                    if doc.doc_type in ('po_services', 'po_trebovanie'):
+                        # подписанный ПО (услуги или товары) уходит на оплату казначею
+                        doc.status = 'awaiting_payment'
+                        for fin in User.query.filter_by(role='accountant', is_active=True).all():
+                            db.session.add(Notification(
+                                user_id=fin.id,
+                                title=f'ПО на оплату: {doc.doc_number}',
+                                body=(doc.title or '')[:100],
+                                link=f'/documents/{doc.id}', is_read=False))
                     if doc.doc_type == 'purchase_req':
                         for proc in User.query.filter_by(role='procurement', is_active=True).all():
                             db.session.add(Notification(
@@ -212,4 +221,55 @@ def mark_executed(doc_id):
     log_action('document_executed', 'document', doc.id, details=doc.doc_number)
     db.session.commit()
     flash('Требование отмечено исполненным.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc_id))
+
+
+@documents.route('/<int:doc_id>/mark-paid', methods=['POST'])
+@login_required
+def mark_paid(doc_id):
+    """Ручная отметка оплаты (казначей) — резерв на случай задержки таблицы."""
+    doc = Document.query.get_or_404(doc_id)
+    if doc.doc_type not in ('po_services', 'po_trebovanie') or doc.status != 'awaiting_payment':
+        flash('Документ не ожидает оплаты.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    if current_user.role not in ('accountant', 'director', 'it_admin'):
+        abort(403)
+    from datetime import datetime as _dt
+    doc.paid_at = _dt.utcnow()
+    doc.status = 'closing_docs'
+    db.session.add(DocumentComment(
+        document_id=doc.id, author_id=current_user.id,
+        text=f'Оплата произведена (отмечено вручную: {current_user.full_name}). '
+             f'Ожидаются закрывающие документы от автора.', is_system=True))
+    db.session.add(Notification(
+        user_id=doc.author_id, title=f'ПО {doc.doc_number} оплачен',
+        body='Предоставьте закрывающие документы.',
+        link=f'/documents/{doc.id}', is_read=False))
+    log_action('po_marked_paid', 'document', doc.id, details=doc.doc_number)
+    db.session.commit()
+    flash('Оплата отмечена. Автору отправлено уведомление о закрывающих документах.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc_id))
+
+
+@documents.route('/<int:doc_id>/closing-docs-received', methods=['POST'])
+@login_required
+def closing_docs_received(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.doc_type not in ('po_services', 'po_trebovanie') or doc.status != 'closing_docs':
+        flash('Документ не ожидает закрывающих документов.', 'warning')
+        return redirect(url_for('documents.view', doc_id=doc_id))
+    if current_user.role not in ('accountant', 'director', 'it_admin'):
+        abort(403)
+    doc.status = 'closed'
+    db.session.add(DocumentComment(
+        document_id=doc.id, author_id=current_user.id,
+        text=f'Закрывающие документы получены ({current_user.full_name}). ПО закрыт.',
+        is_system=True))
+    db.session.add(Notification(
+        user_id=doc.author_id, title=f'ПО {doc.doc_number} закрыт',
+        body='Закрывающие документы приняты бухгалтерией.',
+        link=f'/documents/{doc.id}', is_read=False))
+    log_action('po_closed', 'document', doc.id, details=doc.doc_number)
+    db.session.commit()
+    flash('ПО закрыт.', 'success')
     return redirect(url_for('documents.view', doc_id=doc_id))

@@ -1248,3 +1248,42 @@ msgstr "No transport runs yet"
 msgid "Данные появятся из Transport Bot"
 msgstr "Data will appear from Transport Bot"
 
+msgid "На оплате"
+msgstr "Awaiting payment"
+
+msgid "Оплачен"
+msgstr "Paid"
+
+msgid "Закрывающие документы"
+msgstr "Closing documents"
+
+msgid "Закрыт"
+msgstr "Closed"
+
+msgid "Финансы"
+msgstr "Finance"
+
+msgid "Отметить оплаченным"
+msgstr "Mark as paid"
+
+msgid "Отметить ПО оплаченным?"
+msgstr "Mark this PO as paid?"
+
+msgid "Закрывающие документы получены"
+msgstr "Closing documents received"
+
+msgid "Закрывающие документы получены?"
+msgstr "Closing documents received?"
+
+msgid "ПО на оплате"
+msgstr "POs awaiting payment"
+
+msgid "Ваши ПО ждут закрывающих документов"
+msgstr "Your POs await closing documents"
+
+msgid "ID Google-таблицы оплат (финансовый отдел вносит номера оплаченных ПО; система сама переводит их в «Оплачен»)"
+msgstr "Payments Google Sheet ID (finance adds paid PO numbers; the system marks them paid)"
+
+msgid "Название вкладки (пусто = первая)"
+msgstr "Tab name (empty = first)"
+

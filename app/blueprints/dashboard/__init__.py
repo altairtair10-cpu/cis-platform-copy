@@ -21,7 +21,22 @@ def index():
         'staff_role':         User.query.filter_by(role=current_user.role, is_active=True).count(),
     }
     recent_docs = Document.query.order_by(Document.created_at.desc()).limit(8).all()
-    return render_template('dashboard.html', stats=stats, recent_docs=recent_docs)
+
+    pos_awaiting_payment = []
+    if current_user.role in ('accountant', 'director', 'it_admin'):
+        pos_awaiting_payment = Document.query.filter(
+            Document.doc_type.in_(('po_services', 'po_trebovanie')),
+            Document.status == 'awaiting_payment')\
+            .order_by(Document.created_at.desc()).limit(10).all()
+    my_closing_docs = Document.query.filter(
+        Document.doc_type.in_(('po_services', 'po_trebovanie')),
+        Document.status == 'closing_docs',
+        Document.author_id == current_user.id)\
+        .order_by(Document.created_at.desc()).limit(10).all()
+
+    return render_template('dashboard.html', stats=stats, recent_docs=recent_docs,
+                           pos_awaiting_payment=pos_awaiting_payment,
+                           my_closing_docs=my_closing_docs)
 
 
 @dashboard.route('/briefing')
