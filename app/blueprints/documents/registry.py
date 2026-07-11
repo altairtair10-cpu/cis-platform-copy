@@ -142,8 +142,18 @@ def print_doc(doc_id):
     items = doc.items.all()
     extras = _unpack_extras(doc.justification)
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
-    return render_template('documents/print.html', doc=doc, items=items,
-                           extras=extras, approvals=approvals)
+    total = float(doc.total_cost or 0)
+    vat = round(total * 16 / 116, 2) if (extras.get('vat_payer') or '').strip().lower() == 'да' else 0.0
+    sig_step = max((a.step for a in approvals), default=0)
+    if doc.doc_type == 'po_services':
+        template = 'documents/print_po_services.html'
+    elif doc.doc_type == 'po_trebovanie':
+        template = 'documents/print_po_goods.html'
+    else:
+        template = 'documents/print.html'
+    return render_template(template, doc=doc, items=items, extras=extras,
+                           approvals=approvals, total=total, vat=vat,
+                           sig_step=sig_step)
 
 
 @documents.route('/route-templates/save', methods=['POST'])

@@ -1,0 +1,69 @@
+{# Общие стили и утверждающий лист для печатных форм ПО #}
+{% macro styles() %}
+<style>
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Times New Roman', serif; font-size:10.5pt; color:#000;
+         background:#fff; }
+  .page { max-width:19cm; margin:0 auto; padding:24px 8px; }
+  table { border-collapse:collapse; width:100%; }
+  table.b td, table.b th { border:1px solid #000; padding:3px 6px; vertical-align:top; }
+  .head td { border:1px solid #000; padding:2px 8px; }
+  .head .title { text-align:center; font-weight:bold; font-size:12pt; }
+  .head .meta { font-size:8.5pt; text-align:center; width:120px; padding:1px 4px; }
+  .logo { font-weight:bold; color:#A31E08; font-size:14pt; text-align:center; }
+  .logo small { display:block; color:#1A5276; font-size:6.5pt; letter-spacing:1px; }
+  .kv b { font-weight:bold; }
+  .items th { font-weight:bold; text-align:left; }
+  .num { text-align:right; white-space:nowrap; }
+  .totals { margin-top:4px; font-weight:bold; }
+  .sheet { margin-top:18px; font-size:9.5pt; }
+  .sheet b { display:block; margin-bottom:4px; }
+  .footer { text-align:right; font-size:9pt; margin-top:28px; }
+  .toolbar { text-align:center; padding:10px; }
+  .toolbar button { padding:8px 22px; font-size:12pt; cursor:pointer; }
+  @media print { .toolbar { display:none } .page { padding:0 } @page { margin:1.4cm } }
+</style>
+{% endmacro %}
+
+{% macro header(title_ru, title_en, form_code, form_rev_date) %}
+<table class="head">
+  <tr>
+    <td style="width:26%" class="logo">CIS<small>CASPIAN INTEGRATED SERVICES</small></td>
+    <td class="title">{{ title_ru }}<br>({{ title_en }})</td>
+    <td class="meta" style="border-bottom:none">
+      <div style="border-bottom:1px solid #000">{{ form_code }}</div>
+      <div style="border-bottom:1px solid #000">{{ form_rev_date }}</div>
+      <div style="border-bottom:1px solid #000">Рев 00</div>
+      <div>Страница 1 из 1</div>
+    </td>
+  </tr>
+</table>
+{% endmacro %}
+
+{% macro approval_sheet(approvals, sig_step, sign_word, wait_word) %}
+<div class="sheet">
+  <b>Лист согласования и утверждения</b>
+  {# подписывающий (последний шаг) — первым, как в утверждённой форме #}
+  {% for a in approvals if a.step == sig_step %}
+    {% if a.status == 'approved' %}
+    <div>{{ sign_word }} {{ a.decided_at.strftime('%d.%m.%Y %H:%M') if a.decided_at }} {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% elif a.status == 'rejected' %}
+    <div>Отклонено {{ a.decided_at.strftime('%d.%m.%Y %H:%M') if a.decided_at }} {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% else %}
+    <div>{{ wait_word }} — {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% endif %}
+  {% endfor %}
+  {% for a in approvals if a.step != sig_step %}
+    {% if a.status == 'approved' %}
+    <div>Согласовано {{ a.decided_at.strftime('%d.%m.%Y %H:%M') if a.decided_at }} {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% elif a.status == 'rejected' %}
+    <div>Отклонено {{ a.decided_at.strftime('%d.%m.%Y %H:%M') if a.decided_at }} {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% else %}
+    <div>На согласовании — {{ a.approver.full_name }} {{ a.approver.position_display }}</div>
+    {% endif %}
+  {% endfor %}
+  {% if not approvals %}
+  <div>Маршрут согласования не назначен (черновик).</div>
+  {% endif %}
+</div>
+{% endmacro %}
