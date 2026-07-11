@@ -1,0 +1,84 @@
+{% import 'documents/_print_po_base.html' as po %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ doc.doc_number }} — Заявка на закупку товаров</title>
+{{ po.styles() }}
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">🖨 Печать / Сохранить в PDF</button></div>
+<div class="page">
+  {{ po.header('Заявка на закупку товаров', 'Purchase order', 'CIS-MR-001 · Ф-01', '31.07.2023') }}
+
+  <table class="b" style="margin-top:12px">
+    <tr>
+      <td style="width:55%"><b>Краткое содержание:</b> {{ doc.purpose or doc.title }}</td>
+      <td><b>№ документа:</b> {{ doc.doc_number }}</td>
+    </tr>
+    <tr>
+      <td><b>Требование на приобретение материалов №:</b>
+        {{ doc.related_req.doc_number if doc.related_req else (extras.get('material_request') or '') }}</td>
+      <td><b>Заказано:</b> {{ extras.get('ordered_by') or doc.author.full_name }}</td>
+    </tr>
+    <tr>
+      <td><b>Инициатор:</b> {{ doc.author.full_name }} ({{ doc.author.position_display }})</td>
+      <td><b>Основание (№ WO):</b> {{ extras.get('basis') or '' }}</td>
+    </tr>
+    <tr>
+      <td><b>Плательщик НДС:</b> {{ extras.get('vat_payer') or '' }}</td>
+      <td><b>Дата документа:</b> {{ doc.created_at.strftime('%d.%m.%Y') }}</td>
+    </tr>
+    <tr>
+      <td><b>Поставщик:</b> {{ extras.get('counterparty') or '' }}</td>
+      <td><b>Валюта:</b> {{ extras.get('currency') or 'KZT' }}</td>
+    </tr>
+  </table>
+
+  <div style="font-weight:bold;margin-top:12px">ПРОЧИЕ УСЛОВИЯ:</div>
+  <table class="b">
+    <tr>
+      <th>Группа материалов</th><th>Основание</th><th>Условия оплаты</th>
+      <th>Условия поставки</th><th>Требуемый срок поставки</th><th>Комментарии</th><th>Статья бюджета</th>
+    </tr>
+    <tr>
+      <td>{{ extras.get('material_group') or '' }}</td>
+      <td>{{ extras.get('basis') or '' }}</td>
+      <td>{{ extras.get('payment_terms') or '' }}</td>
+      <td>{{ extras.get('service_terms') or '' }}</td>
+      <td>{{ extras.get('service_date') or '' }}</td>
+      <td></td>
+      <td>{{ extras.get('budget_line') or '' }}</td>
+    </tr>
+  </table>
+
+  <table class="b items" style="margin-top:12px">
+    <tr>
+      <th>Описание</th><th style="width:8%">Ед. изм.</th><th style="width:8%">Кол-во</th>
+      <th style="width:12%">Код ТНВЭД</th><th style="width:14%">Цена за единицу</th><th style="width:13%">Сумма</th>
+    </tr>
+    {% for it in items %}
+    <tr>
+      <td>{{ it.name }}</td>
+      <td>{{ it.unit or '' }}</td>
+      <td class="num">{{ '%.2f' % it.quantity if it.quantity is not none else '' }}</td>
+      <td>{{ it.note or '' }}</td>
+      <td class="num">{{ '{:,.2f}'.format(it.price).replace(',', ' ') if it.price is not none else '' }}</td>
+      <td class="num">{{ '{:,.2f}'.format(it.line_total).replace(',', ' ') if it.line_total is not none else '' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="totals">Итого: {{ '{:,.2f}'.format(total).replace(',', ' ') }}</div>
+  <div class="totals">НДС / VAT 16%: {{ '{:,.2f}'.format(vat).replace(',', ' ') }}</div>
+
+  <div style="margin-top:14px">
+    <b>Инициатор:</b><br>
+    Исп.: {{ doc.author.full_name }}<br>
+    Эл.почта: {{ doc.author.email }}
+  </div>
+
+  {{ po.approval_sheet(approvals, sig_step, 'Подписано', 'Ожидает подписи') }}
+  <div class="footer">Страница <b>1</b> из <b>1</b></div>
+</div>
+</body>
+</html>
