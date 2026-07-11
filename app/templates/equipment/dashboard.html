@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Дэшборд техники','en':'Equipment dashboard','kz':'Техника дэшборды'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Дэшборд техники','en':'Equipment dashboard','kz':'Техника дэшборды'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Дэшборд техники') }}{% endblock %}
+{% block page_title %}{{ _('Дэшборд техники') }}{% endblock %}
 
 {% block content %}
 {% if dashboard_url %}
 <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
   <a href="{{ dashboard_url }}" target="_blank" rel="noopener" class="btn btn-sm">
     <i class="ti ti-external-link"></i>
-    {{ {'ru':'Открыть в новой вкладке','en':'Open in new tab','kz':'Жаңа қойындыда ашу'}[current_user.language] }}
+    {{ _('Открыть в новой вкладке') }}
   </a>
 </div>
 <iframe src="{{ dashboard_url }}"
@@ -19,11 +19,11 @@
   <div class="card-body" style="text-align:center;padding:40px">
     <i class="ti ti-layout-dashboard" style="font-size:32px;color:var(--color-text-secondary)"></i>
     <p style="margin-top:12px">
-      {{ {'ru':'Адрес дэшборда ещё не настроен.','en':'The dashboard URL is not configured yet.','kz':'Дэшборд мекенжайы әлі бапталмаған.'}[current_user.language] }}
+      {{ _('Адрес дэшборда ещё не настроен.') }}
     </p>
     {% if current_user.role == 'it_admin' %}
     <a href="{{ url_for('admin.integrations') }}" class="btn btn-primary" style="margin-top:8px">
-      {{ {'ru':'Настроить в Админ-панели','en':'Configure in Admin panel','kz':'Әкімші панелінде баптау'}[current_user.language] }}
+      {{ _('Настроить в Админ-панели') }}
     </a>
     {% endif %}
   </div>

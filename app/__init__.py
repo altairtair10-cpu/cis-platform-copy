@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
+from flask_babel import Babel
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config.config import config
@@ -11,6 +12,7 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
+babel = Babel()
 limiter = Limiter(key_func=get_remote_address, storage_uri='memory://')
 
 def init_sentry():
@@ -38,6 +40,14 @@ def create_app(config_name='default'):
     login_manager.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
+
+    from app.i18n import select_locale, compile_catalogs
+    import os as _os2
+    compile_catalogs(_os2.path.join(_os2.path.dirname(_os2.path.dirname(__file__)), 'translations'))
+    app.config.setdefault('BABEL_DEFAULT_LOCALE', 'ru')
+    app.config.setdefault('BABEL_TRANSLATION_DIRECTORIES',
+                          _os2.path.join(_os2.path.dirname(_os2.path.dirname(__file__)), 'translations'))
+    babel.init_app(app, locale_selector=select_locale)
 
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'

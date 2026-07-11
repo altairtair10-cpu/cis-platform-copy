@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Интеграции','en':'Integrations','kz':'Интеграциялар'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Интеграции','en':'Integrations','kz':'Интеграциялар'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Интеграции') }}{% endblock %}
+{% block page_title %}{{ _('Интеграции') }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width:640px">
@@ -8,37 +8,31 @@
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
-        {{ {'ru':'URL дэшборда техники (страница «Дэшборд техники» показывает его во фрейме; пусто = раздел скрыт до настройки)',
-            'en':'Equipment dashboard URL (embedded on the Equipment dashboard page; empty = shows setup notice)',
-            'kz':'Техника дэшбордының URL мекенжайы'}[current_user.language] }}
+        {{ _('URL дэшборда техники (страница «Дэшборд техники» показывает его во фрейме; пусто = раздел скрыт до настройки)') }}
       </label>
       <input type="url" name="equipment_dashboard_url" class="form-input"
              value="{{ equipment_dashboard_url }}" placeholder="https://..."
              style="margin-bottom:16px">
       <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
-        {{ {'ru':'ID Google-таблицы учёта техники (из адреса таблицы: /spreadsheets/d/<ID>/...). Не забудьте открыть таблице доступ на чтение для сервисного аккаунта.',
-            'en':'Equipment Google Sheet ID (from the sheet URL: /spreadsheets/d/<ID>/...). Remember to share the sheet with the service account.',
-            'kz':'Техника есебінің Google-кесте ID'}[current_user.language] }}
+        {{ _('ID Google-таблицы учёта техники (из адреса таблицы: /spreadsheets/d/<ID>/...). Не забудьте открыть таблице доступ на чтение для сервисного аккаунта.') }}
       </label>
       <input type="text" name="equipment_spreadsheet_id" class="form-input"
              value="{{ equipment_spreadsheet_id }}" placeholder="1AbC...xyz" style="margin-bottom:16px">
 
       <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
-        {{ {'ru':'Название вкладки с базой техники','en':'Sheet tab with the equipment base','kz':'Техника базасы бар қойынды'}[current_user.language] }}
+        {{ _('Название вкладки с базой техники') }}
       </label>
       <input type="text" name="equipment_sheet_name" class="form-input"
              value="{{ equipment_sheet_name }}" placeholder="База" style="margin-bottom:16px">
 
       <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
-        {{ {'ru':'ID Google-таблицы реестра ТО и ремонтов (вкладки по каждой машине). Не забудьте расшарить её на сервисный аккаунт.',
-            'en':'Maintenance register Google Sheet ID (one tab per unit). Remember to share it with the service account.',
-            'kz':'ТҚ тіркелімінің Google-кесте ID'}[current_user.language] }}
+        {{ _('ID Google-таблицы реестра ТО и ремонтов (вкладки по каждой машине). Не забудьте расшарить её на сервисный аккаунт.') }}
       </label>
       <input type="text" name="maintenance_spreadsheet_id" class="form-input"
              value="{{ maintenance_spreadsheet_id }}" placeholder="1xnEY...F7M4" style="margin-bottom:16px">
 
       <button type="submit" class="btn btn-primary">
-        {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+        {{ _('Сохранить') }}
       </button>
     </form>
   </div>

@@ -12,8 +12,8 @@
   {% endif %}
 
   <span class="text-muted text-small" style="padding:0 8px">
-    {{ {'ru':'Стр.','en':'Page','kz':'Бет'}[current_user.language] }} {{ pagination.page }} / {{ pagination.pages }}
-    <span style="color:var(--text-4)">({{ pagination.total }} {{ {'ru':'всего','en':'total','kz':'барлығы'}[current_user.language] }})</span>
+    {{ _('Стр.') }} {{ pagination.page }} / {{ pagination.pages }}
+    <span style="color:var(--text-4)">({{ pagination.total }} {{ _('всего') }})</span>
   </span>
 
   {% if pagination.has_next %}

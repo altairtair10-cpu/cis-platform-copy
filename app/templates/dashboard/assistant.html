@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'ИИ Ассистент','en':'AI Assistant','kz':'ЖИ Көмекші'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'ИИ Ассистент','en':'AI Assistant','kz':'ЖИ Көмекші'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('ИИ Ассистент') }}{% endblock %}
+{% block page_title %}{{ _('ИИ Ассистент') }}{% endblock %}
 
 {% block content %}
 <div style="max-width:760px">
@@ -9,16 +9,16 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-robot"></i></div>
-        <div class="card-title">{{ {'ru':'Спросите ИИ-ассистента CIS','en':'Ask the CIS AI Assistant','kz':'CIS ЖИ көмекшісінен сұраңыз'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Спросите ИИ-ассистента CIS') }}</div>
       </div>
     </div>
     <div class="card-body">
       <form method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <textarea name="question" rows="3" class="form-textarea" placeholder="{{ {'ru':'Например: Сколько оборудования сейчас на ТО? Кто работает в механическом отделе?','en':'E.g: How much equipment is in maintenance? Who works in the mechanical department?','kz':'Мысалы: Қазір қанша жабдық ТО-да? Механикалық бөлімде кім жұмыс істейді?'}[current_user.language] }}">{{ question or '' }}</textarea>
+        <textarea name="question" rows="3" class="form-textarea" placeholder="{{ _('Например: Сколько оборудования сейчас на ТО? Кто работает в механическом отделе?') }}">{{ question or '' }}</textarea>
         <div style="margin-top:8px;display:flex;justify-content:flex-end">
           <button type="submit" class="btn btn-primary">
-            <i class="ti ti-send"></i>{{ {'ru':'Спросить','en':'Ask','kz':'Сұрау'}[current_user.language] }}
+            <i class="ti ti-send"></i>{{ _('Спросить') }}
           </button>
         </div>
       </form>
@@ -30,7 +30,7 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-message-circle"></i></div>
-        <div class="card-title">{{ {'ru':'Ответ','en':'Answer','kz':'Жауап'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Ответ') }}</div>
       </div>
     </div>
     <div class="card-body">
@@ -43,13 +43,13 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-bulb"></i></div>
-        <div class="card-title">{{ {'ru':'Примеры вопросов','en':'Example questions','kz':'Сұрақ мысалдары'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Примеры вопросов') }}</div>
       </div>
     </div>
     <div class="card-body" style="display:flex;flex-direction:column;gap:6px">
-      <div class="text-muted text-small">{{ {'ru':'Сколько оборудования находится на техобслуживании?','en':'How much equipment is in maintenance?','kz':'Қанша жабдық техқызметте?'}[current_user.language] }}</div>
-      <div class="text-muted text-small">{{ {'ru':'Какие документы ожидают согласования?','en':'Which documents are awaiting approval?','kz':'Қандай құжаттар келісімді күтеді?'}[current_user.language] }}</div>
-      <div class="text-muted text-small">{{ {'ru':'Кто работает в механическом отделе?','en':'Who works in the mechanical department?','kz':'Механикалық бөлімде кім жұмыс істейді?'}[current_user.language] }}</div>
+      <div class="text-muted text-small">{{ _('Сколько оборудования находится на техобслуживании?') }}</div>
+      <div class="text-muted text-small">{{ _('Какие документы ожидают согласования?') }}</div>
+      <div class="text-muted text-small">{{ _('Кто работает в механическом отделе?') }}</div>
     </div>
   </div>
 

@@ -1,23 +1,21 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Нумерация документов') }}{% endblock %}
+{% block page_title %}{{ _('Нумерация документов') }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width:640px">
   <div class="card-body">
     <p class="text-muted" style="font-size:13px;margin-bottom:14px">
-      {{ {'ru':'Формат номера: ПРЕФИКС-ГОД-НОМЕР (напр. ТМЦ-2026-014). Пустое поле = префикс по умолчанию. Изменение действует только на новые документы.',
-          'en':'Number format: PREFIX-YEAR-SEQ (e.g. ТМЦ-2026-014). Empty field = default prefix. Changes affect new documents only.',
-          'kz':'Нөмір форматы: ПРЕФИКС-ЖЫЛ-НӨМІР (мыс. ТМЦ-2026-014). Бос өріс = әдепкі префикс.'}[current_user.language] }}
+      {{ _('Формат номера: ПРЕФИКС-ГОД-НОМЕР (напр. ТМЦ-2026-014). Пустое поле = префикс по умолчанию. Изменение действует только на новые документы.') }}
     </p>
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ {'ru':'Тип документа','en':'Document type','kz':'Құжат түрі'}[current_user.language] }}</th>
-            <th>{{ {'ru':'По умолчанию','en':'Default','kz':'Әдепкі'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Свой префикс','en':'Custom prefix','kz':'Өз префиксі'}[current_user.language] }}</th>
+            <th>{{ _('Тип документа') }}</th>
+            <th>{{ _('По умолчанию') }}</th>
+            <th>{{ _('Свой префикс') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -31,7 +29,7 @@
         </tbody>
       </table>
       <button type="submit" class="btn btn-primary" style="margin-top:14px">
-        {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+        {{ _('Сохранить') }}
       </button>
     </form>
   </div>

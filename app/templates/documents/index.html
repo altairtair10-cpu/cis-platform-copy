@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Документы') }}{% endblock %}
+{% block page_title %}{{ _('Документы') }}{% endblock %}
 
 {% block content %}
 <div style="display:flex;gap:18px;align-items:flex-start">
@@ -12,7 +12,7 @@
       <div style="position:relative;display:inline-block">
       <select name="doc_type" class="form-select" onchange="this.form.submit()"
               style="max-width:280px;min-width:240px;font-size:13px;font-weight:600;padding:9px 34px 9px 12px;border:1.5px solid var(--color-border-primary, #C9C4BA);border-radius:8px;background:var(--color-background-primary,#fff);appearance:none;-webkit-appearance:none;cursor:pointer">
-        <option value="">{{ {'ru':'Все виды документов','en':'All document types','kz':'Барлық құжат түрлері'}[current_user.language] }}</option>
+        <option value="">{{ _('Все виды документов') }}</option>
         {% for k, v in doc_types.items() %}
         <option value="{{ k }}" {% if sel_type == k %}selected{% endif %}>{{ v }}</option>
         {% endfor %}
@@ -20,7 +20,7 @@
       <i class="ti ti-chevron-down" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:14px;color:var(--color-text-secondary,#8a857c)"></i>
       </div>
       <select name="year" class="form-select" style="max-width:130px;font-size:12px" onchange="this.form.submit()">
-        <option value="">{{ {'ru':'Год: все','en':'Year: all','kz':'Жыл: барлығы'}[current_user.language] }}</option>
+        <option value="">{{ _('Год: все') }}</option>
         {% for y in years %}
         <option value="{{ y|int }}" {% if sel_year == y|int %}selected{% endif %}>{{ y|int }}</option>
         {% endfor %}
@@ -28,18 +28,18 @@
       
       {% if current_user.can_access('documents') or current_user.can_access('documents_read') or current_user.can_access('documents_procurement') %}
       <a href="{{ url_for('documents.export_xlsx', doc_type=sel_type, year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
-        <i class="ti ti-file-spreadsheet"></i> {{ {'ru':'Экспорт в Excel','en':'Export to Excel','kz':'Excel-ге экспорт'}[current_user.language] }}
+        <i class="ti ti-file-spreadsheet"></i> {{ _('Экспорт в Excel') }}
       </a>
       {% endif %}
     </form>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
       <a href="{{ url_for('documents.new_defect_act') }}" class="btn">
         <i class="ti ti-alert-triangle"></i>
-        {{ {'ru':'Дефектный акт','en':'Defect act','kz':'Ақаулық актісі'}[current_user.language] }}
+        {{ _('Дефектный акт') }}
       </a>
       <a href="{{ url_for('documents.new_trebovanie_new') }}" class="btn btn-primary">
         <i class="ti ti-plus"></i>
-        {{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}
+        {{ _('Требование') }}
       </a>
     </div>
 
@@ -49,21 +49,21 @@
           <div class="card-icon"><i class="ti ti-files"></i></div>
           <div class="card-title">
             {% if sel_type %}{{ doc_types.get(sel_type, sel_type) }}
-            {% else %}{{ {'ru':'Реестр документов','en':'Document registry','kz':'Құжаттар тізілімі'}[current_user.language] }}{% endif %}
+            {% else %}{{ _('Реестр документов') }}{% endif %}
           </div>
         </div>
-        <div <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ {'ru':'документов','en':'documents','kz':'құжат'}[current_user.language] }}</div>
+        <div <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ _('документов') }}</div>
       </div>
       {% if docs %}
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Содержание','en':'Subject','kz':'Мазмұны'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+            <th>{{ _('Номер') }}</th>
+            <th>{{ _('Тип') }}</th>
+            <th>{{ _('Содержание') }}</th>
+            <th>{{ _('Автор') }}</th>
+            <th>{{ _('Дата') }}</th>
+            <th>{{ _('Статус') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -72,8 +72,8 @@
             <td><span class="doc-number">{{ doc.doc_number or 'Черновик' }}</span></td>
             <td>
               <span class="pill pill-blue">
-                {% if doc.doc_type == 'defect_act' %}{{ {'ru':'Деф. акт','en':'Defect act','kz':'Ақаулық акт'}[current_user.language] }}
-                {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}
+                {% if doc.doc_type == 'defect_act' %}{{ _('Деф. акт') }}
+                {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ _('Требование') }}
                 {% else %}{{ doc.doc_type }}{% endif %}
               </span>
             </td>
@@ -86,10 +86,10 @@
                 {% elif doc.status == 'pending' %}pill-amber
                 {% elif doc.status == 'rejected' %}pill-red
                 {% else %}pill-gray{% endif %}">
-                {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
-                {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
-                {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
-                {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
+                {% if doc.status == 'approved' %}{{ _('Согласован') }}
+                {% elif doc.status == 'pending' %}{{ _('На согласовании') }}
+                {% elif doc.status == 'rejected' %}{{ _('Отклонён') }}
+                {% else %}{{ _('Черновик') }}{% endif %}
               </span>
             </td>
           </tr>
@@ -100,11 +100,11 @@
       {% else %}
       <div class="card-body" style="text-align:center;padding:60px 20px">
         <i class="ti ti-files" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
-        <div style="font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:4px">{{ {'ru':'Документов пока нет','en':'No documents yet','kz':'Құжаттар жоқ'}[current_user.language] }}</div>
-        <div class="text-muted text-small" style="margin-bottom:20px">{{ {'ru':'Создайте первый документ','en':'Create your first document','kz':'Бірінші құжатты жасаңыз'}[current_user.language] }}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:4px">{{ _('Документов пока нет') }}</div>
+        <div class="text-muted text-small" style="margin-bottom:20px">{{ _('Создайте первый документ') }}</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <a href="{{ url_for('documents.new_trebovanie_new') }}" class="btn btn-primary">
-            <i class="ti ti-plus"></i>{{ {'ru':'Требование','en':'Requisition','kz':'Талаптама'}[current_user.language] }}
+            <i class="ti ti-plus"></i>{{ _('Требование') }}
           </a>
         </div>
       </div>

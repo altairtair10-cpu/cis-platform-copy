@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Утренний брифинг','en':'Morning briefing','kz':'Таңғы брифинг'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Утренний брифинг','en':'Morning briefing','kz':'Таңғы брифинг'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Утренний брифинг') }}{% endblock %}
+{% block page_title %}{{ _('Утренний брифинг') }}{% endblock %}
 
 {% block content %}
 <div style="max-width:760px">
@@ -9,31 +9,31 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <div>
       <div style="font-size:22px;font-weight:500;color:var(--text-1)">
-        {{ {'ru':'Доброе утро','en':'Good morning','kz':'Қайырлы таң'}[current_user.language] }}, {{ current_user.full_name.split()[0] }}
+        {{ _('Доброе утро') }}, {{ current_user.full_name.split()[0] }}
       </div>
       <div style="font-size:12px;color:var(--text-3);margin-top:2px">{{ today }}</div>
     </div>
     <a href="{{ url_for('dashboard.briefing') }}" class="btn btn-sm">
-      <i class="ti ti-refresh"></i>{{ {'ru':'Обновить','en':'Refresh','kz':'Жаңарту'}[current_user.language] }}
+      <i class="ti ti-refresh"></i>{{ _('Обновить') }}
     </a>
   </div>
 
   <!-- QUICK STATS -->
   <div class="kpi-grid kpi-grid-3" style="margin-bottom:16px">
     <div class="kpi-card">
-      <div class="kpi-label"><i class="ti ti-clock"></i>{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}</div>
+      <div class="kpi-label"><i class="ti ti-clock"></i>{{ _('На согласовании') }}</div>
       <div class="kpi-value {% if stats.pending_docs > 0 %}danger{% endif %}">{{ stats.pending_docs }}</div>
-      <div class="kpi-sub">{{ {'ru':'Документов','en':'Documents','kz':'Құжат'}[current_user.language] }}</div>
+      <div class="kpi-sub">{{ _('Документов') }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</div>
+      <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ _('На ТО') }}</div>
       <div class="kpi-value {% if stats.equipment_maint > 0 %}warning{% endif %}">{{ stats.equipment_maint }}</div>
-      <div class="kpi-sub">{{ {'ru':'Единиц оборудования','en':'Equipment units','kz':'Жабдық бірлігі'}[current_user.language] }}</div>
+      <div class="kpi-sub">{{ _('Единиц оборудования') }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label"><i class="ti ti-users"></i>{{ {'ru':'Сотрудников','en':'Staff','kz':'Қызметкерлер'}[current_user.language] }}</div>
+      <div class="kpi-label"><i class="ti ti-users"></i>{{ _('Сотрудников') }}</div>
       <div class="kpi-value">{{ stats.staff_total }}</div>
-      <div class="kpi-sub">{{ {'ru':'Активных','en':'Active','kz':'Белсенді'}[current_user.language] }}</div>
+      <div class="kpi-sub">{{ _('Активных') }}</div>
     </div>
   </div>
 
@@ -42,15 +42,15 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-robot"></i></div>
-        <div class="card-title">{{ {'ru':'ИИ Брифинг · Claude','en':'AI Briefing · Claude','kz':'ЖИ Брифинг · Claude'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('ИИ Брифинг · Claude') }}</div>
       </div>
-      <span style="font-size:10px;color:var(--text-3)">{{ {'ru':'Генерируется автоматически','en':'Auto-generated','kz':'Автоматты жасалады'}[current_user.language] }}</span>
+      <span style="font-size:10px;color:var(--text-3)">{{ _('Генерируется автоматически') }}</span>
     </div>
     <div class="card-body">
       {% if error %}
       <div class="banner banner-amber">
         <i class="ti ti-alert-triangle"></i>
-        <div>{{ {'ru':'Не удалось сгенерировать брифинг. Проверьте ANTHROPIC_API_KEY.','en':'Could not generate briefing. Check ANTHROPIC_API_KEY.','kz':'Брифинг жасалмады. ANTHROPIC_API_KEY тексеріңіз.'}[current_user.language] }}<br><small>{{ error }}</small></div>
+        <div>{{ _('Не удалось сгенерировать брифинг. Проверьте ANTHROPIC_API_KEY.') }}<br><small>{{ error }}</small></div>
       </div>
       {% elif briefing_text %}
   <div style="font-size:13px;color:var(--text-1);line-height:1.8;border-left:3px solid var(--red);padding-left:16px">
@@ -59,7 +59,7 @@
       {% else %}
       <div style="text-align:center;padding:32px;color:var(--text-3)">
         <i class="ti ti-loader" style="font-size:28px;display:block;margin-bottom:8px"></i>
-        {{ {'ru':'Генерация брифинга...','en':'Generating briefing...','kz':'Брифинг жасалуда...'}[current_user.language] }}
+        {{ _('Генерация брифинга...') }}
       </div>
       {% endif %}
     </div>
@@ -70,21 +70,21 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-bolt"></i></div>
-        <div class="card-title">{{ {'ru':'Быстрые действия','en':'Quick actions','kz':'Жылдам әрекеттер'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Быстрые действия') }}</div>
       </div>
     </div>
     <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap">
       <a href="{{ url_for('documents.new_defect_act') }}" class="btn">
-        <i class="ti ti-alert-triangle"></i>{{ {'ru':'Новый дефектный акт','en':'New defect act','kz':'Жаңа ақаулық акт'}[current_user.language] }}
+        <i class="ti ti-alert-triangle"></i>{{ _('Новый дефектный акт') }}
       </a>
       <a href="{{ url_for('documents.new_trebovanie') }}" class="btn">
-        <i class="ti ti-shopping-cart"></i>{{ {'ru':'Новое требование','en':'New requisition','kz':'Жаңа талаптама'}[current_user.language] }}
+        <i class="ti ti-shopping-cart"></i>{{ _('Новое требование') }}
       </a>
       <a href="{{ url_for('documents.index') }}" class="btn">
-        <i class="ti ti-files"></i>{{ {'ru':'Все документы','en':'All documents','kz':'Барлық құжаттар'}[current_user.language] }}
+        <i class="ti ti-files"></i>{{ _('Все документы') }}
       </a>
       <a href="{{ url_for('equipment.index') }}" class="btn">
-        <i class="ti ti-tool"></i>{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}
+        <i class="ti ti-tool"></i>{{ _('Оборудование') }}
       </a>
     </div>
   </div>

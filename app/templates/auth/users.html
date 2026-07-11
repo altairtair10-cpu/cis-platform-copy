@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Управление пользователями','en':'User management','kz':'Пайдаланушыларды басқару'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Пользователи') }}{% endblock %}
+{% block page_title %}{{ _('Управление пользователями') }}{% endblock %}
 
 {% block content %}
 <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
   <a href="{{ url_for('auth.new_user') }}" class="btn btn-primary">
-    <i class="ti ti-user-plus"></i>{{ {'ru':'Добавить пользователя','en':'Add user','kz':'Пайдаланушы қосу'}[current_user.language] }}
+    <i class="ti ti-user-plus"></i>{{ _('Добавить пользователя') }}
   </a>
 </div>
 
@@ -13,19 +13,19 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-users"></i></div>
-      <div class="card-title">{{ {'ru':'Все пользователи','en':'All users','kz':'Барлық пайдаланушылар'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Все пользователи') }}</div>
     </div>
-    <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ {'ru':'пользователей','en':'users','kz':'пайдаланушы'}[current_user.language] }}</div>
+    <div style="font-size:11px;color:var(--text-3)">{{ pagination.total }} {{ _('пользователей') }}</div>
   </div>
   <table class="data-table">
     <thead>
       <tr>
-        <th>{{ {'ru':'ФИО','en':'Name','kz':'Аты-жөні'}[current_user.language] }}</th>
+        <th>{{ _('ФИО') }}</th>
         <th>Email</th>
-        <th>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Роль','en':'Role','kz':'Рөл'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Язык','en':'Language','kz':'Тіл'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th>{{ _('Подразделение') }}</th>
+        <th>{{ _('Роль') }}</th>
+        <th>{{ _('Язык') }}</th>
+        <th>{{ _('Статус') }}</th>
         <th></th>
       </tr>
     </thead>
@@ -44,22 +44,22 @@
         <td class="text-muted">{{ user.language.upper() }}</td>
         <td>
           <span class="pill {% if user.is_active %}pill-green{% else %}pill-gray{% endif %}">
-            {% if user.is_active %}{{ {'ru':'Активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
-            {% else %}{{ {'ru':'Неактивен','en':'Inactive','kz':'Белсенді емес'}[current_user.language] }}{% endif %}
+            {% if user.is_active %}{{ _('Активен') }}
+            {% else %}{{ _('Неактивен') }}{% endif %}
           </span>
         </td>
         <td style="text-align:right">
           <div style="display:flex;gap:6px;justify-content:flex-end">
             <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-sm">
-              <i class="ti ti-edit"></i>{{ {'ru':'Ред.','en':'Edit','kz':'Өзг.'}[current_user.language] }}
+              <i class="ti ti-edit"></i>{{ _('Ред.') }}
             </a>
             <form method="POST" action="{{ url_for('auth.deactivate_user', user_id=user.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-sm {% if user.is_active %}btn-danger{% endif %}"
                 onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.full_name }}?')">
                 <i class="ti ti-{% if user.is_active %}user-off{% else %}user-check{% endif %}"></i>
-                {% if user.is_active %}{{ {'ru':'Откл.','en':'Deactivate','kz':'Өшіру'}[current_user.language] }}
-                {% else %}{{ {'ru':'Вкл.','en':'Activate','kz':'Қосу'}[current_user.language] }}{% endif %}
+                {% if user.is_active %}{{ _('Откл.') }}
+                {% else %}{{ _('Вкл.') }}{% endif %}
               </button>
             </form>
           </div>

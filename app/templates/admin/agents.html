@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'ИИ-агенты','en':'AI agents','kz':'ЖИ-агенттер'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'ИИ-агенты','en':'AI agents','kz':'ЖИ-агенттер'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('ИИ-агенты') }}{% endblock %}
+{% block page_title %}{{ _('ИИ-агенты') }}{% endblock %}
 
 {% block content %}
 <div style="margin-bottom:14px">
   <a href="{{ url_for('admin.agent_form') }}" class="btn btn-primary"><i class="ti ti-plus"></i>
-    {{ {'ru':'Новый агент','en':'New agent','kz':'Жаңа агент'}[current_user.language] }}</a>
+    {{ _('Новый агент') }}</a>
 </div>
 <div class="card"><div class="card-body">
   <table class="data-table">
     <thead><tr>
-      <th>{{ {'ru':'Название','en':'Name','kz':'Атауы'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Файлов знаний','en':'Knowledge files','kz':'Файлдар'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Роли','en':'Roles','kz':'Рөлдер'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебе'}[current_user.language] }}</th>
+      <th>{{ _('Название') }}</th>
+      <th>{{ _('Файлов знаний') }}</th>
+      <th>{{ _('Роли') }}</th>
+      <th>{{ _('Статус') }}</th>
       <th></th>
     </tr></thead>
     <tbody>
@@ -21,15 +21,15 @@
       <tr>
         <td><b>{{ a.name }}</b><div class="text-muted" style="font-size:12px">{{ a.description or '' }}</div></td>
         <td>{{ a.files.count() }}</td>
-        <td style="font-size:12px">{{ a.allowed_roles or {'ru':'все','en':'all','kz':'барлығы'}[current_user.language] }}</td>
+        <td style="font-size:12px">{{ a.allowed_roles or _('все') }}</td>
         <td><span class="pill {% if a.is_active %}pill-green{% else %}pill-gray{% endif %}">
           {{ {'ru':('Активен' if a.is_active else 'Выключен'),'en':('Active' if a.is_active else 'Off'),'kz':('Белсенді' if a.is_active else 'Өшірулі')}[current_user.language] }}</span></td>
         <td style="text-align:right"><a class="btn btn-sm" href="{{ url_for('admin.agent_form', agent_id=a.id) }}">
-          {{ {'ru':'Настроить','en':'Edit','kz':'Баптау'}[current_user.language] }}</a></td>
+          {{ _('Настроить') }}</a></td>
       </tr>
       {% else %}
       <tr><td colspan="5" class="text-muted" style="text-align:center;padding:20px">
-        {{ {'ru':'Агентов пока нет','en':'No agents yet','kz':'Агенттер жоқ'}[current_user.language] }}</td></tr>
+        {{ _('Агентов пока нет') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

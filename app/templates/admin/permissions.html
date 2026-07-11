@@ -1,21 +1,19 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Права ролей') }}{% endblock %}
+{% block page_title %}{{ _('Права ролей') }}{% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="card-body" style="overflow-x:auto">
     <p class="text-muted" style="font-size:13px;margin-bottom:14px">
-      {{ {'ru':'Галочка = роль видит модуль. IT Admin всегда имеет полный доступ и не редактируется. Изменения действуют сразу после сохранения.',
-          'en':'Checked = the role can access the module. IT Admin always has full access and is not editable. Changes apply immediately after saving.',
-          'kz':'Белгі = рөл модульді көреді. IT Admin әрқашан толық қолжетімділікке ие.'}[current_user.language] }}
+      {{ _('Галочка = роль видит модуль. IT Admin всегда имеет полный доступ и не редактируется. Изменения действуют сразу после сохранения.') }}
     </p>
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <table class="data-table" style="font-size:12px">
         <thead>
           <tr>
-            <th style="position:sticky;left:0;background:var(--color-background-primary)">{{ {'ru':'Модуль','en':'Module','kz':'Модуль'}[current_user.language] }}</th>
+            <th style="position:sticky;left:0;background:var(--color-background-primary)">{{ _('Модуль') }}</th>
             {% for role in editable_roles %}
             <th style="text-align:center;white-space:nowrap">{{ roles[role] }}</th>
             {% endfor %}
@@ -36,7 +34,7 @@
         </tbody>
       </table>
       <button type="submit" class="btn btn-primary" style="margin-top:14px">
-        {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+        {{ _('Сохранить') }}
       </button>
     </form>
   </div>

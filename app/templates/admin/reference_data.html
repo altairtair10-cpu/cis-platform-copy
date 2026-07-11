@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Справочники','en':'Reference data','kz':'Анықтамалықтар'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Управление справочниками','en':'Reference data management','kz':'Анықтамалықтарды басқару'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Справочники') }}{% endblock %}
+{% block page_title %}{{ _('Управление справочниками') }}{% endblock %}
 
 {% macro ref_section(title, icon, section, items, placeholder) %}
   <div class="card">
@@ -19,8 +19,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ {'ru':'Название','en':'Name','kz':'Атауы'}[current_user.language] }}</th>
-            <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+            <th>{{ _('Название') }}</th>
+            <th>{{ _('Статус') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -31,27 +31,27 @@
               <form method="POST" action="{{ url_for('admin.ref_rename', section=section, row_id=t.id) }}" style="display:flex;gap:6px">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="name" value="{{ t.name }}" class="form-input" style="font-size:13px;padding:3px 8px">
-                <button type="submit" class="btn btn-sm" title="{{ {'ru':'Переименовать','en':'Rename','kz':'Атын өзгерту'}[current_user.language] }}"><i class="ti ti-check"></i></button>
+                <button type="submit" class="btn btn-sm" title="{{ _('Переименовать') }}"><i class="ti ti-check"></i></button>
               </form>
             </td>
             <td>
               <span class="pill {% if t.is_active %}pill-green{% else %}pill-gray{% endif %}">
-                {% if t.is_active %}{{ {'ru':'Активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
-                {% else %}{{ {'ru':'Неактивен','en':'Inactive','kz':'Белсенді емес'}[current_user.language] }}{% endif %}
+                {% if t.is_active %}{{ _('Активен') }}
+                {% else %}{{ _('Неактивен') }}{% endif %}
               </span>
             </td>
             <td style="text-align:right">
               <form method="POST" action="{{ url_for('admin.ref_toggle', section=section, row_id=t.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm">
-                  {% if t.is_active %}{{ {'ru':'Откл.','en':'Deactivate','kz':'Өшіру'}[current_user.language] }}
-                  {% else %}{{ {'ru':'Вкл.','en':'Activate','kz':'Қосу'}[current_user.language] }}{% endif %}
+                  {% if t.is_active %}{{ _('Откл.') }}
+                  {% else %}{{ _('Вкл.') }}{% endif %}
                 </button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="3" class="text-muted" style="text-align:center;padding:20px">{{ {'ru':'Пока пусто','en':'Nothing yet','kz':'Әзірге бос'}[current_user.language] }}</td></tr>
+          <tr><td colspan="3" class="text-muted" style="text-align:center;padding:20px">{{ _('Пока пусто') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -61,14 +61,14 @@
 
 {% block content %}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-  {{ ref_section({'ru':'Локации','en':'Locations','kz':'Локациялар'}[current_user.language],
+  {{ ref_section(_('Локации'),
                  'ti-map-pin', 'locations', locations,
-                 {'ru':'Новая локация, напр. База Атырау','en':'New location, e.g. Base Atyrau','kz':'Жаңа локация'}[current_user.language]) }}
-  {{ ref_section({'ru':'Типы оборудования','en':'Equipment types','kz':'Жабдық түрлері'}[current_user.language],
+                 _('Новая локация, напр. База Атырау')) }}
+  {{ ref_section(_('Типы оборудования'),
                  'ti-tool', 'equipment-types', equipment_types,
-                 {'ru':'Новый тип, напр. Frac Pump','en':'New type, e.g. Frac Pump','kz':'Жаңа түр'}[current_user.language]) }}
-  {{ ref_section({'ru':'Отделы','en':'Departments','kz':'Бөлімдер'}[current_user.language],
+                 _('Новый тип, напр. Frac Pump')) }}
+  {{ ref_section(_('Отделы'),
                  'ti-building', 'departments', departments,
-                 {'ru':'Новый отдел','en':'New department','kz':'Жаңа бөлім'}[current_user.language]) }}
+                 _('Новый отдел')) }}
 </div>
 {% endblock %}

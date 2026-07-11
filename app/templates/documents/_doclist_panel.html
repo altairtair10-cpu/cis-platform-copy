@@ -2,7 +2,7 @@
 <aside style="width:210px;flex-shrink:0;position:sticky;top:70px;align-self:flex-start">
   <div class="card" style="margin-bottom:0">
     <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-      <span style="font-size:12px;font-weight:600;color:var(--text-1)">{{ {'ru':'Документы','en':'Documents','kz':'Құжаттар'}[current_user.language] }}</span>
+      <span style="font-size:12px;font-weight:600;color:var(--text-1)">{{ _('Документы') }}</span>
     </div>
     <div style="padding:6px 0">
       {% set cur_type = request.args.get('doc_type') or '' %}
@@ -11,16 +11,16 @@
         <span>Все</span><span class="dl-count">{{ panel_counts.get('_total', 0) }}</span>
       </a>
 
-      <div class="dl-section">{{ {'ru':'По статусу','en':'By status','kz':'Мәртебе бойынша'}[current_user.language] }}</div>
+      <div class="dl-section">{{ _('По статусу') }}</div>
       {% set L = current_user.language %}
       {% for st, label in [
-          ('pending',      {'ru':'На согласовании','en':'Pending approval','kz':'Келісімде'}[L]),
-          ('approved',     {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[L]),
-          ('in_execution', {'ru':'На исполнении','en':'In execution','kz':'Орындалуда'}[L]),
-          ('executed',     {'ru':'Исполнен','en':'Executed','kz':'Орындалды'}[L]),
-          ('rejected',     {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[L]),
-          ('draft',        {'ru':'Создание','en':'Draft','kz':'Жоба'}[L]),
-          ('returned',     {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[L])] %}
+          ('pending',      _('На согласовании')),
+          ('approved',     _('Согласован')),
+          ('in_execution', _('На исполнении')),
+          ('executed',     _('Исполнен')),
+          ('rejected',     _('Отклонён')),
+          ('draft',        _('Создание')),
+          ('returned',     _('Возвращён'))] %}
       <a href="{{ url_for('documents.index', status=st, doc_type=cur_type or None) }}" class="dl-item {% if cur_status == st %}active{% endif %}">
         <span>{{ label }}</span><span class="dl-count">{{ panel_counts.get(st, 0) }}</span>
       </a>

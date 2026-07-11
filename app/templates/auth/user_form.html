@@ -17,7 +17,7 @@
         {{ form.hidden_tag() }}
         <div class="form-grid-2" style="margin-bottom:14px">
           <div class="form-group">
-            <label class="form-label">{{ {'ru':'ФИО','en':'Full name','kz':'Аты-жөні'}[current_user.language] }} <span class="req">*</span></label>
+            <label class="form-label">{{ _('ФИО') }} <span class="req">*</span></label>
             {{ form.full_name(class="form-input", placeholder="Иванов Иван Иванович") }}
           </div>
           <div class="form-group">
@@ -27,36 +27,36 @@
         </div>
         <div class="form-grid-2" style="margin-bottom:14px">
           <div class="form-group">
-            <label class="form-label">{{ {'ru':'Пароль','en':'Password','kz':'Құпиясөз'}[current_user.language] }} {% if not user %}<span class="req">*</span>{% else %}<span style="font-weight:400;color:var(--text-3)">({{ {'ru':'оставьте пустым чтобы не менять','en':'leave blank to keep current','kz':'өзгертпеу үшін бос қалдырыңыз'}[current_user.language] }})</span>{% endif %}</label>
+            <label class="form-label">{{ _('Пароль') }} {% if not user %}<span class="req">*</span>{% else %}<span style="font-weight:400;color:var(--text-3)">({{ _('оставьте пустым чтобы не менять') }})</span>{% endif %}</label>
             {{ form.password(class="form-input", placeholder="••••••••") }}
           </div>
           <div class="form-group">
-            <label class="form-label">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</label>
+            <label class="form-label">{{ _('Подразделение') }}</label>
             {{ form.department(class="form-input", placeholder="mechanic, transport, hr...") }}
           </div>
         </div>
         <div class="form-grid-2" style="margin-bottom:14px">
           <div class="form-group">
-            <label class="form-label">{{ {'ru':'Роль','en':'Role','kz':'Рөл'}[current_user.language] }}</label>
+            <label class="form-label">{{ _('Роль') }}</label>
             {{ form.role(class="form-select") }}
           </div>
           <div class="form-group">
-            <label class="form-label">{{ {'ru':'Язык интерфейса','en':'Interface language','kz':'Интерфейс тілі'}[current_user.language] }}</label>
+            <label class="form-label">{{ _('Язык интерфейса') }}</label>
             {{ form.language(class="form-select") }}
           </div>
         </div>
         <div class="form-group" style="margin-bottom:20px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             {{ form.is_active(style="accent-color:#C0392B;width:15px;height:15px") }}
-            <span class="form-label" style="margin-bottom:0">{{ {'ru':'Активный пользователь','en':'Active user','kz':'Белсенді пайдаланушы'}[current_user.language] }}</span>
+            <span class="form-label" style="margin-bottom:0">{{ _('Активный пользователь') }}</span>
           </label>
         </div>
         <div style="display:flex;gap:8px">
           <button type="submit" class="btn btn-primary">
-            <i class="ti ti-device-floppy"></i>{{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+            <i class="ti ti-device-floppy"></i>{{ _('Сохранить') }}
           </button>
           <a href="{{ url_for('auth.users') }}" class="btn">
-            <i class="ti ti-x"></i>{{ {'ru':'Отмена','en':'Cancel','kz':'Бас тарту'}[current_user.language] }}
+            <i class="ti ti-x"></i>{{ _('Отмена') }}
           </a>
         </div>
       </form>
