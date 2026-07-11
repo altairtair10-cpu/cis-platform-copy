@@ -283,3 +283,71 @@ def deactivate_user(user_id):
     db.session.commit()
     flash(f'User {user.full_name} {status}.', 'success')
     return redirect(url_for('auth.users'))
+
+# ── ВХОД ЧЕРЕЗ MICROSOFT (Entra ID) ──────────────────────────────────────────
+
+from app.services import ms_auth
+
+
+@auth.route('/ms/login')
+def ms_login():
+    if not ms_auth.enabled():
+        from flask import abort
+        abort(404)
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    state = ms_auth.new_state()
+    session['ms_auth_state'] = state
+    redirect_uri = url_for('auth.ms_callback', _external=True)
+    return redirect(ms_auth.build_auth_url(redirect_uri, state))
+
+
+@auth.route('/ms/callback')
+def ms_callback():
+    if not ms_auth.enabled():
+        from flask import abort
+        abort(404)
+    if request.args.get('state') != session.pop('ms_auth_state', None):
+        flash('Не удалось проверить запрос входа. Попробуйте ещё раз.', 'danger')
+        return redirect(url_for('auth.login'))
+    if 'error' in request.args:
+        flash(f"Microsoft: {request.args.get('error_description', 'вход отменён')}", 'danger')
+        return redirect(url_for('auth.login'))
+    code = request.args.get('code')
+    if not code:
+        return redirect(url_for('auth.login'))
+
+    redirect_uri = url_for('auth.ms_callback', _external=True)
+    result = ms_auth.acquire_token(code, redirect_uri)
+    claims = result.get('id_token_claims') if isinstance(result, dict) else None
+    if not claims:
+        flash('Не удалось получить данные от Microsoft. Попробуйте ещё раз.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    email = (claims.get('preferred_username') or claims.get('email') or '').lower().strip()
+    name = claims.get('name') or email
+    if not email:
+        flash('Microsoft не вернул адрес почты для этой учётной записи.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        # сотрудник есть в корпоративном каталоге — создаём активную учётку
+        first, last = _split_name(name)
+        user = User(first_name=first or email.split('@')[0], last_name=last or '',
+                    email=email, role='field', is_active=True)
+        user.set_password(generate_password_hash('!', method='pbkdf2:sha256')[:32])
+        db.session.add(user)
+        db.session.flush()
+        log_action('ms_user_provisioned', 'user', user.id, details=email)
+    if not user.is_active:
+        flash('Ваша учётная запись деактивирована. Обратитесь к администратору.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    from datetime import datetime as _dt
+    login_user(user)
+    user.last_login = _dt.utcnow()
+    user.must_change_password = False   # пароль не используется при SSO
+    log_action('login_microsoft', 'user', user.id)
+    db.session.commit()
+    return redirect(url_for('dashboard.index'))
