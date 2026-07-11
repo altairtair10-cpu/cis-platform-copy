@@ -190,20 +190,6 @@
   </div>
 </div>
 
-<!-- RECIPIENTS -->
-<div class="form-section">
-  <div class="form-section-header"><i class="ti ti-send"></i><span class="form-section-title">Получатели<span class="req">*</span></span></div>
-  <div class="form-section-body">
-    <div class="form-group" style="max-width:500px">
-      <label class="form-label">Выберите получателей</label>
-      <select name="recipient_ids" multiple class="form-select" style="height:100px">
-        {% for u in executors %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}
-      </select>
-      <div style="font-size:10px;color:var(--text-3);margin-top:4px">Удерживайте Ctrl для множественного выбора</div>
-    </div>
-  </div>
-</div>
-
 </form>
 
 <!-- DOC TYPE MODAL -->

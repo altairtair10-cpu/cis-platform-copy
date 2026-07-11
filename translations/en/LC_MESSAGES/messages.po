@@ -1299,3 +1299,9 @@ msgstr "View as"
 msgid "Посмотреть платформу глазами этого сотрудника"
 msgstr "See the platform through this employee's eyes"
 
+msgid "Копировать таблицу"
+msgstr "Copy table"
+
+msgid "Скопировано"
+msgstr "Copied"
+

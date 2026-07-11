@@ -109,3 +109,28 @@ def test_to_parts_no_stock_configured(client, app, monkeypatch):
     monkeypatch.setattr('app.services.to_stock._stock_rows', lambda: None)
     body = client.get(f'/equipment/{eq_id}').get_data(as_text=True)
     assert 'нет данных склада' in body
+
+
+def test_demo_blocks_removed_from_forms(client, app):
+    _mk_eq(app)
+    login(client, 'mech@test.kz', 'mechpass123')
+    body = client.get('/documents/defect-act/new').get_data(as_text=True)
+    assert 'Начальник механического отдела' not in body   # статичный маршрут
+    assert 'ИИ автоматически проверит' not in body
+    assert 'Имеет ссылку с' not in body
+    body = client.get('/documents/trebovanie-new/new').get_data(as_text=True)
+    assert 'Удерживайте Ctrl' not in body                  # секция «Получатели»
+
+
+def test_copy_table_button_on_document(client, app):
+    login(client, 'mech@test.kz', 'mechpass123')
+    client.post('/documents/trebovanie-new/submit', data={
+        'summary': 'Копитест', 'action': 'draft',
+        'item_name[]': ['Товар'], 'item_spec[]': [''], 'item_qty[]': ['1'],
+        'item_unit[]': ['шт'], 'item_date[]': [''], 'item_note[]': [''],
+        'item_cost[]': ['5'],
+    })
+    with app.app_context():
+        doc_id = Document.query.filter_by(title='Копитест').first().id
+    body = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert 'copyItemsTable' in body and 'items-copy-table' in body
