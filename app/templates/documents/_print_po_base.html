@@ -28,7 +28,11 @@
 {% macro header(title_ru, title_en, form_code, form_rev_date) %}
 <table class="head">
   <tr>
-    <td style="width:26%" class="logo">CIS<small>CASPIAN INTEGRATED SERVICES</small></td>
+    <td style="width:26%;text-align:center">
+      {% if branding.has_logo %}<img src="{{ url_for('admin.logo') }}" alt="CIS" style="max-height:52px;max-width:90%">
+      {% else %}<img src="{{ url_for('static', filename='img/cis-logo.svg') }}" alt="CIS" style="max-height:52px;max-width:90%">
+      {% endif %}
+    </td>
     <td class="title">{{ title_ru }}<br>({{ title_en }})</td>
     <td class="meta" style="border-bottom:none">
       <div style="border-bottom:1px solid #000">{{ form_code }}</div>

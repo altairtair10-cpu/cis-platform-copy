@@ -130,6 +130,10 @@ DOC_STATUSES = {
     'approved':     'Approved',
     'in_execution': 'In execution',
     'executed':     'Executed',
+    'awaiting_payment': 'На оплате',
+    'paid':         'Оплачен',
+    'closing_docs': 'Закрывающие документы',
+    'closed':       'Закрыт',
     'rejected':     'Rejected',
     'archived':     'Archived',
 }
@@ -156,6 +160,7 @@ class Document(db.Model):
     defect_closed_at = db.Column(db.DateTime, nullable=True)
     related_defect_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     related_req_id    = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
+    paid_at           = db.Column(db.DateTime, nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)

@@ -31,6 +31,14 @@
       <input type="text" name="maintenance_spreadsheet_id" class="form-input"
              value="{{ maintenance_spreadsheet_id }}" placeholder="1xnEY...F7M4" style="margin-bottom:16px">
 
+      <label style="display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">
+        {{ _('ID Google-таблицы оплат (финансовый отдел вносит номера оплаченных ПО; система сама переводит их в «Оплачен»)') }}
+      </label>
+      <input type="text" name="payments_spreadsheet_id" class="form-input"
+             value="{{ payments_spreadsheet_id }}" placeholder="1AbC...xyz" style="margin-bottom:10px">
+      <input type="text" name="payments_sheet_name" class="form-input"
+             value="{{ payments_sheet_name }}" placeholder="{{ _('Название вкладки (пусто = первая)') }}" style="margin-bottom:16px;max-width:300px">
+
       <button type="submit" class="btn btn-primary">
         {{ _('Сохранить') }}
       </button>

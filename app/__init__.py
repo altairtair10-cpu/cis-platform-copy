@@ -107,6 +107,11 @@ def create_app(config_name='default'):
         start_scheduler(app)
 
     @app.context_processor
+    def inject_doc_types():
+        from app.models import DOC_TYPES
+        return dict(doc_types_all=DOC_TYPES)
+
+    @app.context_processor
     def inject_ms_sso():
         from app.services.ms_auth import enabled
         return dict(ms_sso_enabled=enabled())

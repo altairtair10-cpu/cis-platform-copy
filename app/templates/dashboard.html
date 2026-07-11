@@ -7,6 +7,43 @@
 {% block content %}
 
 <!-- ROW 1: DOCUMENT KPIS -->
+
+{% if pos_awaiting_payment %}
+<div class="card" style="margin-bottom:12px;border-left:4px solid #B98900">
+  <div class="card-header"><div class="card-header-left">
+    <div class="card-icon"><i class="ti ti-cash"></i></div>
+    <div class="card-title">{{ _('ПО на оплате') }} ({{ pos_awaiting_payment|length }})</div>
+  </div></div>
+  <div class="card-body">
+    {% for d in pos_awaiting_payment %}
+    <div style="display:flex;gap:10px;align-items:center;padding:4px 0;font-size:13px">
+      <a href="{{ url_for('documents.view', doc_id=d.id) }}">{{ d.doc_number }}</a>
+      <span style="flex:1">{{ d.title[:60] }}</span>
+      <span class="text-muted">{{ '{:,.0f}'.format(d.total_cost or 0).replace(',', ' ') }}</span>
+      <span class="text-muted" style="font-size:11px">{{ d.created_at.strftime('%d.%m') }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if my_closing_docs %}
+<div class="card" style="margin-bottom:12px;border-left:4px solid #A31E08">
+  <div class="card-header"><div class="card-header-left">
+    <div class="card-icon"><i class="ti ti-file-alert"></i></div>
+    <div class="card-title">{{ _('Ваши ПО ждут закрывающих документов') }} ({{ my_closing_docs|length }})</div>
+  </div></div>
+  <div class="card-body">
+    {% for d in my_closing_docs %}
+    <div style="display:flex;gap:10px;align-items:center;padding:4px 0;font-size:13px">
+      <a href="{{ url_for('documents.view', doc_id=d.id) }}">{{ d.doc_number }}</a>
+      <span style="flex:1">{{ d.title[:60] }}</span>
+      {% if d.paid_at %}<span class="text-muted" style="font-size:11px">{{ _('Оплачен') }} {{ d.paid_at.strftime('%d.%m') }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 <div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-files"></i>{{ _('Всего документов') }}</div>

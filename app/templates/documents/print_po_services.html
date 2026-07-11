@@ -1,4 +1,4 @@
-{% import 'documents/_print_po_base.html' as po %}
+{% import 'documents/_print_po_base.html' as po with context %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -35,7 +35,7 @@
       <td><b>Валюта:</b> {{ extras.get('currency') or 'KZT' }}</td>
     </tr>
     <tr>
-      <td><b>Плательщик НДС:</b> {{ extras.get('vat_payer') or '' }}</td>
+      <td><b>Плательщик НДС:</b> {{ vat_display }}</td>
       <td><b>Дата оплаты:</b> {{ extras.get('payment_date') or '' }}</td>
     </tr>
   </table>
@@ -56,7 +56,7 @@
     {% endfor %}
   </table>
   <div class="totals">Итого: {{ '{:,.2f}'.format(total).replace(',', ' ') }}</div>
-  <div class="totals">НДС / VAT 16%: {{ '{:,.2f}'.format(vat).replace(',', ' ') }}</div>
+  <div class="totals">В том числе НДС 16%: {{ '{:,.2f}'.format(vat).replace(',', ' ') }}</div>
 
   <div style="text-align:center;font-weight:bold;margin-top:12px">Прочие услуги:</div>
   <table class="b">

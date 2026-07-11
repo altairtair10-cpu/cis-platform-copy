@@ -24,9 +24,13 @@
             <span class="doc-number">{{ doc.doc_number }}</span> · {{ doc.author.full_name }} · {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
           </div>
         </div>
-        <span class="pill {% if doc.status in ('approved','executed') %}pill-green{% elif doc.status in ('pending','in_execution') %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
+        <span class="pill {% if doc.status in ('approved','executed','paid','closed') %}pill-green{% elif doc.status in ('pending','in_execution','awaiting_payment','closing_docs') %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
           {% if doc.status == 'approved' %}{{ _('Согласован') }}
           {% elif doc.status == 'pending' %}{{ _('На согласовании') }}
+          {% elif doc.status == 'awaiting_payment' %}{{ _('На оплате') }}
+          {% elif doc.status == 'paid' %}{{ _('Оплачен') }}
+          {% elif doc.status == 'closing_docs' %}{{ _('Закрывающие документы') }}
+          {% elif doc.status == 'closed' %}{{ _('Закрыт') }}
           {% elif doc.status == 'in_execution' %}{{ _('На исполнении') }}
           {% elif doc.status == 'executed' %}{{ _('Исполнен') }}
           {% elif doc.status == 'rejected' %}{{ _('Отклонён') }}
@@ -40,7 +44,15 @@
         {% set steps_en = ['Created','Approval','Signature','In progress','Completed'] %}
         {% set steps_kz = ['Жасалды','Келісім','Қол қою','Орындауда','Орындалды'] %}
         {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
-        {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':4,'executed':5,'rejected':2}.get(doc.status,1) %}
+        {% if doc.doc_type in ('po_services', 'po_trebovanie') %}
+          {% set steps_ru = ['Создание','Согласование','Подпись','На оплате','Оплачен','Закрывающие док.'] %}
+          {% set steps_en = ['Created','Approval','Signature','Awaiting payment','Paid','Closing docs'] %}
+          {% set steps_kz = ['Жасалды','Келісім','Қол қою','Төлемде','Төленді','Жабу құжаттары'] %}
+          {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
+          {% set cur = {'draft':1,'returned':1,'pending':2,'awaiting_payment':4,'paid':5,'closing_docs':6,'closed':7,'rejected':2}.get(doc.status,1) %}
+        {% else %}
+          {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':4,'executed':5,'rejected':2}.get(doc.status,1) %}
+        {% endif %}
         {% set _steps = approvals|map(attribute='step')|list %}
         {% if doc.status == 'pending' and _steps and doc.current_step == _steps|max %}{% set cur = 3 %}{% endif %}
         {% for step in steps %}
@@ -110,6 +122,31 @@
         </form>
         {% endif %}
       </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.doc_type in ('po_services', 'po_trebovanie') and doc.status in ('awaiting_payment', 'closing_docs')
+        and current_user.role in ('accountant', 'director', 'it_admin') %}
+  <div class="card" style="margin-bottom:14px;border-left:4px solid #0E7A45">
+    <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <b>{{ _('Финансы') }}:</b>
+      {% if doc.status == 'awaiting_payment' %}
+      <form method="POST" action="{{ url_for('documents.mark_paid', doc_id=doc.id) }}"
+            onsubmit="return confirm('{{ _('Отметить ПО оплаченным?') }}')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-cash"></i>
+          {{ _('Отметить оплаченным') }}</button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('documents.closing_docs_received', doc_id=doc.id) }}"
+            onsubmit="return confirm('{{ _('Закрывающие документы получены?') }}')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-file-check"></i>
+          {{ _('Закрывающие документы получены') }}</button>
+      </form>
+      {% endif %}
+      {% if doc.paid_at %}<span class="text-muted" style="font-size:12px">{{ _('Оплачен') }}: {{ doc.paid_at.strftime('%d.%m.%Y') }}</span>{% endif %}
     </div>
   </div>
   {% endif %}

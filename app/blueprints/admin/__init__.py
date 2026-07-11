@@ -257,6 +257,10 @@ def integrations():
         AppSetting.set('equipment_sheet_name', sheet_name or None)
         maint_id = (request.form.get('maintenance_spreadsheet_id') or '').strip()
         AppSetting.set('maintenance_spreadsheet_id', maint_id or None)
+        pay_id = (request.form.get('payments_spreadsheet_id') or '').strip()
+        AppSetting.set('payments_spreadsheet_id', pay_id or None)
+        AppSetting.set('payments_sheet_name',
+                       (request.form.get('payments_sheet_name') or '').strip() or None)
         log_action('integration_equipment_sheet', details=sheet_id or '(cleared)')
         db.session.commit()
         flash('Integrations saved.', 'success')
@@ -266,7 +270,9 @@ def integrations():
                            equipment_dashboard_url=AppSetting.get('equipment_dashboard_url', ''),
                            equipment_spreadsheet_id=AppSetting.get('equipment_spreadsheet_id', ''),
                            equipment_sheet_name=AppSetting.get('equipment_sheet_name', 'База'),
-                           maintenance_spreadsheet_id=AppSetting.get('maintenance_spreadsheet_id', ''))
+                           maintenance_spreadsheet_id=AppSetting.get('maintenance_spreadsheet_id', ''),
+                           payments_spreadsheet_id=AppSetting.get('payments_spreadsheet_id', ''),
+                           payments_sheet_name=AppSetting.get('payments_sheet_name', ''))
 
 
 # ── ROLE PERMISSIONS ──────────────────────────────────────────────────────────

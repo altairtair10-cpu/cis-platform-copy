@@ -1,4 +1,4 @@
-{% import 'documents/_print_po_base.html' as po %}
+{% import 'documents/_print_po_base.html' as po with context %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -26,7 +26,7 @@
       <td><b>Основание (№ WO):</b> {{ extras.get('basis') or '' }}</td>
     </tr>
     <tr>
-      <td><b>Плательщик НДС:</b> {{ extras.get('vat_payer') or '' }}</td>
+      <td><b>Плательщик НДС:</b> {{ vat_display }}</td>
       <td><b>Дата документа:</b> {{ doc.created_at.strftime('%d.%m.%Y') }}</td>
     </tr>
     <tr>
@@ -69,7 +69,7 @@
     {% endfor %}
   </table>
   <div class="totals">Итого: {{ '{:,.2f}'.format(total).replace(',', ' ') }}</div>
-  <div class="totals">НДС / VAT 16%: {{ '{:,.2f}'.format(vat).replace(',', ' ') }}</div>
+  <div class="totals">В том числе НДС 16%: {{ '{:,.2f}'.format(vat).replace(',', ' ') }}</div>
 
   <div style="margin-top:14px">
     <b>Инициатор:</b><br>
