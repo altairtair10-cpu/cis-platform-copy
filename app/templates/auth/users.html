@@ -53,6 +53,13 @@
             <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-sm">
               <i class="ti ti-edit"></i>{{ _('Ред.') }}
             </a>
+            {% if user.id != current_user.id and user.is_active %}
+            <form method="POST" action="{{ url_for('auth.impersonate', user_id=user.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm" title="{{ _('Посмотреть платформу глазами этого сотрудника') }}">
+                <i class="ti ti-eye"></i> {{ _('Войти как') }}</button>
+            </form>
+            {% endif %}
             <form method="POST" action="{{ url_for('auth.deactivate_user', user_id=user.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-sm {% if user.is_active %}btn-danger{% endif %}"

@@ -9,6 +9,17 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 </head>
 <body>
+{% if session.get('impersonator_id') %}
+<div style="position:sticky;top:0;z-index:200;background:#A31E08;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:13px">
+  <i class="ti ti-eye"></i>
+  <span>{{ _('Режим просмотра') }}: {{ current_user.full_name }} ({{ current_user.role_display }})</span>
+  <form method="POST" action="{{ url_for('auth.impersonate_stop') }}" style="margin-left:auto">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" style="background:#fff;color:#A31E08;border:none;border-radius:6px;padding:5px 14px;font-weight:600;cursor:pointer">
+      {{ _('Вернуться в свою учётную запись') }}</button>
+  </form>
+</div>
+{% endif %}
 <div class="app-shell">
   <aside class="sidebar">
    <div class="sb-logo">

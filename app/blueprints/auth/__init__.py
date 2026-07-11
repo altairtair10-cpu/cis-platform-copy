@@ -351,3 +351,46 @@ def ms_callback():
     log_action('login_microsoft', 'user', user.id)
     db.session.commit()
     return redirect(url_for('dashboard.index'))
+
+
+# ── РЕЖИМ «ВОЙТИ КАК» (просмотр глазами сотрудника) ──────────────────────────
+
+@auth.route('/users/<int:user_id>/impersonate', methods=['POST'])
+@login_required
+def impersonate(user_id):
+    if current_user.role != 'it_admin' or session.get('impersonator_id'):
+        flash('Доступ запрещён.', 'danger')
+        return redirect(url_for('dashboard.index'))
+    target = User.query.get_or_404(user_id)
+    if target.id == current_user.id:
+        flash('Вы уже вы.', 'warning')
+        return redirect(url_for('auth.users'))
+    if not target.is_active:
+        flash('Пользователь деактивирован — вход от его имени невозможен.', 'warning')
+        return redirect(url_for('auth.users'))
+    admin_id = current_user.id
+    log_action('impersonate_start', 'user', target.id,
+               details=f'{current_user.email} -> {target.email}')
+    db.session.commit()
+    login_user(target)
+    session['impersonator_id'] = admin_id
+    flash(f'Вы смотрите платформу как {target.full_name}.', 'info')
+    return redirect(url_for('dashboard.index'))
+
+
+@auth.route('/impersonate/stop', methods=['POST'])
+@login_required
+def impersonate_stop():
+    admin_id = session.pop('impersonator_id', None)
+    if not admin_id:
+        return redirect(url_for('dashboard.index'))
+    admin = User.query.get(admin_id)
+    log_action('impersonate_stop', 'user', current_user.id,
+               details=f'back to {admin.email if admin else admin_id}')
+    db.session.commit()
+    if admin and admin.is_active:
+        login_user(admin)
+        flash('Вы вернулись в свою учётную запись.', 'success')
+        return redirect(url_for('auth.users'))
+    logout_user()
+    return redirect(url_for('auth.login'))
