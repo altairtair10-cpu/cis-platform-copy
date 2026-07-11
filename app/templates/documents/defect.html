@@ -3,6 +3,7 @@
 {% block page_title %}Дефектный акт{% endblock %}
 
 {% block content %}
+{% include 'documents/_dlog_style.html' %}
 <div style="max-width:960px">
 
   <!-- DOCUMENT HEADER CARD -->
@@ -437,7 +438,10 @@
       </div>
     </div>
 
+    <!-- МАРШРУТ ДОКУМЕНТА (как во всех документах) -->
+    {% include 'documents/_dlog_route.html' %}
   </form>
+{% include 'documents/_dlog_modal.html' %}
 </div>
 
 <script>

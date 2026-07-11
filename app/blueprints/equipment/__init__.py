@@ -54,6 +54,8 @@ def view(unit_id):
     docs = Document.query.filter_by(equipment_id=unit.id)\
                          .order_by(Document.created_at.desc()).all()
     from app.models import ServiceRecord
+    from app.services.to_stock import check_to_parts
+    to_parts_status = check_to_parts(unit)
     records = ServiceRecord.query.filter_by(equipment_id=unit.id)\
                                  .order_by(ServiceRecord.date.desc()).limit(7).all()
     open_defects = Document.query.filter_by(equipment_id=unit.id, doc_type='defect_act',
@@ -61,7 +63,7 @@ def view(unit_id):
                                  .order_by(Document.created_at.desc()).all()
     return render_template('equipment/view.html', unit=unit, logs=logs, docs=docs,
                            records=records, open_defects=open_defects,
-                           to_state=to_status(unit))
+                           to_state=to_status(unit), to_parts_status=to_parts_status)
 
 @equipment.route('/<int:unit_id>/log', methods=['POST'])
 @login_required
@@ -136,3 +138,36 @@ def sync():
         except Exception as exc:
             flash(f'Не удалось синхронизировать реестр ТО: {exc}', 'danger')
     return redirect(url_for('equipment.index'))
+
+
+@equipment.route('/<int:unit_id>/to-parts/add', methods=['POST'])
+@login_required
+@requires_permission('equipment')
+def add_to_part(unit_id):
+    from app.models import ToPart
+    unit = Equipment.query.get_or_404(unit_id)
+    name = (request.form.get('name') or '').strip()
+    if not name:
+        flash('Укажите название материала.', 'warning')
+        return redirect(url_for('equipment.view', unit_id=unit.id))
+    db.session.add(ToPart(
+        equipment_id=unit.id, name=name[:256],
+        qty=_to_float(request.form.get('qty')) or 1,
+        unit=(request.form.get('unit') or '').strip()[:32] or None,
+        note=(request.form.get('note') or '').strip()[:256] or None))
+    log_action('to_part_added', 'equipment', unit.id, details=name)
+    db.session.commit()
+    return redirect(url_for('equipment.view', unit_id=unit.id))
+
+
+@equipment.route('/to-parts/<int:part_id>/delete', methods=['POST'])
+@login_required
+@requires_permission('equipment')
+def delete_to_part(part_id):
+    from app.models import ToPart
+    part = ToPart.query.get_or_404(part_id)
+    unit_id = part.equipment_id
+    log_action('to_part_removed', 'equipment', unit_id, details=part.name)
+    db.session.delete(part)
+    db.session.commit()
+    return redirect(url_for('equipment.view', unit_id=unit_id))
