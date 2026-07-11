@@ -1,0 +1,115 @@
+{# Модальное окно выбора/добавления контрагента.
+   Требует: hidden inputs #counterparty_id и #counterparty_name + span #counterparty_display #}
+<div id="cp-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;width:720px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #e3e0da">
+      <b style="font-size:15px">Контрагенты</b>
+      <button type="button" onclick="cpClose()" style="margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer">×</button>
+    </div>
+
+    <div id="cp-list-pane" style="display:flex;flex-direction:column;min-height:0;flex:1">
+      <div style="display:flex;gap:8px;padding:10px 18px;background:#1A5276">
+        <input id="cp-search" placeholder="Найти…" oninput="cpRender()"
+               style="flex:1;padding:8px 10px;border:none;border-radius:6px;font-size:13px">
+        <button type="button" onclick="cpShowAdd()" title="Добавить контрагента"
+                style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">+</button>
+        <button type="button" onclick="cpLoad()" title="Обновить"
+                style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer"><i class="ti ti-refresh"></i></button>
+      </div>
+      <div style="overflow-y:auto;flex:1">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="color:#666;text-align:left">
+            <th style="padding:8px 14px">БИН</th><th>Контрагент</th><th>Телефон</th><th>Контактное лицо</th><th>Материалы</th>
+          </tr></thead>
+          <tbody id="cp-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="cp-add-pane" style="display:none;padding:16px 18px;overflow-y:auto">
+      <div style="font-weight:600;color:#1A5276;border-bottom:2px solid #1A5276;padding-bottom:6px;margin-bottom:12px">Новый контрагент</div>
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;font-size:13px">
+        <label>Контрагент: <span style="color:#c00">*</span></label><input id="cpf-name" class="dlg-input">
+        <label>БИН:</label><input id="cpf-bin" class="dlg-input">
+        <label>Адрес:</label><input id="cpf-address" class="dlg-input">
+        <label>Телефон:</label><input id="cpf-phone" class="dlg-input">
+        <label>Е-мэйл:</label><input id="cpf-email" class="dlg-input">
+        <label>Контактное лицо:</label><input id="cpf-contact" class="dlg-input">
+        <label>Материалы:</label><input id="cpf-materials" class="dlg-input" placeholder="что поставляет">
+        <label>Валюта:</label>
+        <select id="cpf-currency" class="dlg-select" style="max-width:120px">
+          <option>KZT</option><option>USD</option><option>EUR</option><option>RUB</option><option>CNY</option>
+        </select>
+      </div>
+      <div id="cpf-error" style="color:#c00;font-size:12px;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button type="button" class="btn btn-primary" onclick="cpSave()">Сохранить</button>
+        <button type="button" class="btn" onclick="cpShowList()">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let CP_DATA = [];
+const CP_CSRF = document.querySelector('input[name=csrf_token]').value;
+
+function cpOpen() {
+  document.getElementById('cp-modal').style.display = 'flex';
+  cpShowList();
+  if (!CP_DATA.length) cpLoad(); else cpRender();
+}
+function cpClose() { document.getElementById('cp-modal').style.display = 'none'; }
+function cpShowAdd() {
+  document.getElementById('cp-list-pane').style.display = 'none';
+  document.getElementById('cp-add-pane').style.display = 'block';
+}
+function cpShowList() {
+  document.getElementById('cp-add-pane').style.display = 'none';
+  document.getElementById('cp-list-pane').style.display = 'flex';
+}
+function cpLoad() {
+  fetch('{{ url_for("documents.counterparties_json") }}')
+    .then(r => r.json()).then(d => { CP_DATA = d; cpRender(); });
+}
+function cpRender() {
+  const q = (document.getElementById('cp-search').value || '').toLowerCase();
+  const rows = CP_DATA.filter(c =>
+    !q || (c.name + ' ' + c.bin + ' ' + c.contact_person + ' ' + c.materials).toLowerCase().includes(q));
+  document.getElementById('cp-rows').innerHTML = rows.map(c => `
+    <tr onclick="cpPick(${c.id}, this.dataset.name)" data-name="${c.name.replace(/"/g,'&quot;')}"
+        style="border-top:1px solid #eee;cursor:pointer" onmouseover="this.style.background='#FAF8F4'" onmouseout="this.style.background=''">
+      <td style="padding:8px 14px;color:#666">${c.bin}</td>
+      <td><b>${c.name}</b></td><td>${c.phone}</td><td>${c.contact_person}</td>
+      <td style="color:#666">${c.materials}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="5" style="padding:20px;text-align:center;color:#999">Ничего не найдено — добавьте через «+»</td></tr>';
+}
+function cpPick(id, name) {
+  document.getElementById('counterparty_id').value = id;
+  document.getElementById('counterparty_name').value = name;
+  const d = document.getElementById('counterparty_display');
+  d.textContent = name; d.style.color = 'var(--text-1)';
+  cpClose();
+}
+function cpSave() {
+  const payload = {
+    name: document.getElementById('cpf-name').value,
+    bin: document.getElementById('cpf-bin').value,
+    address: document.getElementById('cpf-address').value,
+    phone: document.getElementById('cpf-phone').value,
+    email: document.getElementById('cpf-email').value,
+    contact_person: document.getElementById('cpf-contact').value,
+    materials: document.getElementById('cpf-materials').value,
+    currency: document.getElementById('cpf-currency').value,
+  };
+  fetch('{{ url_for("documents.counterparty_add") }}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CP_CSRF},
+    body: JSON.stringify(payload),
+  }).then(r => r.json()).then(j => {
+    if (j.ok) { CP_DATA = []; cpPick(j.id, j.name); }
+    else document.getElementById('cpf-error').textContent = j.error || 'Ошибка';
+  });
+}
+</script>

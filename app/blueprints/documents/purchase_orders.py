@@ -18,6 +18,17 @@ from .helpers import (_to_float, _unpack_extras, _is_assigned_approver,
                       _notify_current_approvers, PROCUREMENT_DOC_TYPES)
 
 
+def _resolve_counterparty():
+    """Возвращает (counterparty_id, name) из формы; имя берём из справочника."""
+    from app.models import Counterparty
+    cp_id = request.form.get('counterparty_id', type=int)
+    if cp_id:
+        cp = db.session.get(Counterparty, cp_id)
+        if cp:
+            return cp.id, cp.name
+    return None, (request.form.get('counterparty') or '').strip()
+
+
 @documents.route('/po-services/new', methods=['GET'])
 @login_required
 def new_po_services():
@@ -34,6 +45,7 @@ def new_po_services():
 @login_required
 def submit_po_services():
     action = request.form.get('action', 'draft')
+    cp_id, cp_name = _resolve_counterparty()
     signatory_id = request.form.get('signatory_id', type=int)
 
     if action == 'submit' and not signatory_id:
@@ -46,7 +58,7 @@ def submit_po_services():
         'Валюта': request.form.get('currency'),
         'Дата оплаты': request.form.get('payment_date'),
         'Основание': request.form.get('basis'),
-        'Контрагент': request.form.get('counterparty'),
+        'Контрагент': cp_name,
         'Условия оплаты': request.form.get('payment_terms'),
         'Условия оказания услуг': request.form.get('service_terms'),
         'Срок оказания услуг': request.form.get('service_date'),
@@ -57,6 +69,7 @@ def submit_po_services():
     doc = Document(
         doc_type      = 'po_services',
         related_req_id = (request.form.get('related_req_id', type=int) or None),
+        counterparty_id = cp_id,
         title         = request.form.get('summary', 'РО на услуги')[:100],
         department    = request.form.get('department', current_user.department),
         purpose       = request.form.get('summary'),
@@ -157,7 +170,7 @@ def update_po_services(doc_id):
         'Валюта': request.form.get('currency'),
         'Дата оплаты': request.form.get('payment_date'),
         'Основание': request.form.get('basis'),
-        'Контрагент': request.form.get('counterparty'),
+        'Контрагент': cp_name,
         'Условия оплаты': request.form.get('payment_terms'),
         'Условия оказания услуг': request.form.get('service_terms'),
         'Срок оказания услуг': request.form.get('service_date'),
@@ -218,13 +231,25 @@ def update_po_services(doc_id):
 @login_required
 def new_po_trebovanie():
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
-    return render_template('documents/po_trebovanie.html', executors=executors)
+    requisitions = Document.query.filter(
+        Document.doc_type == 'purchase_req',
+        Document.status != 'draft')\
+        .order_by(Document.created_at.desc()).limit(200).all()
+    return render_template('documents/po_trebovanie.html', executors=executors,
+                           requisitions=requisitions)
 
 
 @documents.route('/po-trebovanie/submit', methods=['POST'])
 @login_required
 def submit_po_trebovanie():
     action = request.form.get('action', 'draft')
+    cp_id, cp_name = _resolve_counterparty()
+    related_req_id = request.form.get('related_req_id', type=int) or None
+    related_req = None
+    if related_req_id:
+        related_req = Document.query.filter_by(id=related_req_id,
+                                               doc_type='purchase_req').first()
+        related_req_id = related_req.id if related_req else None
     signatory_id = request.form.get('signatory_id', type=int)
 
     if action == 'submit' and not signatory_id:
@@ -233,8 +258,10 @@ def submit_po_trebovanie():
 
     extras = {
         'Основание': request.form.get('basis'),
-        'Требование на приобретение материалов': request.form.get('material_request'),
-        'Контрагент': request.form.get('counterparty'),
+        'Группа материалов': (request.form.getlist('group_name[]') or [''])[0] or None,
+        'Требование на приобретение материалов':
+            (f'{related_req.doc_number} — {related_req.title[:60]}' if related_req else None),
+        'Контрагент': cp_name,
         'Плательщик НДС': request.form.get('vat_payer'),
         'Заказано': request.form.get('ordered_by'),
         'Валюта': request.form.get('currency'),
@@ -248,6 +275,8 @@ def submit_po_trebovanie():
 
     doc = Document(
         doc_type      = 'po_trebovanie',
+        related_req_id = related_req_id,
+        counterparty_id = cp_id,
         title         = request.form.get('summary', 'РО на товары')[:100],
         department    = request.form.get('department', current_user.department),
         purpose       = request.form.get('summary'),
@@ -336,8 +365,10 @@ def update_po_trebovanie(doc_id):
 
     extras = {
         'Основание': request.form.get('basis'),
-        'Требование на приобретение материалов': request.form.get('material_request'),
-        'Контрагент': request.form.get('counterparty'),
+        'Группа материалов': (request.form.getlist('group_name[]') or [''])[0] or None,
+        'Требование на приобретение материалов':
+            (f'{related_req.doc_number} — {related_req.title[:60]}' if related_req else None),
+        'Контрагент': cp_name,
         'Плательщик НДС': request.form.get('vat_payer'),
         'Заказано': request.form.get('ordered_by'),
         'Валюта': request.form.get('currency'),

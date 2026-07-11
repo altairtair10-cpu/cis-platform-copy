@@ -30,6 +30,7 @@ def _unpack_extras(justification):
         'Срок оказания услуг': 'service_date',
         'Статья бюджета': 'budget_line',
         'Требование на приобретение материалов': 'material_request',
+        'Группа материалов': 'material_group',
     }
     out = {}
     for line in (justification or '').split('\n'):
