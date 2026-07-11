@@ -40,11 +40,18 @@
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Требование на приобретение материалов:</div>
-          <div><input name="material_request" type="text" class="dlg-input"></div>
+          <div><select name="related_req_id" class="dlg-select">
+            <option value="">— Не связано —</option>
+            {% for r in requisitions %}<option value="{{ r.id }}">{{ r.doc_number }} — {{ r.title[:48] }}</option>{% endfor %}
+          </select></div>
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Контрагент:<span class="dlg-req">*</span></div>
-          <div><input name="counterparty" type="text" class="dlg-input" required></div>
+          <div><input type="hidden" name="counterparty_id" id="counterparty_id" value="">
+            <input type="hidden" name="counterparty" id="counterparty_name" value="">
+            <div class="dlg-picker" onclick="cpOpen()">
+              <span class="dlg-picker-ph" id="counterparty_display" style="color:var(--text-3)">— Выбрать контрагента —</span><i class="ti ti-building"></i>
+            </div></div>
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Плательщик НДС:</div>
@@ -65,7 +72,10 @@
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Заказано:</div>
-          <div><input name="ordered_by" type="text" class="dlg-input"></div>
+          <div><select name="ordered_by" class="dlg-select">
+            <option value="">— Выбрать сотрудника —</option>
+            {% for u in executors %}<option value="{{ u.full_name }}">{{ u.full_name }} ({{ u.position_display }})</option>{% endfor %}
+          </select></div>
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Подразделение:<span class="dlg-req">*</span></div>
@@ -121,11 +131,11 @@
           <div><input name="payment_terms" type="text" class="dlg-input" placeholder="напр. 100% предоплата"></div>
         </div>
         <div class="dlg-row">
-          <div class="dlg-label">Условия оказания услуг:</div>
+          <div class="dlg-label">Условия поставки:</div>
           <div><input name="service_terms" type="text" class="dlg-input"></div>
         </div>
         <div class="dlg-row">
-          <div class="dlg-label">Срок оказания услуг:</div>
+          <div class="dlg-label">Требуемый срок поставки:</div>
           <div><input name="service_date" type="date" class="dlg-input"></div>
         </div>
       </div>
@@ -138,7 +148,7 @@
     </div>
 
     <!-- ГРУППА МАТЕРИАЛОВ TABLE -->
-    <div class="dlg-h">Прочие условия</div>
+    <div class="dlg-h">Группа материалов</div>
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px" id="group-table">
         <thead>
@@ -147,7 +157,7 @@
             <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2)">Группа материалов</th>
             <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Без договора <span class="dlg-req">*</span></th>
             <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:130px">Договор</th>
-            <th style="padding:8px 6px;text-align:left;font-weight:600;color:var(--text-2);width:100px">Условия оплаты</th>
+
           </tr>
         </thead>
         <tbody id="group-body">
@@ -156,7 +166,7 @@
             <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_name[]" type="text" class="dlg-input"></td>
             <td style="padding:6px;border-bottom:1px solid var(--border)"><select name="group_no_contract[]" class="dlg-select"><option value="">Нет</option><option value="yes">Да</option></select></td>
             <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_contract[]" type="text" class="dlg-input"></td>
-            <td style="padding:6px;border-bottom:1px solid var(--border)"><input name="group_payment[]" type="text" class="dlg-input"></td>
+
           </tr>
         </tbody>
       </table>
@@ -256,3 +266,5 @@ function showAttachments(input){
 }
 </script>
 {% endblock %}
+
+{% include 'documents/_counterparty_modal.html' %}

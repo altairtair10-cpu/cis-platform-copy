@@ -8,4 +8,4 @@ from flask import Blueprint
 documents = Blueprint('documents', __name__, url_prefix='/documents',
                       template_folder='../../app/templates/documents')
 
-from . import helpers, registry, approvals, requisitions, purchase_orders, defects  # noqa: E402,F401
+from . import helpers, registry, approvals, requisitions, purchase_orders, defects, counterparties  # noqa: E402,F401

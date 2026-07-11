@@ -161,6 +161,7 @@ class Document(db.Model):
     related_defect_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     related_req_id    = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     paid_at           = db.Column(db.DateTime, nullable=True)
+    counterparty_id   = db.Column(db.Integer, db.ForeignKey('counterparties.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -733,3 +734,23 @@ class AgentKnowledgeFile(db.Model):
     extracted_text    = db.Column(db.Text, nullable=True)   # что читает агент
     uploaded_by       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# ── КОНТРАГЕНТЫ ───────────────────────────────────────────────────────────────
+
+class Counterparty(db.Model):
+    """Справочник контрагентов для ПО (поставщики товаров и услуг)."""
+    __tablename__ = 'counterparties'
+
+    id             = db.Column(db.Integer, primary_key=True)
+    name           = db.Column(db.String(256), unique=True, nullable=False)
+    bin            = db.Column(db.String(32), nullable=True)      # БИН/ИИН
+    address        = db.Column(db.String(256), nullable=True)
+    phone          = db.Column(db.String(64), nullable=True)
+    email          = db.Column(db.String(128), nullable=True)
+    contact_person = db.Column(db.String(128), nullable=True)
+    materials      = db.Column(db.String(256), nullable=True)     # что поставляет
+    currency       = db.Column(db.String(8), nullable=True, default='KZT')
+    is_active      = db.Column(db.Boolean, nullable=False, default=True)
+    created_by     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)

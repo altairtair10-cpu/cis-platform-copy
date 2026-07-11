@@ -45,7 +45,11 @@
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Контрагент:<span class="dlg-req">*</span></div>
-          <div><input name="counterparty" type="text" class="dlg-input" required></div>
+          <div><input type="hidden" name="counterparty_id" id="counterparty_id" value="">
+            <input type="hidden" name="counterparty" id="counterparty_name" value="">
+            <div class="dlg-picker" onclick="cpOpen()">
+              <span class="dlg-picker-ph" id="counterparty_display" style="color:var(--text-3)">— Выбрать контрагента —</span><i class="ti ti-building"></i>
+            </div></div>
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Плательщик НДС:</div>
@@ -63,7 +67,10 @@
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Заказано:<span class="dlg-req">*</span></div>
-          <div><input name="ordered_by" type="text" class="dlg-input" required></div>
+          <div><select name="ordered_by" class="dlg-select" required>
+            <option value="">— Выбрать сотрудника —</option>
+            {% for u in executors %}<option value="{{ u.full_name }}">{{ u.full_name }} ({{ u.position_display }})</option>{% endfor %}
+          </select></div>
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Подразделение:<span class="dlg-req">*</span></div>
@@ -191,3 +198,5 @@ function recalc(){
 window.addEventListener('load', recalc);
 </script>
 {% endblock %}
+
+{% include 'documents/_counterparty_modal.html' %}
