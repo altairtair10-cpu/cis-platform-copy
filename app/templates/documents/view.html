@@ -349,7 +349,11 @@
         <div class="card-title">{{ _('Позиции') }} ({{ items|length }})</div>
       </div>
     </div>
-    <table class="data-table">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button type="button" class="btn btn-sm" onclick="copyItemsTable(this)">
+        <i class="ti ti-copy"></i> {{ _('Копировать таблицу') }}</button>
+    </div>
+    <table class="data-table" id="items-copy-table">
       <thead>
         <tr>
           <th style="width:35px">№</th>
@@ -448,4 +452,24 @@
 
   </div>
 </div>
+
+<script>
+function copyItemsTable(btn) {
+  const table = document.getElementById('items-copy-table');
+  if (!table) return;
+  const rows = [];
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('th,td').forEach(td => {
+      cells.push(td.innerText.replace(/\s+/g, ' ').trim());
+    });
+    if (cells.length) rows.push(cells.join('\t'));
+  });
+  navigator.clipboard.writeText(rows.join('\n')).then(() => {
+    const old = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check"></i> {{ _('Скопировано') }}';
+    setTimeout(() => { btn.innerHTML = old; }, 1500);
+  });
+}
+</script>
 {% endblock %}
