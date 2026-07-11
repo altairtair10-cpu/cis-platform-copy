@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Админ-панель') }}{% endblock %}
+{% block page_title %}{{ _('Админ-панель') }}{% endblock %}
 
 {% block content %}
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
@@ -9,11 +9,11 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-list-details"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Справочники','en':'Reference data','kz':'Анықтамалықтар'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Справочники') }}</div>
         <div class="text-muted" style="font-size:12px">
-          {{ counts.locations }} {{ {'ru':'локаций','en':'locations','kz':'локация'}[current_user.language] }} ·
-          {{ counts.departments }} {{ {'ru':'отделов','en':'departments','kz':'бөлім'}[current_user.language] }} ·
-          {{ counts.equipment_types }} {{ {'ru':'типов оборуд.','en':'equipment types','kz':'жабдық түрі'}[current_user.language] }}
+          {{ counts.locations }} {{ _('локаций') }} ·
+          {{ counts.departments }} {{ _('отделов') }} ·
+          {{ counts.equipment_types }} {{ _('типов оборуд.') }}
         </div>
       </div>
     </div>
@@ -23,8 +23,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-palette"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Брендинг','en':'Branding','kz':'Брендинг'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Логотип и название компании','en':'Logo and company name','kz':'Логотип және компания атауы'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Брендинг') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Логотип и название компании') }}</div>
       </div>
     </div>
   </a>
@@ -33,8 +33,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-hash"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Нумерация документов','en':'Document numbering','kz':'Құжат нөмірлеу'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Префиксы номеров (ТМЦ, ДА...)','en':'Number prefixes (ТМЦ, ДА...)','kz':'Нөмір префикстері'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Нумерация документов') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Префиксы номеров (ТМЦ, ДА...)') }}</div>
       </div>
     </div>
   </a>
@@ -43,8 +43,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-lock-cog"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Права ролей','en':'Role permissions','kz':'Рөл құқықтары'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Какая роль видит какие модули','en':'Which role sees which modules','kz':'Қай рөл нені көреді'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Права ролей') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Какая роль видит какие модули') }}</div>
       </div>
     </div>
   </a>
@@ -53,8 +53,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-settings-check"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Интервалы ТО и получатели уведомлений','en':'Service intervals and alert recipients','kz':'ТҚ аралықтары және алушылар'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Настройки ТО') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Интервалы ТО и получатели уведомлений') }}</div>
       </div>
     </div>
   </a>
@@ -63,8 +63,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-shield-search"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Аудит действий','en':'Audit log','kz':'Әрекеттер аудиті'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Кто, что и когда сделал в системе','en':'Who did what and when','kz':'Кім не істеді'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Аудит действий') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Кто, что и когда сделал в системе') }}</div>
       </div>
     </div>
   </a>
@@ -73,8 +73,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-robot"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'ИИ-агенты','en':'AI agents','kz':'ЖИ-агенттер'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Промпты, файлы знаний, доступ','en':'Prompts, knowledge files, access','kz':'Промпттар, файлдар'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('ИИ-агенты') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Промпты, файлы знаний, доступ') }}</div>
       </div>
     </div>
   </a>
@@ -83,8 +83,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-plug"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Интеграции','en':'Integrations','kz':'Интеграциялар'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Дэшборд техники и внешние сервисы','en':'Equipment dashboard and external services','kz':'Дэшборд және сыртқы сервистер'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Интеграции') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Дэшборд техники и внешние сервисы') }}</div>
       </div>
     </div>
   </a>
@@ -93,8 +93,8 @@
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-users"></i></div>
       <div>
-        <div class="card-title">{{ {'ru':'Пользователи','en':'Users','kz':'Пайдаланушылар'}[current_user.language] }}</div>
-        <div class="text-muted" style="font-size:12px">{{ {'ru':'Роли, доступы, активация','en':'Roles, access, activation','kz':'Рөлдер, қолжетімділік'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Пользователи') }}</div>
+        <div class="text-muted" style="font-size:12px">{{ _('Роли, доступы, активация') }}</div>
       </div>
     </div>
   </a>

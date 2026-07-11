@@ -1,0 +1,1250 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+msgid "Стр."
+msgstr "Page"
+
+msgid "всего"
+msgstr "total"
+
+msgid "Новый агент"
+msgstr "New agent"
+
+msgid "Название"
+msgstr "Name"
+
+msgid "Короткое описание (видят сотрудники)"
+msgstr "Short description"
+
+msgid "Системный промпт (кто такой агент, как отвечать)"
+msgstr "System prompt"
+
+msgid "Модель"
+msgstr "Model"
+
+msgid "Доступ к живым данным (техника, ТО, дефекты)"
+msgstr "Live platform data (equipment, service, defects)"
+
+msgid "Агент активен"
+msgstr "Active"
+
+msgid "Кому доступен (пусто = всем)"
+msgstr "Allowed roles (empty = everyone)"
+
+msgid "Сохранить"
+msgstr "Save"
+
+msgid "К списку"
+msgstr "Back"
+
+msgid "База знаний"
+msgstr "Knowledge base"
+
+msgid "Загрузите TXT, MD или PDF (текстовый, не скан). Это документы, по которым агент отвечает."
+msgstr "Upload TXT, MD or text PDF files the agent answers from."
+
+msgid "Сначала сохраните агента — затем здесь появится загрузка файлов."
+msgstr "Save the agent first, then upload files here."
+
+msgid "ИИ-агенты"
+msgstr "AI agents"
+
+msgid "Файлов знаний"
+msgstr "Knowledge files"
+
+msgid "Роли"
+msgstr "Roles"
+
+msgid "Статус"
+msgstr "Status"
+
+msgid "все"
+msgstr "all"
+
+msgid "Настроить"
+msgstr "Edit"
+
+msgid "Агентов пока нет"
+msgstr "No agents yet"
+
+msgid "Аудит действий"
+msgstr "Audit log"
+
+msgid "Пользователь: все"
+msgstr "User: all"
+
+msgid "Действие (напр. login)"
+msgstr "Action (e.g. login)"
+
+msgid "Фильтр"
+msgstr "Filter"
+
+msgid "Сброс"
+msgstr "Reset"
+
+msgid "записей"
+msgstr "entries"
+
+msgid "Когда (UTC)"
+msgstr "When (UTC)"
+
+msgid "Кто"
+msgstr "Who"
+
+msgid "Действие"
+msgstr "Action"
+
+msgid "Объект"
+msgstr "Entity"
+
+msgid "Детали"
+msgstr "Details"
+
+msgid "Записей нет"
+msgstr "No entries"
+
+msgid "Брендинг"
+msgstr "Branding"
+
+msgid "Название компании"
+msgstr "Company name"
+
+msgid "Логотип (PNG, JPG, SVG, WEBP)"
+msgstr "Logo (PNG, JPG, SVG, WEBP)"
+
+msgid "Убрать логотип (вернуть стандартный)"
+msgstr "Remove logo (restore default)"
+
+msgid "Админ-панель"
+msgstr "Admin panel"
+
+msgid "Справочники"
+msgstr "Reference data"
+
+msgid "локаций"
+msgstr "locations"
+
+msgid "отделов"
+msgstr "departments"
+
+msgid "типов оборуд."
+msgstr "equipment types"
+
+msgid "Логотип и название компании"
+msgstr "Logo and company name"
+
+msgid "Нумерация документов"
+msgstr "Document numbering"
+
+msgid "Префиксы номеров (ТМЦ, ДА...)"
+msgstr "Number prefixes (ТМЦ, ДА...)"
+
+msgid "Права ролей"
+msgstr "Role permissions"
+
+msgid "Какая роль видит какие модули"
+msgstr "Which role sees which modules"
+
+msgid "Настройки ТО"
+msgstr "Maintenance settings"
+
+msgid "Интервалы ТО и получатели уведомлений"
+msgstr "Service intervals and alert recipients"
+
+msgid "Кто, что и когда сделал в системе"
+msgstr "Who did what and when"
+
+msgid "Промпты, файлы знаний, доступ"
+msgstr "Prompts, knowledge files, access"
+
+msgid "Интеграции"
+msgstr "Integrations"
+
+msgid "Дэшборд техники и внешние сервисы"
+msgstr "Equipment dashboard and external services"
+
+msgid "Пользователи"
+msgstr "Users"
+
+msgid "Роли, доступы, активация"
+msgstr "Roles, access, activation"
+
+msgid "URL дэшборда техники (страница «Дэшборд техники» показывает его во фрейме; пусто = раздел скрыт до настройки)"
+msgstr "Equipment dashboard URL (embedded on the Equipment dashboard page; empty = shows setup notice)"
+
+msgid "ID Google-таблицы учёта техники (из адреса таблицы: /spreadsheets/d/<ID>/...). Не забудьте открыть таблице доступ на чтение для сервисного аккаунта."
+msgstr "Equipment Google Sheet ID (from the sheet URL: /spreadsheets/d/<ID>/...). Remember to share the sheet with the service account."
+
+msgid "Название вкладки с базой техники"
+msgstr "Sheet tab with the equipment base"
+
+msgid "ID Google-таблицы реестра ТО и ремонтов (вкладки по каждой машине). Не забудьте расшарить её на сервисный аккаунт."
+msgstr "Maintenance register Google Sheet ID (one tab per unit). Remember to share it with the service account."
+
+msgid "Правила ТО по категориям"
+msgstr "Service rules per category"
+
+msgid "Сначала синхронизируйте технику из таблицы — категории появятся здесь."
+msgstr "Sync equipment from the sheet first — categories will appear here."
+
+msgid "Категория"
+msgstr "Category"
+
+msgid "Режим"
+msgstr "Mode"
+
+msgid "Интервал"
+msgstr "Interval"
+
+msgid "Только ремонт"
+msgstr "Repair only"
+
+msgid "ТО по моточасам"
+msgstr "Service by motohours"
+
+msgid "ТО по пробегу (км)"
+msgstr "Service by mileage (km)"
+
+msgid "Кому слать уведомления о ТО"
+msgstr "Who receives service alerts"
+
+msgid "Все активные механики получают уведомления всегда. Ниже — дополнительные получатели."
+msgstr "All active mechanics always receive alerts. Below — extra recipients."
+
+msgid "Несопоставленные вкладки реестра"
+msgstr "Unmatched register tabs"
+
+msgid "Эти вкладки реестра не удалось привязать к технике автоматически. Выберите машину вручную — привязка запомнится навсегда."
+msgstr "These register tabs could not be matched automatically. Pick the unit manually — the mapping is remembered permanently."
+
+msgid "не привязывать пока"
+msgstr "leave unmapped"
+
+msgid "игнорировать эту вкладку"
+msgstr "ignore this tab"
+
+msgid "Формат номера: ПРЕФИКС-ГОД-НОМЕР (напр. ТМЦ-2026-014). Пустое поле = префикс по умолчанию. Изменение действует только на новые документы."
+msgstr "Number format: PREFIX-YEAR-SEQ (e.g. ТМЦ-2026-014). Empty field = default prefix. Changes affect new documents only."
+
+msgid "Тип документа"
+msgstr "Document type"
+
+msgid "По умолчанию"
+msgstr "Default"
+
+msgid "Свой префикс"
+msgstr "Custom prefix"
+
+msgid "Галочка = роль видит модуль. IT Admin всегда имеет полный доступ и не редактируется. Изменения действуют сразу после сохранения."
+msgstr "Checked = the role can access the module. IT Admin always has full access and is not editable. Changes apply immediately after saving."
+
+msgid "Модуль"
+msgstr "Module"
+
+msgid "Управление справочниками"
+msgstr "Reference data management"
+
+msgid "Переименовать"
+msgstr "Rename"
+
+msgid "Активен"
+msgstr "Active"
+
+msgid "Неактивен"
+msgstr "Inactive"
+
+msgid "Откл."
+msgstr "Deactivate"
+
+msgid "Вкл."
+msgstr "Activate"
+
+msgid "Пока пусто"
+msgstr "Nothing yet"
+
+msgid "Локации"
+msgstr "Locations"
+
+msgid "Новая локация, напр. База Атырау"
+msgstr "New location, e.g. Base Atyrau"
+
+msgid "Типы оборудования"
+msgstr "Equipment types"
+
+msgid "Новый тип, напр. Frac Pump"
+msgstr "New type, e.g. Frac Pump"
+
+msgid "Отделы"
+msgstr "Departments"
+
+msgid "Новый отдел"
+msgstr "New department"
+
+msgid "Задайте вопрос."
+msgstr "Ask a question."
+
+msgid "Ваш вопрос..."
+msgstr "Your question..."
+
+msgid "ИИ-ассистенты"
+msgstr "AI assistants"
+
+msgid "Доступных ассистентов пока нет."
+msgstr "No assistants available yet."
+
+msgid "ФИО"
+msgstr "Full name"
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "оставьте пустым чтобы не менять"
+msgstr "leave blank to keep current"
+
+msgid "Подразделение"
+msgstr "Department"
+
+msgid "Роль"
+msgstr "Role"
+
+msgid "Язык интерфейса"
+msgstr "Interface language"
+
+msgid "Активный пользователь"
+msgstr "Active user"
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Управление пользователями"
+msgstr "User management"
+
+msgid "Добавить пользователя"
+msgstr "Add user"
+
+msgid "Все пользователи"
+msgstr "All users"
+
+msgid "пользователей"
+msgstr "users"
+
+msgid "Язык"
+msgstr "Language"
+
+msgid "Ред."
+msgstr "Edit"
+
+msgid "Главное"
+msgstr "Main"
+
+msgid "Главная"
+msgstr "Dashboard"
+
+msgid "Утренний брифинг"
+msgstr "Morning briefing"
+
+msgid "Операции"
+msgstr "Operations"
+
+msgid "Оборудование"
+msgstr "Equipment"
+
+msgid "Дэшборд техники"
+msgstr "Equipment dashboard"
+
+msgid "Транспорт"
+msgstr "Transport"
+
+msgid "Склад"
+msgstr "Inventory"
+
+msgid "Все документы"
+msgstr "All documents"
+
+msgid "Новый документ"
+msgstr "New document"
+
+msgid "Сотрудники"
+msgstr "People"
+
+msgid "HR Система"
+msgstr "HR System"
+
+msgid "Отпуска"
+msgstr "PTO & leave"
+
+msgid "Данные"
+msgstr "Data"
+
+msgid "Договор ЭМГ"
+msgstr "EMG Contract"
+
+msgid "Интеграция 1С"
+msgstr "1С integration"
+
+msgid "KPI Отчёты"
+msgstr "KPI reports"
+
+msgid "ИИ Ассистент"
+msgstr "AI assistant"
+
+msgid "Система"
+msgstr "System"
+
+msgid "Настройки"
+msgstr "Settings"
+
+msgid "Выйти"
+msgstr "Log out"
+
+msgid "Уведомления"
+msgstr "Notifications"
+
+msgid "Нет уведомлений"
+msgstr "No notifications"
+
+msgid "Исполнение договора ЭМГ 2026"
+msgstr "EMG 2026 Contract Execution"
+
+msgid "Клиент"
+msgstr "Client"
+
+msgid "Обновлено"
+msgstr "Updated"
+
+msgid "Данные актуальны"
+msgstr "Data is current"
+
+msgid "Обновить"
+msgstr "Refresh"
+
+msgid "план Q1"
+msgstr "Q1 plan"
+
+msgid "План год"
+msgstr "Year plan"
+
+msgid "Изменить факт"
+msgstr "Edit actual"
+
+msgid "Детализация по месторождениям"
+msgstr "Field breakdown"
+
+msgid "Месторождение"
+msgstr "Field"
+
+msgid "По договору"
+msgstr "Contract"
+
+msgid "Выполнено"
+msgstr "Done"
+
+msgid "Остаток"
+msgstr "Remainder"
+
+msgid "Исполнение"
+msgstr "Execution"
+
+msgid "Данные будут автоматически синхронизированы с Excel в SharePoint после подключения Microsoft Graph API"
+msgstr "Data will automatically sync with Excel in SharePoint once Microsoft Graph API is connected"
+
+msgid "Всего документов"
+msgstr "Total documents"
+
+msgid "В системе"
+msgstr "In system"
+
+msgid "На согласовании"
+msgstr "Pending"
+
+msgid "Требуют действия"
+msgstr "Require action"
+
+msgid "Согласовано"
+msgstr "Approved"
+
+msgid "Завершено"
+msgstr "Completed"
+
+msgid "Сотрудников"
+msgstr "Staff"
+
+msgid "Активных"
+msgstr "Active"
+
+msgid "Всего единиц"
+msgstr "Total units"
+
+msgid "В работе"
+msgstr "Deployed"
+
+msgid "На объектах"
+msgstr "On site"
+
+msgid "Простой"
+msgstr "Idle"
+
+msgid "На базе"
+msgstr "At base"
+
+msgid "На ТО"
+msgstr "Maintenance"
+
+msgid "Техобслуживание"
+msgstr "In service"
+
+msgid "Последние документы"
+msgstr "Recent documents"
+
+msgid "Все документы →"
+msgstr "View all →"
+
+msgid "Номер"
+msgstr "Number"
+
+msgid "Тип"
+msgstr "Type"
+
+msgid "Содержание"
+msgstr "Subject"
+
+msgid "Автор"
+msgstr "Author"
+
+msgid "Дата"
+msgstr "Date"
+
+msgid "Деф. акт"
+msgstr "Defect act"
+
+msgid "Требование"
+msgstr "Requisition"
+
+msgid "Согласован"
+msgstr "Approved"
+
+msgid "Отклонён"
+msgstr "Rejected"
+
+msgid "Черновик"
+msgstr "Draft"
+
+msgid "Документов пока нет"
+msgstr "No documents yet"
+
+msgid "Дефектный акт"
+msgstr "Defect act"
+
+msgid "Спросите ИИ-ассистента CIS"
+msgstr "Ask the CIS AI Assistant"
+
+msgid "Например: Сколько оборудования сейчас на ТО? Кто работает в механическом отделе?"
+msgstr "E.g: How much equipment is in maintenance? Who works in the mechanical department?"
+
+msgid "Спросить"
+msgstr "Ask"
+
+msgid "Ответ"
+msgstr "Answer"
+
+msgid "Примеры вопросов"
+msgstr "Example questions"
+
+msgid "Сколько оборудования находится на техобслуживании?"
+msgstr "How much equipment is in maintenance?"
+
+msgid "Какие документы ожидают согласования?"
+msgstr "Which documents are awaiting approval?"
+
+msgid "Кто работает в механическом отделе?"
+msgstr "Who works in the mechanical department?"
+
+msgid "Доброе утро"
+msgstr "Good morning"
+
+msgid "Документов"
+msgstr "Documents"
+
+msgid "Единиц оборудования"
+msgstr "Equipment units"
+
+msgid "ИИ Брифинг · Claude"
+msgstr "AI Briefing · Claude"
+
+msgid "Генерируется автоматически"
+msgstr "Auto-generated"
+
+msgid "Не удалось сгенерировать брифинг. Проверьте ANTHROPIC_API_KEY."
+msgstr "Could not generate briefing. Check ANTHROPIC_API_KEY."
+
+msgid "Генерация брифинга..."
+msgstr "Generating briefing..."
+
+msgid "Быстрые действия"
+msgstr "Quick actions"
+
+msgid "Новый дефектный акт"
+msgstr "New defect act"
+
+msgid "Новое требование"
+msgstr "New requisition"
+
+msgid "Документы"
+msgstr "Documents"
+
+msgid "По статусу"
+msgstr "By status"
+
+msgid "На исполнении"
+msgstr "In execution"
+
+msgid "Исполнен"
+msgstr "Executed"
+
+msgid "Создание"
+msgstr "Draft"
+
+msgid "Возвращён"
+msgstr "Returned"
+
+msgid "Версия 1 · Черновик"
+msgstr "Version 1 · Draft"
+
+msgid "Номер присваивается при отправке"
+msgstr "Number assigned on submit"
+
+msgid "Отправить на согласование"
+msgstr "Submit for approval"
+
+msgid "Сохранить черновик"
+msgstr "Save draft"
+
+msgid "Печать"
+msgstr "Print"
+
+msgid "Регистрационные реквизиты"
+msgstr "Registration details"
+
+msgid "Исполнитель"
+msgstr "Executor"
+
+msgid "Механический"
+msgstr "Mechanic"
+
+msgid "Язык документа"
+msgstr "Document language"
+
+msgid "Дата и время обнаружения"
+msgstr "Date/time discovered"
+
+msgid "Связанная работа / Контракт"
+msgstr "Related job / Contract"
+
+msgid "Срок устранения"
+msgstr "Repair deadline"
+
+msgid "Единица оборудования"
+msgstr "Equipment unit"
+
+msgid "Выберите оборудование"
+msgstr "Select equipment"
+
+msgid "Местонахождение / Скважина"
+msgstr "Location / Well site"
+
+msgid "Автозаполняется при выборе оборудования"
+msgstr "Auto-filled on equipment selection"
+
+msgid "Данные оборудования из системы"
+msgstr "Equipment data from system"
+
+msgid "Последнее ТО"
+msgstr "Last service"
+
+msgid "Следующее ТО"
+msgstr "Next service"
+
+msgid "Мастер на объекте"
+msgstr "Supervisor on site"
+
+msgid "ФИО мастера..."
+msgstr "Supervisor name..."
+
+msgid "Состав бригады"
+msgstr "Crew members"
+
+msgid "Перечислите членов бригады..."
+msgstr "List crew members..."
+
+msgid "Наработка моточасов"
+msgstr "Engine hours at failure"
+
+msgid "Описание дефекта"
+msgstr "Defect description"
+
+msgid "Краткое содержание — описание неисправности"
+msgstr "Summary — description of defect"
+
+msgid "Подробно опишите что именно сломалось, где, при каких обстоятельствах..."
+msgstr "Describe in detail what broke, where, under what circumstances..."
+
+msgid "Возможная причина дефекта"
+msgstr "Possible cause of defect"
+
+msgid "Предполагаемая причина поломки (износ, неправильная эксплуатация, заводской брак и т.д.)..."
+msgstr "Probable cause (wear, improper use, manufacturing defect, etc.)..."
+
+msgid "Степень срочности"
+msgstr "Urgency"
+
+msgid "Плановый"
+msgstr "Planned"
+
+msgid "Срочный"
+msgstr "Urgent"
+
+msgid "В течение 2 дней"
+msgstr "Within 2 days"
+
+msgid "Критический"
+msgstr "Critical"
+
+msgid "Оборудование остановлено"
+msgstr "Equipment down"
+
+msgid "Влияние на производство"
+msgstr "Production impact"
+
+msgid "Полная остановка работ"
+msgstr "Full work stoppage"
+
+msgid "Частичная работоспособность"
+msgstr "Partial operation"
+
+msgid "Снижение производительности"
+msgstr "Reduced performance"
+
+msgid "Нет влияния на производство"
+msgstr "No production impact"
+
+msgid "Оценка времени ремонта"
+msgstr "Estimated repair time"
+
+msgid "Выберите"
+msgstr "Select"
+
+msgid "часа"
+msgstr "hour"
+
+msgid "1 день"
+msgstr "1 day"
+
+msgid "дня"
+msgstr "days"
+
+msgid "1 неделя"
+msgstr "1 week"
+
+msgid "Более недели"
+msgstr "More than 1 week"
+
+msgid "Ориентировочная стоимость ремонта"
+msgstr "Estimated repair cost"
+
+msgid "Тип ремонта"
+msgstr "Repair type"
+
+msgid "Собственными силами"
+msgstr "In-house repair"
+
+msgid "Силами подрядчика"
+msgstr "Contractor repair"
+
+msgid "Гарантийный ремонт"
+msgstr "Warranty repair"
+
+msgid "Списание"
+msgstr "Write-off"
+
+msgid "Чеклист ОТ и ТБ"
+msgstr "HSE checklist"
+
+msgid "выполнено"
+msgstr "completed"
+
+msgid "Все пункты ТБ должны быть выполнены до начала ремонтных работ"
+msgstr "All HSE items must be completed before repair work begins"
+
+msgid "Фото и видео материалы"
+msgstr "Photos & videos"
+
+msgid "Загрузить фото и видео дефекта"
+msgstr "Upload photos and videos of defect"
+
+msgid "JPG, PNG, HEIC, MP4, MOV · Макс. 50 МБ · Несколько файлов одновременно"
+msgstr "JPG, PNG, HEIC, MP4, MOV · Max 50MB · Multiple files at once"
+
+msgid "Список запчастей · Проверка остатков 1С"
+msgstr "Parts list · 1С inventory check"
+
+msgid "Остатки автоматически проверяются по 1С складу при сохранении. Если запчастей нет — система создаст Требование на приобретение."
+msgstr "Stock levels automatically checked against 1С inventory on save. If parts unavailable — system will create a purchase requisition."
+
+msgid "Наименование запчасти"
+msgstr "Part name"
+
+msgid "Характеристика / Арт."
+msgstr "Specification / Part no."
+
+msgid "Кол-во"
+msgstr "Qty"
+
+msgid "Ед."
+msgstr "Unit"
+
+msgid "Сумма без НДС, ₸"
+msgstr "Amount excl. VAT, ₸"
+
+msgid "1С статус"
+msgstr "1С status"
+
+msgid "Название запчасти..."
+msgstr "Part name..."
+
+msgid "Арт. номер / характеристика..."
+msgstr "Part no. / specification..."
+
+msgid "Ожидание"
+msgstr "Pending"
+
+msgid "ИТОГО"
+msgstr "TOTAL"
+
+msgid "Добавить запчасть"
+msgstr "Add part"
+
+msgid "Маршрут документа"
+msgstr "Document routing"
+
+msgid "Параллельное"
+msgstr "Parallel"
+
+msgid "Автор · Исполнитель"
+msgstr "Author · Executor"
+
+msgid "Создан"
+msgstr "Created"
+
+msgid "Начальник механического отдела"
+msgstr "Head of mechanical department"
+
+msgid "Согласующий · Шаг 1 · Обязательно"
+msgstr "Approver · Step 1 · Required"
+
+msgid "Ожидает отправки"
+msgstr "Awaiting submission"
+
+msgid "Технический директор"
+msgstr "Technical director"
+
+msgid "Подписант · Шаг 2"
+msgstr "Signatory · Step 2"
+
+msgid "Ожидает"
+msgstr "Waiting"
+
+msgid "Снабжение / Закупки"
+msgstr "Procurement / Supply"
+
+msgid "Исполнитель · Создаёт ЗП в 1С при необходимости"
+msgstr "Executor · Creates PO in 1С if required"
+
+msgid "Примечание"
+msgstr "Notes"
+
+msgid "Дополнительные комментарии, рекомендации по ремонту, контактные лица и т.д..."
+msgstr "Additional comments, repair recommendations, contacts, etc..."
+
+msgid "Связанные документы"
+msgstr "Linked documents"
+
+msgid "Имеет ссылку с:"
+msgstr "Linked to:"
+
+msgid "Номера связанных документов через запятую..."
+msgstr "Linked document numbers separated by comma..."
+
+msgid "Получатели:"
+msgstr "Recipients:"
+
+msgid "ФИО получателей..."
+msgstr "Recipient names..."
+
+msgid "ИИ автоматически проверит наличие деталей в 1С и уведомит снабжение при необходимости закупки"
+msgstr "AI will automatically check part availability in 1С and notify procurement if purchase is needed"
+
+msgid "Все виды документов"
+msgstr "All document types"
+
+msgid "Год: все"
+msgstr "Year: all"
+
+msgid "Экспорт в Excel"
+msgstr "Export to Excel"
+
+msgid "Реестр документов"
+msgstr "Document registry"
+
+msgid "документов"
+msgstr "documents"
+
+msgid "Создайте первый документ"
+msgstr "Create your first document"
+
+msgid "Требование на приобретение"
+msgstr "Purchase Requisition"
+
+msgid "К реестру"
+msgstr "Back"
+
+msgid "Отклонить"
+msgstr "Reject"
+
+msgid "Согласовать"
+msgstr "Approve"
+
+msgid "Учётный код"
+msgstr "Event code"
+
+msgid "Дефект закрыт"
+msgstr "Defect closed"
+
+msgid "Дефект открыт"
+msgstr "Defect open"
+
+msgid "Создать требование по акту"
+msgstr "Create requisition"
+
+msgid "Закрыть дефект? Обычно это делается записью ремонта."
+msgstr "Close the defect?"
+
+msgid "Закрыть дефект"
+msgstr "Close defect"
+
+msgid "Снабжение"
+msgstr "Procurement"
+
+msgid "Создать ПО по требованию"
+msgstr "Create PO from requisition"
+
+msgid "Отметить требование исполненным?"
+msgstr "Mark as executed?"
+
+msgid "Отметить исполненным"
+msgstr "Mark executed"
+
+msgid "Созданные ПО по этому требованию"
+msgstr "POs created from this requisition"
+
+msgid "Создан по требованию"
+msgstr "Created from requisition"
+
+msgid "Связано с дефектным актом"
+msgstr "Linked to defect act"
+
+msgid "закрыт"
+msgstr "closed"
+
+msgid "открыт"
+msgstr "open"
+
+msgid "Документ возвращён на доработку"
+msgstr "Returned for revision"
+
+msgid "Проверьте историю ниже и внесите правки."
+msgstr "Check the history below and make your edits."
+
+msgid "Редактировать"
+msgstr "Edit"
+
+msgid "Отправить без изменений"
+msgstr "Resubmit as-is"
+
+msgid "Срочность"
+msgstr "Urgency"
+
+msgid "Описание"
+msgstr "Description"
+
+msgid "Результаты согласования"
+msgstr "Approval results"
+
+msgid "Версия 1 от"
+msgstr "Version 1 of"
+
+msgid "Согласующие:"
+msgstr "Reviewers:"
+
+msgid "Подписывающий:"
+msgstr "Signatory:"
+
+msgid "Подписывающий"
+msgstr "Signatory"
+
+msgid "Этап"
+msgstr "Stage"
+
+msgid "Не потребовалось"
+msgstr "Not needed"
+
+msgid "На рассмотрении"
+msgstr "In review"
+
+msgid "Маршрут не задан"
+msgstr "No route defined"
+
+msgid "Комментарий (обязателен для возврата)..."
+msgstr "Comment (required to return)..."
+
+msgid "Вернуть"
+msgstr "Return"
+
+msgid "Позиции"
+msgstr "Items"
+
+msgid "Наименование"
+msgstr "Name"
+
+msgid "Характеристика"
+msgstr "Spec"
+
+msgid "Цена"
+msgstr "Price"
+
+msgid "Сумма"
+msgstr "Sum"
+
+msgid "Итого"
+msgstr "Total"
+
+msgid "Вложения"
+msgstr "Attachments"
+
+msgid "Удалить файл?"
+msgstr "Delete file?"
+
+msgid "Нет вложений"
+msgstr "No attachments yet"
+
+msgid "Загрузить"
+msgstr "Upload"
+
+msgid "История"
+msgstr "History"
+
+msgid "Добавить комментарий..."
+msgstr "Add comment..."
+
+msgid "Открыть в новой вкладке"
+msgstr "Open in new tab"
+
+msgid "Адрес дэшборда ещё не настроен."
+msgstr "The dashboard URL is not configured yet."
+
+msgid "Настроить в Админ-панели"
+msgstr "Configure in Admin panel"
+
+msgid "Всего"
+msgstr "Total"
+
+msgid "Все единицы оборудования"
+msgstr "All equipment units"
+
+msgid "Таблица синхр."
+msgstr "Sheet synced"
+
+msgid "Обновить из таблицы"
+msgstr "Sync from sheet"
+
+msgid "Подключить таблицу"
+msgstr "Connect sheet"
+
+msgid "Единица"
+msgstr "Unit"
+
+msgid "Местонахождение"
+msgstr "Location"
+
+msgid "Назад к списку"
+msgstr "Back to list"
+
+msgid "Документы по этой технике"
+msgstr "Documents for this unit"
+
+msgid "Документов по этой технике пока нет. Дефектные акты, созданные с выбором этой единицы, появятся здесь."
+msgstr "No documents for this unit yet. Defect acts created for it will appear here."
+
+msgid "Открытые дефекты"
+msgstr "Open defects"
+
+msgid "Дефект закрывается записью ремонта с указанием его кода (например «…-Р») или кнопкой в самом акте."
+msgstr "A defect closes when a repair record mentions its code, or via the button on the act."
+
+msgid "ТО просрочено"
+msgstr "Service overdue"
+
+msgid "ТО скоро"
+msgstr "Service due soon"
+
+msgid "ТО в норме"
+msgstr "Service on schedule"
+
+msgid "Наработка с последнего ТО"
+msgstr "Since last service"
+
+msgid "последнее ТО"
+msgstr "last service"
+
+msgid "Последние ТО и ремонты"
+msgstr "Recent service & repairs"
+
+msgid "Вид"
+msgstr "Kind"
+
+msgid "Наработка"
+msgstr "Reading"
+
+msgid "Записей из реестра пока нет — либо реестр не подключён (Админ-панель → Интеграции), либо вкладка этой машины не сопоставлена по гос. номеру."
+msgstr "No register records yet — either the register is not connected (Admin → Integrations) or this unit's tab was not matched by gos number."
+
+msgid "Заявки на отпуск"
+msgstr "PTO requests"
+
+msgid "Подразделений"
+msgstr "Departments"
+
+msgid "Сотрудник"
+msgstr "Employee"
+
+msgid "Начало"
+msgstr "Start"
+
+msgid "Окончание"
+msgstr "End"
+
+msgid "Причина"
+msgstr "Reason"
+
+msgid "Действия"
+msgstr "Actions"
+
+msgid "Справочник сотрудников"
+msgstr "Staff Directory"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Сотрудников пока нет"
+msgstr "No staff yet"
+
+msgid "Мои заявки на отпуск"
+msgstr "My Leave Requests"
+
+msgid "Мои заявки"
+msgstr "My Requests"
+
+msgid "Новая заявка"
+msgstr "New Request"
+
+msgid "Одобрено"
+msgstr "Approved"
+
+msgid "Отклонено"
+msgstr "Denied"
+
+msgid "Заявок пока нет"
+msgstr "No requests yet"
+
+msgid "Новая заявка на отпуск"
+msgstr "New Leave Request"
+
+msgid "Заявка на отпуск"
+msgstr "Leave Request"
+
+msgid "Тип отпуска"
+msgstr "Leave Type"
+
+msgid "Ежегодный"
+msgstr "Annual"
+
+msgid "Больничный"
+msgstr "Sick Leave"
+
+msgid "За свой счёт"
+msgstr "Unpaid"
+
+msgid "Другое"
+msgstr "Other"
+
+msgid "Дата начала"
+msgstr "Start Date"
+
+msgid "Дата окончания"
+msgstr "End Date"
+
+msgid "Укажите причину..."
+msgstr "Enter reason..."
+
+msgid "Отправить"
+msgstr "Submit"
+
+msgid "Низкий запас"
+msgstr "Low Stock"
+
+msgid "Остатки по базам"
+msgstr "Stock by Base"
+
+msgid "Поиск материала..."
+msgstr "Search material..."
+
+msgid "Найти"
+msgstr "Search"
+
+msgid "Ничего не найдено"
+msgstr "No results found"
+
+msgid "Спросить об инвентаре"
+msgstr "Ask about inventory"
+
+msgid "Например: какие материалы заканчиваются?"
+msgstr "E.g. which materials are running low?"
+
+msgid "Всего рейсов"
+msgstr "Total runs"
+
+msgid "Активных маршрутов"
+msgstr "Active routes"
+
+msgid "Транспортных средств"
+msgstr "Vehicles"
+
+msgid "Журнал транспортных рейсов"
+msgstr "Transport log"
+
+msgid "Маршрут"
+msgstr "Route"
+
+msgid "Водитель"
+msgstr "Driver"
+
+msgid "Назначение"
+msgstr "Purpose"
+
+msgid "Рейсов пока нет"
+msgstr "No transport runs yet"
+
+msgid "Данные появятся из Transport Bot"
+msgstr "Data will appear from Transport Bot"
+

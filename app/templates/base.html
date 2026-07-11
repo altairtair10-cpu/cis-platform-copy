@@ -24,59 +24,59 @@
       </div>
     </div>
     <nav class="sb-nav">
-      <div class="sb-section">{{ {'ru':'Главное','en':'Main','kz':'Басты'}[current_user.language] }}</div>
+      <div class="sb-section">{{ _('Главное') }}</div>
       <a href="{{ url_for('dashboard.index') }}" class="sb-item {% if request.endpoint and 'dashboard' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-layout-dashboard"></i><span>{{ {'ru':'Главная','en':'Dashboard','kz':'Басты бет'}[current_user.language] }}</span>
+        <i class="ti ti-layout-dashboard"></i><span>{{ _('Главная') }}</span>
       </a>
       <a href="{{ url_for('dashboard.briefing') }}" class="sb-item ...">
-        <i class="ti ti-sunshine"></i><span>{{ {'ru':'Утренний брифинг','en':'Morning briefing','kz':'Таңғы брифинг'}[current_user.language] }}</span>
+        <i class="ti ti-sunshine"></i><span>{{ _('Утренний брифинг') }}</span>
       </a>
-      <div class="sb-section">{{ {'ru':'Операции','en':'Operations','kz':'Операциялар'}[current_user.language] }}</div>
+      <div class="sb-section">{{ _('Операции') }}</div>
       {% if current_user.is_authenticated and (current_user.can_access('equipment') or current_user.can_access('equipment_read')) %}
       <a href="{{ url_for('equipment.index') }}" class="sb-item {% if request.endpoint in ('equipment.index', 'equipment.view') %}active{% endif %}">
-        <i class="ti ti-tool"></i><span>{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}</span>
+        <i class="ti ti-tool"></i><span>{{ _('Оборудование') }}</span>
       </a>
       <a href="{{ url_for('equipment.dashboard') }}" class="sb-item {% if request.endpoint == 'equipment.dashboard' %}active{% endif %}">
-        <i class="ti ti-layout-dashboard"></i><span>{{ {'ru':'Дэшборд техники','en':'Equipment dashboard','kz':'Техника дэшборды'}[current_user.language] }}</span>
+        <i class="ti ti-layout-dashboard"></i><span>{{ _('Дэшборд техники') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.can_access('transport') %}
       <a href="{{ url_for('transport.index') }}" class="sb-item {% if request.endpoint and 'transport' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-truck"></i><span>{{ {'ru':'Транспорт','en':'Transport','kz':'Көлік'}[current_user.language] }}</span>
+        <i class="ti ti-truck"></i><span>{{ _('Транспорт') }}</span>
       </a>
       {% endif %}
-      <a href="{{ url_for('inventory.index') }}" class="sb-item {% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}"><i class="ti ti-packages"></i><span>{{ {'ru':'Склад','en':'Inventory','kz':'Қойма'}[current_user.language] }}</span></a>
+      <a href="{{ url_for('inventory.index') }}" class="sb-item {% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}"><i class="ti ti-packages"></i><span>{{ _('Склад') }}</span></a>
       <a href="{{ url_for('documents.index') }}" class="sb-item {% if request.endpoint == 'documents.index' %}active{% endif %}">
-        <i class="ti ti-files"></i><span>{{ {'ru':'Все документы','en':'All documents','kz':'Барлық құжаттар'}[current_user.language] }}</span>
+        <i class="ti ti-files"></i><span>{{ _('Все документы') }}</span>
       </a>
       <a href="{{ url_for('documents.new') }}" class="sb-item {% if request.endpoint == 'documents.new' %}active{% endif %}">
-        <i class="ti ti-plus"></i><span>{{ {'ru':'Новый документ','en':'New document','kz':'Жаңа құжат'}[current_user.language] }}</span>
+        <i class="ti ti-plus"></i><span>{{ _('Новый документ') }}</span>
       </a>
       {% if current_user.is_authenticated and (current_user.can_access('hr') or current_user.can_access('hr_read')) %}
-      <div class="sb-section">{{ {'ru':'Сотрудники','en':'People','kz':'Қызметкерлер'}[current_user.language] }}</div>
+      <div class="sb-section">{{ _('Сотрудники') }}</div>
       <a href="{{ url_for('hr.index') }}" class="sb-item {% if request.endpoint and 'hr' in request.endpoint %}active{% endif %}">
-        <i class="ti ti-users"></i><span>{{ {'ru':'HR Система','en':'HR System','kz':'HR Жүйесі'}[current_user.language] }}</span>
+        <i class="ti ti-users"></i><span>{{ _('HR Система') }}</span>
       </a>
-     <a href="{{ url_for('hr.pto') }}" class="sb-item"><i class="ti ti-calendar-off"></i><span>{{ {'ru':'Отпуска','en':'PTO & leave','kz':'Демалыс'}[current_user.language] }}</span></a>
+     <a href="{{ url_for('hr.pto') }}" class="sb-item"><i class="ti ti-calendar-off"></i><span>{{ _('Отпуска') }}</span></a>
       {% endif %}
-      <div class="sb-section">{{ {'ru':'Данные','en':'Data','kz':'Деректер'}[current_user.language] }}</div>
+      <div class="sb-section">{{ _('Данные') }}</div>
       <a href="{{ url_for('contracts.index') }}" class="sb-item {% if request.endpoint and 'contracts' in request.endpoint %}active{% endif %}">
-  <i class="ti ti-file-check"></i><span>{{ {'ru':'Договор ЭМГ','en':'EMG Contract','kz':'ЭМГ келісімі'}[current_user.language] }}</span>
+  <i class="ti ti-file-check"></i><span>{{ _('Договор ЭМГ') }}</span>
 </a>
-      <a href="#" class="sb-item"><i class="ti ti-database"></i><span>{{ {'ru':'Интеграция 1С','en':'1С integration','kz':'1С интеграция'}[current_user.language] }}</span></a>
-      <a href="#" class="sb-item"><i class="ti ti-chart-bar"></i><span>{{ {'ru':'KPI Отчёты','en':'KPI reports','kz':'KPI есептері'}[current_user.language] }}</span></a>
-      <a href="{{ url_for('dashboard.assistant') }}" class="sb-item"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ Ассистент','en':'AI assistant','kz':'ЖИ көмекші'}[current_user.language] }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-database"></i><span>{{ _('Интеграция 1С') }}</span></a>
+      <a href="#" class="sb-item"><i class="ti ti-chart-bar"></i><span>{{ _('KPI Отчёты') }}</span></a>
+      <a href="{{ url_for('dashboard.assistant') }}" class="sb-item"><i class="ti ti-robot"></i><span>{{ _('ИИ Ассистент') }}</span></a>
       {% if current_user.is_authenticated and current_user.role == 'it_admin' %}
-      <div class="sb-section">{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}</div>
-      <a href="{{ url_for('auth.users') }}" class="sb-item {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}"><i class="ti ti-users-cog"></i><span>{{ {'ru':'Пользователи','en':'User management','kz':'Пайдаланушылар'}[current_user.language] }}</span></a>
-      <a href="{{ url_for('admin.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('admin.') and request.endpoint != 'admin.logo' %}active{% endif %}"><i class="ti ti-adjustments"></i><span>{{ {'ru':'Админ-панель','en':'Admin panel','kz':'Әкімші панелі'}[current_user.language] }}</span></a>
-      <a href="{{ url_for('ai.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('ai.') %}active{% endif %}"><i class="ti ti-robot"></i><span>{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}</span></a>
-      <a href="{{ url_for('auth.settings') }}" class="sb-item {% if request.endpoint == 'auth.settings' %}active{% endif %}"><i class="ti ti-settings"></i><span>{{ {'ru':'Настройки','en':'Settings','kz':'Параметрлер'}[current_user.language] }}</span></a>
+      <div class="sb-section">{{ _('Система') }}</div>
+      <a href="{{ url_for('auth.users') }}" class="sb-item {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}"><i class="ti ti-users-cog"></i><span>{{ _('Пользователи') }}</span></a>
+      <a href="{{ url_for('admin.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('admin.') and request.endpoint != 'admin.logo' %}active{% endif %}"><i class="ti ti-adjustments"></i><span>{{ _('Админ-панель') }}</span></a>
+      <a href="{{ url_for('ai.index') }}" class="sb-item {% if request.endpoint and request.endpoint.startswith('ai.') %}active{% endif %}"><i class="ti ti-robot"></i><span>{{ _('ИИ-ассистенты') }}</span></a>
+      <a href="{{ url_for('auth.settings') }}" class="sb-item {% if request.endpoint == 'auth.settings' %}active{% endif %}"><i class="ti ti-settings"></i><span>{{ _('Настройки') }}</span></a>
       {% endif %}
     </nav>
     <div class="sb-bottom">
       <a href="{{ url_for('auth.logout') }}" class="sb-bottom-item">
-        <i class="ti ti-logout"></i><span>{{ {'ru':'Выйти','en':'Log out','kz':'Шығу'}[current_user.language] }}</span>
+        <i class="ti ti-logout"></i><span>{{ _('Выйти') }}</span>
       </a>
     </div>
   </aside>
@@ -100,7 +100,7 @@
 </div>
 
 <div id="notif-dropdown" style="display:none;position:absolute;top:52px;right:60px;width:320px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100">
-  <div style="padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;color:var(--text-1);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Уведомления','en':'Notifications','kz':'Хабарламалар'}[current_user.language] }}</div>
+  <div style="padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;color:var(--text-1);text-transform:uppercase;letter-spacing:0.05em">{{ _('Уведомления') }}</div>
   {% if notifications %}
   {% for n in notifications %}
   <a href="{{ n.link or '#' }}" style="display:block;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);text-decoration:none;background:{% if not n.is_read %}#fdf8f8{% else %}var(--color-background-primary){% endif %}">
@@ -110,7 +110,7 @@
   </a>
   {% endfor %}
   {% else %}
-  <div style="padding:20px;text-align:center;font-size:12px;color:var(--text-3)">{{ {'ru':'Нет уведомлений','en':'No notifications','kz':'Хабарламалар жоқ'}[current_user.language] }}</div>
+  <div style="padding:20px;text-align:center;font-size:12px;color:var(--text-3)">{{ _('Нет уведомлений') }}</div>
   {% endif %}
 </div>
 

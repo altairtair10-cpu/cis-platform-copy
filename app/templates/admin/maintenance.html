@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Настройки ТО','en':'Maintenance settings','kz':'ТҚ баптаулары'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Настройки ТО') }}{% endblock %}
+{% block page_title %}{{ _('Настройки ТО') }}{% endblock %}
 
 {% block content %}
 <form method="POST">
@@ -9,17 +9,17 @@
   <div class="card">
     <div class="card-header"><div class="card-header-left">
       <div class="card-icon"><i class="ti ti-settings-check"></i></div>
-      <div class="card-title">{{ {'ru':'Правила ТО по категориям','en':'Service rules per category','kz':'Санат бойынша ТҚ ережелері'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Правила ТО по категориям') }}</div>
     </div></div>
     <div class="card-body">
       {% if not eq_types %}
-      <p class="text-muted">{{ {'ru':'Сначала синхронизируйте технику из таблицы — категории появятся здесь.','en':'Sync equipment from the sheet first — categories will appear here.','kz':'Алдымен техниканы синхрондаңыз.'}[current_user.language] }}</p>
+      <p class="text-muted">{{ _('Сначала синхронизируйте технику из таблицы — категории появятся здесь.') }}</p>
       {% endif %}
       <table class="data-table">
         <thead><tr>
-          <th>{{ {'ru':'Категория','en':'Category','kz':'Санат'}[current_user.language] }}</th>
-          <th>{{ {'ru':'Режим','en':'Mode','kz':'Режим'}[current_user.language] }}</th>
-          <th>{{ {'ru':'Интервал','en':'Interval','kz':'Аралық'}[current_user.language] }}</th>
+          <th>{{ _('Категория') }}</th>
+          <th>{{ _('Режим') }}</th>
+          <th>{{ _('Интервал') }}</th>
         </tr></thead>
         <tbody>
           {% for et in eq_types %}
@@ -28,9 +28,9 @@
             <td>{{ et }}<input type="hidden" name="eq_type[]" value="{{ et }}"></td>
             <td>
               <select name="mode[]" class="form-input" style="max-width:220px">
-                <option value="repair_only" {% if not pol or pol.mode=='repair_only' %}selected{% endif %}>{{ {'ru':'Только ремонт','en':'Repair only','kz':'Тек жөндеу'}[current_user.language] }}</option>
-                <option value="hours" {% if pol and pol.mode=='hours' %}selected{% endif %}>{{ {'ru':'ТО по моточасам','en':'Service by motohours','kz':'Мотосағат бойынша'}[current_user.language] }}</option>
-                <option value="km" {% if pol and pol.mode=='km' %}selected{% endif %}>{{ {'ru':'ТО по пробегу (км)','en':'Service by mileage (km)','kz':'Жүріс бойынша (км)'}[current_user.language] }}</option>
+                <option value="repair_only" {% if not pol or pol.mode=='repair_only' %}selected{% endif %}>{{ _('Только ремонт') }}</option>
+                <option value="hours" {% if pol and pol.mode=='hours' %}selected{% endif %}>{{ _('ТО по моточасам') }}</option>
+                <option value="km" {% if pol and pol.mode=='km' %}selected{% endif %}>{{ _('ТО по пробегу (км)') }}</option>
               </select>
             </td>
             <td><input type="text" name="interval[]" class="form-input" style="max-width:110px"
@@ -45,11 +45,11 @@
   <div class="card">
     <div class="card-header"><div class="card-header-left">
       <div class="card-icon"><i class="ti ti-bell-ringing"></i></div>
-      <div class="card-title">{{ {'ru':'Кому слать уведомления о ТО','en':'Who receives service alerts','kz':'Кімге хабарлама жіберу'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Кому слать уведомления о ТО') }}</div>
     </div></div>
     <div class="card-body">
       <p class="text-muted" style="font-size:12px;margin-bottom:10px">
-        {{ {'ru':'Все активные механики получают уведомления всегда. Ниже — дополнительные получатели.','en':'All active mechanics always receive alerts. Below — extra recipients.','kz':'Барлық белсенді механиктер әрқашан алады. Төменде — қосымша.'}[current_user.language] }}
+        {{ _('Все активные механики получают уведомления всегда. Ниже — дополнительные получатели.') }}
       </p>
       {% for u in users %}
       <label style="display:flex;gap:8px;align-items:center;padding:4px 0;font-size:13px">
@@ -65,21 +65,19 @@
 <div class="card" style="margin-top:16px">
   <div class="card-header"><div class="card-header-left">
     <div class="card-icon"><i class="ti ti-link"></i></div>
-    <div class="card-title">{{ {'ru':'Несопоставленные вкладки реестра','en':'Unmatched register tabs','kz':'Сәйкестендірілмеген қойындылар'}[current_user.language] }}</div>
+    <div class="card-title">{{ _('Несопоставленные вкладки реестра') }}</div>
   </div></div>
   <div class="card-body">
     <p class="text-muted" style="font-size:12px;margin-bottom:10px">
-      {{ {'ru':'Эти вкладки реестра не удалось привязать к технике автоматически. Выберите машину вручную — привязка запомнится навсегда.',
-          'en':'These register tabs could not be matched automatically. Pick the unit manually — the mapping is remembered permanently.',
-          'kz':'Қолмен таңдаңыз — сәйкестік мәңгі сақталады.'}[current_user.language] }}
+      {{ _('Эти вкладки реестра не удалось привязать к технике автоматически. Выберите машину вручную — привязка запомнится навсегда.') }}
     </p>
     {% for tab in unmatched %}
     <div style="display:flex;gap:10px;align-items:center;padding:5px 0">
       <span style="min-width:220px;font-family:ui-monospace,monospace;font-size:13px">{{ tab }}</span>
       <input type="hidden" name="map_tab[]" value="{{ tab }}">
       <select name="map_to_{{ tab }}" class="form-input" style="max-width:320px">
-        <option value="">— {{ {'ru':'не привязывать пока','en':'leave unmapped','kz':'қалдыру'}[current_user.language] }} —</option>
-        <option value="ignore">{{ {'ru':'игнорировать эту вкладку','en':'ignore this tab','kz':'елемеу'}[current_user.language] }}</option>
+        <option value="">— {{ _('не привязывать пока') }} —</option>
+        <option value="ignore">{{ _('игнорировать эту вкладку') }}</option>
         {% for u in all_units %}
         <option value="{{ u.id }}">{{ u.unit_id }} — {{ u.name }}{% if u.gos_number %} ({{ u.gos_number }}){% endif %}</option>
         {% endfor %}
@@ -90,7 +88,7 @@
 </div>
 {% endif %}
 <button type="submit" class="btn btn-primary" style="margin-top:14px">
-  {{ {'ru':'Сохранить','en':'Save','kz':'Сақтау'}[current_user.language] }}
+  {{ _('Сохранить') }}
 </button>
 </form>
 {% endblock %}

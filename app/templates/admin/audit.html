@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'Аудит действий','en':'Audit log','kz':'Аудит'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'Аудит действий','en':'Audit log','kz':'Әрекеттер аудиті'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('Аудит действий') }}{% endblock %}
+{% block page_title %}{{ _('Аудит действий') }}{% endblock %}
 
 {% block content %}
 <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
   <select name="user_id" class="form-select" style="max-width:220px;font-size:12px" onchange="this.form.submit()">
-    <option value="">{{ {'ru':'Пользователь: все','en':'User: all','kz':'Пайдаланушы: барлығы'}[current_user.language] }}</option>
+    <option value="">{{ _('Пользователь: все') }}</option>
     {% for u in users %}
     <option value="{{ u.id }}" {% if f_user == u.id %}selected{% endif %}>{{ u.full_name }}</option>
     {% endfor %}
   </select>
   <input type="text" name="action" class="form-input" style="max-width:200px;font-size:12px"
-         placeholder="{{ {'ru':'Действие (напр. login)','en':'Action (e.g. login)','kz':'Әрекет'}[current_user.language] }}"
+         placeholder="{{ _('Действие (напр. login)') }}"
          value="{{ f_action }}">
   <input type="date" name="date_from" class="form-input" style="max-width:150px;font-size:12px" value="{{ f_from }}">
   <input type="date" name="date_to" class="form-input" style="max-width:150px;font-size:12px" value="{{ f_to }}">
-  <button type="submit" class="btn btn-sm">{{ {'ru':'Фильтр','en':'Filter','kz':'Сүзгі'}[current_user.language] }}</button>
-  <a href="{{ url_for('admin.audit') }}" class="btn btn-sm">{{ {'ru':'Сброс','en':'Reset','kz':'Тазарту'}[current_user.language] }}</a>
-  <span class="text-muted" style="font-size:12px;margin-left:auto">{{ pagination.total }} {{ {'ru':'записей','en':'entries','kz':'жазба'}[current_user.language] }}</span>
+  <button type="submit" class="btn btn-sm">{{ _('Фильтр') }}</button>
+  <a href="{{ url_for('admin.audit') }}" class="btn btn-sm">{{ _('Сброс') }}</a>
+  <span class="text-muted" style="font-size:12px;margin-left:auto">{{ pagination.total }} {{ _('записей') }}</span>
 </form>
 
 <div class="card"><div class="card-body" style="overflow-x:auto">
   <table class="data-table" style="font-size:12px">
     <thead><tr>
-      <th>{{ {'ru':'Когда (UTC)','en':'When (UTC)','kz':'Қашан'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Кто','en':'Who','kz':'Кім'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Действие','en':'Action','kz':'Әрекет'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Объект','en':'Entity','kz':'Нысан'}[current_user.language] }}</th>
-      <th>{{ {'ru':'Детали','en':'Details','kz':'Егжей'}[current_user.language] }}</th>
+      <th>{{ _('Когда (UTC)') }}</th>
+      <th>{{ _('Кто') }}</th>
+      <th>{{ _('Действие') }}</th>
+      <th>{{ _('Объект') }}</th>
+      <th>{{ _('Детали') }}</th>
       <th>IP</th>
     </tr></thead>
     <tbody>
@@ -42,7 +42,7 @@
       </tr>
       {% else %}
       <tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">
-        {{ {'ru':'Записей нет','en':'No entries','kz':'Жазбалар жоқ'}[current_user.language] }}</td></tr>
+        {{ _('Записей нет') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

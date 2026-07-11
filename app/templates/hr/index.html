@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block title %}HR{% endblock %}
-{% block page_title %}{{ {'ru':'HR Система','en':'HR System','kz':'HR Жүйесі'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ _('HR Система') }}{% endblock %}
 
 {% block content %}
 <div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-users"></i>{{ {'ru':'Сотрудников','en':'Staff','kz':'Қызметкерлер'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-users"></i>{{ _('Сотрудников') }}</div>
     <div class="kpi-value">{{ staff|length }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-calendar-off"></i>{{ {'ru':'Заявки на отпуск','en':'PTO requests','kz':'Демалыс өтінімдері'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-calendar-off"></i>{{ _('Заявки на отпуск') }}</div>
     <div class="kpi-value {% if pto|length > 0 %}warning{% endif %}">{{ pto|length }}</div>
-    <div class="kpi-sub">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</div>
+    <div class="kpi-sub">{{ _('На рассмотрении') }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-building"></i>{{ {'ru':'Подразделений','en':'Departments','kz':'Бөлімдер'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-building"></i>{{ _('Подразделений') }}</div>
     <div class="kpi-value">{{ staff|map(attribute='department')|unique|list|length }}</div>
   </div>
 </div>
@@ -25,19 +25,19 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-calendar-off"></i></div>
-      <div class="card-title">{{ {'ru':'Заявки на отпуск','en':'PTO Requests','kz':'Демалыс өтінімдері'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Заявки на отпуск') }}</div>
     </div>
   </div>
   <table class="data-table">
     <thead>
       <tr>
-        <th>{{ {'ru':'Сотрудник','en':'Employee','kz':'Қызметкер'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Начало','en':'Start','kz':'Басы'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Окончание','en':'End','kz':'Соңы'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Причина','en':'Reason','kz':'Себеп'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Действия','en':'Actions','kz':'Әрекеттер'}[current_user.language] }}</th>
+        <th>{{ _('Сотрудник') }}</th>
+        <th>{{ _('Тип') }}</th>
+        <th>{{ _('Начало') }}</th>
+        <th>{{ _('Окончание') }}</th>
+        <th>{{ _('Причина') }}</th>
+        <th>{{ _('Статус') }}</th>
+        <th>{{ _('Действия') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -48,7 +48,7 @@
         <td class="text-muted">{{ req.start_date.strftime('%d.%m.%Y') if req.start_date else '—' }}</td>
         <td class="text-muted">{{ req.end_date.strftime('%d.%m.%Y') if req.end_date else '—' }}</td>
         <td class="text-muted">{{ req.reason or '—' }}</td>
-        <td><span class="pill pill-amber">{{ {'ru':'На рассмотрении','en':'Pending','kz':'Қарастырылуда'}[current_user.language] }}</span></td>
+        <td><span class="pill pill-amber">{{ _('На рассмотрении') }}</span></td>
         <td>
           <form method="post" action="{{ url_for('hr.pto_approve', req_id=req.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -71,18 +71,18 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-users"></i></div>
-      <div class="card-title">{{ {'ru':'Справочник сотрудников','en':'Staff Directory','kz':'Қызметкерлер анықтамалығы'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Справочник сотрудников') }}</div>
     </div>
   </div>
   {% if staff %}
   <table class="data-table">
     <thead>
       <tr>
-        <th>{{ {'ru':'ФИО','en':'Name','kz':'Аты-жөні'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Email','en':'Email','kz':'Email'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Роль','en':'Role','kz':'Рөл'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
+        <th>{{ _('ФИО') }}</th>
+        <th>{{ _('Email') }}</th>
+        <th>{{ _('Подразделение') }}</th>
+        <th>{{ _('Роль') }}</th>
+        <th>{{ _('Статус') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -93,8 +93,8 @@
         <td>{{ person.department or '—' }}</td>
         <td><span class="pill pill-blue">{{ person.role_display }}</span></td>
         <td><span class="pill {% if person.is_active %}pill-green{% else %}pill-gray{% endif %}">
-          {% if person.is_active %}{{ {'ru':'Активен','en':'Active','kz':'Белсенді'}[current_user.language] }}
-          {% else %}{{ {'ru':'Неактивен','en':'Inactive','kz':'Белсенді емес'}[current_user.language] }}{% endif %}
+          {% if person.is_active %}{{ _('Активен') }}
+          {% else %}{{ _('Неактивен') }}{% endif %}
         </span></td>
       </tr>
       {% endfor %}
@@ -103,7 +103,7 @@
   {% else %}
   <div class="card-body" style="text-align:center;padding:60px 20px">
     <i class="ti ti-users" style="font-size:40px;color:var(--text-4);display:block;margin-bottom:14px"></i>
-    <div class="text-muted">{{ {'ru':'Сотрудников пока нет','en':'No staff yet','kz':'Қызметкерлер жоқ'}[current_user.language] }}</div>
+    <div class="text-muted">{{ _('Сотрудников пока нет') }}</div>
   </div>
   {% endif %}
 </div>

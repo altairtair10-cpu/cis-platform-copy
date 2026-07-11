@@ -10,19 +10,19 @@
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
       <div>
         <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">
-          {{ {'ru':'Дефектный акт','en':'Defect Act','kz':'Ақаулық актісі'}[current_user.language] }}
+          {{ _('Дефектный акт') }}
         </div>
         <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">
           <span style="color:#C0392B;font-weight:500">ДА-2026-###</span> ·
-          {{ {'ru':'Версия 1 · Черновик','en':'Version 1 · Draft','kz':'1-нұсқа · Жоба'}[current_user.language] }} ·
+          {{ _('Версия 1 · Черновик') }} ·
           {{ current_user.full_name }} · {{ now }}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#faeeda;color:#854f0b">
-          {{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}
+          {{ _('Черновик') }}
         </span>
-        <span style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Номер присваивается при отправке','en':'Number assigned on submit','kz':'Нөмір жіберу кезінде беріледі'}[current_user.language] }}</span>
+        <span style="font-size:10px;color:var(--color-text-tertiary)">{{ _('Номер присваивается при отправке') }}</span>
       </div>
     </div>
 
@@ -49,19 +49,19 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button type="submit" form="defect-form" name="action" value="submit" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:#C0392B;color:#fff;border:0.5px solid #96281B;font-family:inherit">
         <i class="ti ti-send" style="font-size:13px"></i>
-        {{ {'ru':'Отправить на согласование','en':'Submit for approval','kz':'Келісуге жіберу'}[current_user.language] }}
+        {{ _('Отправить на согласование') }}
       </button>
       <button type="submit" form="defect-form" name="action" value="draft" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);font-family:inherit">
         <i class="ti ti-device-floppy" style="font-size:13px"></i>
-        {{ {'ru':'Сохранить черновик','en':'Save draft','kz':'Жобаны сақтау'}[current_user.language] }}
+        {{ _('Сохранить черновик') }}
       </button>
       <button type="button" onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);font-family:inherit">
         <i class="ti ti-printer" style="font-size:13px"></i>
-        {{ {'ru':'Печать','en':'Print','kz':'Басып шығару'}[current_user.language] }}
+        {{ _('Печать') }}
       </button>
       <a href="{{ url_for('documents.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);text-decoration:none;margin-left:auto">
         <i class="ti ti-x" style="font-size:13px"></i>
-        {{ {'ru':'Отмена','en':'Cancel','kz':'Бас тарту'}[current_user.language] }}
+        {{ _('Отмена') }}
       </a>
     </div>
   </div>
@@ -73,20 +73,20 @@
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
         <i class="ti ti-file-description" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Регистрационные реквизиты','en':'Registration details','kz':'Тіркеу деректемелері'}[current_user.language] }}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Регистрационные реквизиты') }}</div>
       </div>
       <div style="padding:18px 20px">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Исполнитель','en':'Executor','kz':'Орындаушы'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Исполнитель') }}</label>
             <input type="text" value="{{ current_user.full_name }}" readonly style="width:100%;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-secondary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</label>
-            <input type="text" value="{{ current_user.department or {'ru':'Механический','en':'Mechanic','kz':'Механикалық'}[current_user.language] }}" readonly style="width:100%;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-secondary);font-family:inherit">
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Подразделение') }}</label>
+            <input type="text" value="{{ current_user.department or _('Механический') }}" readonly style="width:100%;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-secondary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Язык документа','en':'Document language','kz':'Құжат тілі'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Язык документа') }}</label>
             <select name="doc_language" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
               <option value="ru" {% if current_user.language == 'ru' %}selected{% endif %}>Русский</option>
               <option value="en" {% if current_user.language == 'en' %}selected{% endif %}>English</option>
@@ -96,15 +96,15 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Дата и время обнаружения','en':'Date/time discovered','kz':'Анықталған күн/уақыт'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Дата и время обнаружения') }} <span style="color:#C0392B">*</span></label>
             <input name="discovered_at" type="datetime-local" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Связанная работа / Контракт','en':'Related job / Contract','kz':'Байланысты жұмыс / Келісім'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Связанная работа / Контракт') }}</label>
             <input name="related_job" type="text" placeholder="J-2026-041" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Срок устранения','en':'Repair deadline','kz':'Жою мерзімі'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Срок устранения') }} <span style="color:#C0392B">*</span></label>
             <input name="repair_deadline" type="date" required style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
         </div>
@@ -115,14 +115,14 @@
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
         <i class="ti ti-tool" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Оборудование') }}</div>
       </div>
       <div style="padding:18px 20px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Единица оборудования','en':'Equipment unit','kz':'Жабдық бірлігі'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Единица оборудования') }} <span style="color:#C0392B">*</span></label>
             <select name="equipment_id" id="equipment-select" required onchange="fillEquipmentDetails(this)" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-              <option value="">— {{ {'ru':'Выберите оборудование','en':'Select equipment','kz':'Жабдықты таңдаңыз'}[current_user.language] }} —</option>
+              <option value="">— {{ _('Выберите оборудование') }} —</option>
               {% for unit in equipment %}
               <option value="{{ unit.id }}" data-location="{{ unit.location }}" data-type="{{ unit.eq_type or '' }}" data-status="{{ unit.status }}" data-hp="{{ unit.horsepower or '' }}" data-last="{{ unit.last_service or '' }}" data-next="{{ unit.next_service or '' }}">
                 {{ unit.unit_id }} · {{ unit.name }}{% if unit.location %} · {{ unit.location }}{% endif %}
@@ -131,33 +131,33 @@
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Местонахождение / Скважина','en':'Location / Well site','kz':'Орналасқан жері / Ұңғыма'}[current_user.language] }}</label>
-            <input name="location" id="equip-location" type="text" placeholder="{{ {'ru':'Автозаполняется при выборе оборудования','en':'Auto-filled on equipment selection','kz':'Жабдық таңдағанда автоматты толтырылады'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Местонахождение / Скважина') }}</label>
+            <input name="location" id="equip-location" type="text" placeholder="{{ _('Автозаполняется при выборе оборудования') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
         </div>
 
         <!-- EQUIPMENT INFO PANEL (auto-filled) -->
         <div id="equip-info" style="display:none;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;margin-bottom:14px">
-          <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Данные оборудования из системы','en':'Equipment data from system','kz':'Жүйеден жабдық деректері'}[current_user.language] }}</div>
+          <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">{{ _('Данные оборудования из системы') }}</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</div><div id="ei-type" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
-            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</div><div id="ei-status" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
-            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'Последнее ТО','en':'Last service','kz':'Соңғы ТО'}[current_user.language] }}</div><div id="ei-last" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
-            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</div><div id="ei-next" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
+            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('Тип') }}</div><div id="ei-type" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
+            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('Статус') }}</div><div id="ei-status" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
+            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('Последнее ТО') }}</div><div id="ei-last" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
+            <div><div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('Следующее ТО') }}</div><div id="ei-next" style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</div></div>
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Мастер на объекте','en':'Supervisor on site','kz':'Объектідегі шебер'}[current_user.language] }}</label>
-            <input name="supervisor" type="text" placeholder="{{ {'ru':'ФИО мастера...','en':'Supervisor name...','kz':'Шебер аты-жөні...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Мастер на объекте') }}</label>
+            <input name="supervisor" type="text" placeholder="{{ _('ФИО мастера...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Состав бригады','en':'Crew members','kz':'Бригада құрамы'}[current_user.language] }}</label>
-            <input name="crew" type="text" placeholder="{{ {'ru':'Перечислите членов бригады...','en':'List crew members...','kz':'Бригада мүшелерін тізімдеңіз...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Состав бригады') }}</label>
+            <input name="crew" type="text" placeholder="{{ _('Перечислите членов бригады...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Наработка моточасов','en':'Engine hours at failure','kz':'Мотосағаттар'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Наработка моточасов') }}</label>
             <input name="engine_hours" type="number" min="0" placeholder="0" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
           </div>
         </div>
@@ -168,75 +168,75 @@
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
         <i class="ti ti-alert-triangle" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Описание дефекта','en':'Defect description','kz':'Ақаулықтың сипаттамасы'}[current_user.language] }}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Описание дефекта') }}</div>
       </div>
       <div style="padding:18px 20px">
         <div style="margin-bottom:14px">
-          <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Краткое содержание — описание неисправности','en':'Summary — description of defect','kz':'Қысқаша мазмұн — ақаулықтың сипаттамасы'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
-          <textarea name="description" required rows="3" placeholder="{{ {'ru':'Подробно опишите что именно сломалось, где, при каких обстоятельствах...','en':'Describe in detail what broke, where, under what circumstances...','kz':'Не сынғанын, қайда, қандай жағдайда екенін егжей-тегжейлі сипаттаңыз...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
+          <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Краткое содержание — описание неисправности') }} <span style="color:#C0392B">*</span></label>
+          <textarea name="description" required rows="3" placeholder="{{ _('Подробно опишите что именно сломалось, где, при каких обстоятельствах...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
         </div>
         <div style="margin-bottom:14px">
-          <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Возможная причина дефекта','en':'Possible cause of defect','kz':'Ақаулықтың мүмкін себебі'}[current_user.language] }}</label>
-          <textarea name="cause" rows="2" placeholder="{{ {'ru':'Предполагаемая причина поломки (износ, неправильная эксплуатация, заводской брак и т.д.)...','en':'Probable cause (wear, improper use, manufacturing defect, etc.)...','kz':'Болжамды себеп (тозу, дұрыс пайдаланбау, зауыт ақауы және т.б.)...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
+          <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Возможная причина дефекта') }}</label>
+          <textarea name="cause" rows="2" placeholder="{{ _('Предполагаемая причина поломки (износ, неправильная эксплуатация, заводской брак и т.д.)...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px">{{ {'ru':'Степень срочности','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px">{{ _('Степень срочности') }} <span style="color:#C0392B">*</span></label>
             <div style="display:flex;flex-direction:column;gap:6px">
               <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer">
                 <input type="radio" name="urgency" value="planned" style="accent-color:#27ae60">
                 <div>
-                  <div style="font-size:11px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Плановый','en':'Planned','kz':'Жоспарлы'}[current_user.language] }}</div>
-                  <div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</div>
+                  <div style="font-size:11px;font-weight:500;color:var(--color-text-primary)">{{ _('Плановый') }}</div>
+                  <div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('Следующее ТО') }}</div>
                 </div>
               </label>
               <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer">
                 <input type="radio" name="urgency" value="urgent" style="accent-color:#f0994a">
                 <div>
-                  <div style="font-size:11px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Срочный','en':'Urgent','kz':'Шұғыл'}[current_user.language] }}</div>
-                  <div style="font-size:9px;color:var(--color-text-tertiary)">{{ {'ru':'В течение 2 дней','en':'Within 2 days','kz':'2 күн ішінде'}[current_user.language] }}</div>
+                  <div style="font-size:11px;font-weight:500;color:var(--color-text-primary)">{{ _('Срочный') }}</div>
+                  <div style="font-size:9px;color:var(--color-text-tertiary)">{{ _('В течение 2 дней') }}</div>
                 </div>
               </label>
               <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #C0392B;border-radius:var(--border-radius-md);cursor:pointer;background:#fcebeb">
                 <input type="radio" name="urgency" value="critical" checked style="accent-color:#C0392B">
                 <div>
-                  <div style="font-size:11px;font-weight:500;color:#a32d2d">{{ {'ru':'Критический','en':'Critical','kz':'Өте шұғыл'}[current_user.language] }}</div>
-                  <div style="font-size:9px;color:#a32d2d">{{ {'ru':'Оборудование остановлено','en':'Equipment down','kz':'Жабдық тоқтатылды'}[current_user.language] }}</div>
+                  <div style="font-size:11px;font-weight:500;color:#a32d2d">{{ _('Критический') }}</div>
+                  <div style="font-size:9px;color:#a32d2d">{{ _('Оборудование остановлено') }}</div>
                 </div>
               </label>
             </div>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Влияние на производство','en':'Production impact','kz':'Өндіріске әсері'}[current_user.language] }} <span style="color:#C0392B">*</span></label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Влияние на производство') }} <span style="color:#C0392B">*</span></label>
             <select name="impact" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;margin-bottom:10px">
-              <option value="full_stop">{{ {'ru':'Полная остановка работ','en':'Full work stoppage','kz':'Жұмыстың толық тоқтауы'}[current_user.language] }}</option>
-              <option value="partial">{{ {'ru':'Частичная работоспособность','en':'Partial operation','kz':'Ішінара жұмыс'}[current_user.language] }}</option>
-              <option value="degraded">{{ {'ru':'Снижение производительности','en':'Reduced performance','kz':'Өнімділіктің төмендеуі'}[current_user.language] }}</option>
-              <option value="none">{{ {'ru':'Нет влияния на производство','en':'No production impact','kz':'Өндіріске әсері жоқ'}[current_user.language] }}</option>
+              <option value="full_stop">{{ _('Полная остановка работ') }}</option>
+              <option value="partial">{{ _('Частичная работоспособность') }}</option>
+              <option value="degraded">{{ _('Снижение производительности') }}</option>
+              <option value="none">{{ _('Нет влияния на производство') }}</option>
             </select>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Оценка времени ремонта','en':'Estimated repair time','kz':'Жөндеу уақытын бағалау'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Оценка времени ремонта') }}</label>
             <select name="repair_time_estimate" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-              <option value="">— {{ {'ru':'Выберите','en':'Select','kz':'Таңдаңыз'}[current_user.language] }} —</option>
-              <option value="1h">< 1 {{ {'ru':'часа','en':'hour','kz':'сағат'}[current_user.language] }}</option>
-              <option value="4h">1-4 {{ {'ru':'часа','en':'hours','kz':'сағат'}[current_user.language] }}</option>
-              <option value="1d">{{ {'ru':'1 день','en':'1 day','kz':'1 күн'}[current_user.language] }}</option>
-              <option value="3d">2-3 {{ {'ru':'дня','en':'days','kz':'күн'}[current_user.language] }}</option>
-              <option value="1w">{{ {'ru':'1 неделя','en':'1 week','kz':'1 апта'}[current_user.language] }}</option>
-              <option value="more">{{ {'ru':'Более недели','en':'More than 1 week','kz':'1 аптадан астам'}[current_user.language] }}</option>
+              <option value="">— {{ _('Выберите') }} —</option>
+              <option value="1h">< 1 {{ _('часа') }}</option>
+              <option value="4h">1-4 {{ _('часа') }}</option>
+              <option value="1d">{{ _('1 день') }}</option>
+              <option value="3d">2-3 {{ _('дня') }}</option>
+              <option value="1w">{{ _('1 неделя') }}</option>
+              <option value="more">{{ _('Более недели') }}</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Ориентировочная стоимость ремонта','en':'Estimated repair cost','kz':'Жөндеудің болжамды құны'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Ориентировочная стоимость ремонта') }}</label>
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
               <input name="cost_estimate" type="number" min="0" placeholder="0" style="flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
               <span style="font-size:12px;color:var(--color-text-tertiary);font-weight:500">₸</span>
             </div>
-            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ {'ru':'Тип ремонта','en':'Repair type','kz':'Жөндеу түрі'}[current_user.language] }}</label>
+            <label style="font-size:11px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">{{ _('Тип ремонта') }}</label>
             <select name="repair_type" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit">
-              <option value="own">{{ {'ru':'Собственными силами','en':'In-house repair','kz':'Өз күшімізбен'}[current_user.language] }}</option>
-              <option value="contractor">{{ {'ru':'Силами подрядчика','en':'Contractor repair','kz':'Мердігер арқылы'}[current_user.language] }}</option>
-              <option value="warranty">{{ {'ru':'Гарантийный ремонт','en':'Warranty repair','kz':'Кепілдік жөндеу'}[current_user.language] }}</option>
-              <option value="writeoff">{{ {'ru':'Списание','en':'Write-off','kz':'Есептен шығару'}[current_user.language] }}</option>
+              <option value="own">{{ _('Собственными силами') }}</option>
+              <option value="contractor">{{ _('Силами подрядчика') }}</option>
+              <option value="warranty">{{ _('Гарантийный ремонт') }}</option>
+              <option value="writeoff">{{ _('Списание') }}</option>
             </select>
           </div>
         </div>
@@ -248,9 +248,9 @@
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
           <i class="ti ti-shield-check" style="font-size:15px;color:#C0392B"></i>
-          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Чеклист ОТ и ТБ','en':'HSE checklist','kz':'ЕҚ және ТҚ тізімі'}[current_user.language] }}</div>
+          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Чеклист ОТ и ТБ') }}</div>
         </div>
-        <span style="font-size:10px;color:var(--color-text-tertiary)" id="hse-progress">0/6 {{ {'ru':'выполнено','en':'completed','kz':'орындалды'}[current_user.language] }}</span>
+        <span style="font-size:10px;color:var(--color-text-tertiary)" id="hse-progress">0/6 {{ _('выполнено') }}</span>
       </div>
       <div style="padding:14px 20px">
         {% set hse_items_ru = [
@@ -286,7 +286,7 @@
         {% endfor %}
         <div style="background:#faeeda;border:0.5px solid #ef9f27;border-radius:var(--border-radius-md);padding:8px 12px;margin-top:10px;display:flex;align-items:center;gap:6px">
           <i class="ti ti-alert-triangle" style="font-size:13px;color:#854f0b"></i>
-          <span style="font-size:11px;color:#854f0b">{{ {'ru':'Все пункты ТБ должны быть выполнены до начала ремонтных работ','en':'All HSE items must be completed before repair work begins','kz':'Барлық ТҚ тармақтары жөндеу жұмыстары басталмас бұрын орындалуы тиіс'}[current_user.language] }}</span>
+          <span style="font-size:11px;color:#854f0b">{{ _('Все пункты ТБ должны быть выполнены до начала ремонтных работ') }}</span>
         </div>
       </div>
     </div>
@@ -295,13 +295,13 @@
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
         <i class="ti ti-camera" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Фото и видео материалы','en':'Photos & videos','kz':'Фото және бейне материалдар'}[current_user.language] }}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Фото и видео материалы') }}</div>
       </div>
       <div style="padding:18px 20px">
         <label for="photo-upload" style="display:block;border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:28px;text-align:center;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#C0392B'" onmouseout="this.style.borderColor='var(--color-border-secondary)'">
           <i class="ti ti-cloud-upload" style="font-size:32px;color:var(--color-text-tertiary);display:block;margin-bottom:10px"></i>
-          <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">{{ {'ru':'Загрузить фото и видео дефекта','en':'Upload photos and videos of defect','kz':'Ақаулықтың фото және бейнесін жүктеу'}[current_user.language] }}</div>
-          <div style="font-size:11px;color:var(--color-text-tertiary)">{{ {'ru':'JPG, PNG, HEIC, MP4, MOV · Макс. 50 МБ · Несколько файлов одновременно','en':'JPG, PNG, HEIC, MP4, MOV · Max 50MB · Multiple files at once','kz':'JPG, PNG, HEIC, MP4, MOV · Макс. 50 МБ · Бірнеше файл бірден'}[current_user.language] }}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">{{ _('Загрузить фото и видео дефекта') }}</div>
+          <div style="font-size:11px;color:var(--color-text-tertiary)">{{ _('JPG, PNG, HEIC, MP4, MOV · Макс. 50 МБ · Несколько файлов одновременно') }}</div>
           <input id="photo-upload" name="photos" type="file" multiple accept="image/*,video/*" style="display:none" onchange="showPreviews(this)">
         </label>
         <div id="preview-row" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
@@ -313,42 +313,42 @@
     <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
         <i class="ti ti-list-check" style="font-size:15px;color:#C0392B"></i>
-        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Список запчастей · Проверка остатков 1С','en':'Parts list · 1С inventory check','kz':'Қосалқы бөлшектер тізімі · 1С қоймасын тексеру'}[current_user.language] }}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Список запчастей · Проверка остатков 1С') }}</div>
       </div>
       <div style="padding:18px 20px">
         <div style="background:#eaf3de;border:0.5px solid #97c459;border-radius:var(--border-radius-md);padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <i class="ti ti-database" style="font-size:16px;color:#3b6d11"></i>
-          <div style="font-size:11px;color:#3b6d11;font-weight:500">{{ {'ru':'Остатки автоматически проверяются по 1С складу при сохранении. Если запчастей нет — система создаст Требование на приобретение.','en':'Stock levels automatically checked against 1С inventory on save. If parts unavailable — system will create a purchase requisition.','kz':'Қалдықтар сақтау кезінде 1С қоймасымен автоматты тексеріледі. Бөлшектер болмаса — жүйе сатып алу талаптамасын жасайды.'}[current_user.language] }}</div>
+          <div style="font-size:11px;color:#3b6d11;font-weight:500">{{ _('Остатки автоматически проверяются по 1С складу при сохранении. Если запчастей нет — система создаст Требование на приобретение.') }}</div>
         </div>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:11px" id="parts-table">
             <thead>
               <tr>
                 <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:30px">№</th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ {'ru':'Наименование запчасти','en':'Part name','kz':'Бөлшек атауы'}[current_user.language] }} <span style="color:#C0392B">*</span></th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ {'ru':'Характеристика / Арт.','en':'Specification / Part no.','kz':'Сипаттама / Арт.'}[current_user.language] }}</th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:65px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }}</th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:60px">{{ {'ru':'Ед.','en':'Unit','kz':'Өлш.'}[current_user.language] }}</th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:110px">{{ {'ru':'Сумма без НДС, ₸','en':'Amount excl. VAT, ₸','kz':'ҚҚС-сыз сомасы, ₸'}[current_user.language] }}</th>
-                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:90px">{{ {'ru':'1С статус','en':'1С status','kz':'1С мәртебесі'}[current_user.language] }}</th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ _('Наименование запчасти') }} <span style="color:#C0392B">*</span></th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase">{{ _('Характеристика / Арт.') }}</th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:65px">{{ _('Кол-во') }}</th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:60px">{{ _('Ед.') }}</th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:110px">{{ _('Сумма без НДС, ₸') }}</th>
+                <th style="text-align:left;font-size:9px;font-weight:500;color:var(--color-text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);text-transform:uppercase;width:90px">{{ _('1С статус') }}</th>
                 <th style="width:30px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"></th>
               </tr>
             </thead>
             <tbody id="parts-body">
               <tr id="part-row-1">
                 <td style="padding:8px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);font-weight:500">1</td>
-                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_name[]" type="text" placeholder="{{ {'ru':'Название запчасти...','en':'Part name...','kz':'Бөлшек атауы...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit;min-width:150px"></td>
-                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_spec[]" type="text" placeholder="{{ {'ru':'Арт. номер / характеристика...','en':'Part no. / specification...','kz':'Арт. нөміp / сипаттама...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit;min-width:120px"></td>
+                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_name[]" type="text" placeholder="{{ _('Название запчасти...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit;min-width:150px"></td>
+                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_spec[]" type="text" placeholder="{{ _('Арт. номер / характеристика...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit;min-width:120px"></td>
                 <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_qty[]" type="number" min="1" value="1" style="width:60px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit"></td>
                 <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><select name="part_unit[]" style="width:58px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 4px;font-size:11px;color:var(--color-text-primary);font-family:inherit"><option>шт</option><option>кг</option><option>л</option><option>м</option><option>уп</option><option>к-т</option></select></td>
                 <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><input name="part_cost[]" type="number" min="0" placeholder="0" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 8px;font-size:11px;color:var(--color-text-primary);font-family:inherit"></td>
-                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-clock" style="font-size:9px"></i>{{ {'ru':'Ожидание','en':'Pending','kz':'Күтуде'}[current_user.language] }}</span></td>
+                <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-tertiary)"><i class="ti ti-clock" style="font-size:9px"></i>{{ _('Ожидание') }}</span></td>
                 <td style="padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:center"><button type="button" onclick="removeRow(this)" style="background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);padding:2px"><i class="ti ti-trash" style="font-size:13px"></i></button></td>
               </tr>
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="5" style="padding:8px 8px;font-size:10px;color:var(--color-text-tertiary);font-weight:500;text-align:right">{{ {'ru':'ИТОГО','en':'TOTAL','kz':'БАРЛЫҒЫ'}[current_user.language] }}</td>
+                <td colspan="5" style="padding:8px 8px;font-size:10px;color:var(--color-text-tertiary);font-weight:500;text-align:right">{{ _('ИТОГО') }}</td>
                 <td style="padding:8px 8px;font-size:12px;font-weight:500;color:var(--color-text-primary)" id="total-cost">0 ₸</td>
                 <td></td>
               </tr>
@@ -357,7 +357,7 @@
         </div>
         <button type="button" onclick="addPartRow()" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--border-radius-md);font-size:11px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);font-family:inherit;margin-top:10px">
           <i class="ti ti-plus" style="font-size:11px"></i>
-          {{ {'ru':'Добавить запчасть','en':'Add part','kz':'Бөлшек қосу'}[current_user.language] }}
+          {{ _('Добавить запчасть') }}
         </button>
       </div>
     </div>
@@ -367,43 +367,43 @@
       <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
           <i class="ti ti-git-branch" style="font-size:15px;color:#C0392B"></i>
-          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Маршрут документа','en':'Document routing','kz':'Құжат маршруты'}[current_user.language] }}</div>
+          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Маршрут документа') }}</div>
         </div>
-        <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#e6f1fb;color:#185fa5"><i class="ti ti-arrows-shuffle" style="font-size:9px"></i>{{ {'ru':'Параллельное','en':'Parallel','kz':'Параллельді'}[current_user.language] }}</span>
+        <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#e6f1fb;color:#185fa5"><i class="ti ti-arrows-shuffle" style="font-size:9px"></i>{{ _('Параллельное') }}</span>
       </div>
       <div style="padding:14px 20px">
         <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
           <div style="width:32px;height:32px;border-radius:50%;background:#eaf3de;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#3b6d11;flex-shrink:0">{{ current_user.initials }}</div>
           <div style="flex:1">
             <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ current_user.full_name }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Автор · Исполнитель','en':'Author · Executor','kz':'Автор · Орындаушы'}[current_user.language] }} · {{ current_user.department or '' }}</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ _('Автор · Исполнитель') }} · {{ current_user.department or '' }}</div>
           </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#eaf3de;color:#3b6d11">{{ {'ru':'Создан','en':'Created','kz':'Жасалды'}[current_user.language] }}</span>
+          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#eaf3de;color:#3b6d11">{{ _('Создан') }}</span>
           <div style="font-size:10px;color:var(--color-text-tertiary)">{{ now }}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
           <div style="width:32px;height:32px;border-radius:50%;background:#fcebeb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#a32d2d;flex-shrink:0">НО</div>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Начальник механического отдела','en':'Head of mechanical department','kz':'Механикалық бөлім басшысы'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Согласующий · Шаг 1 · Обязательно','en':'Approver · Step 1 · Required','kz':'Келісуші · 1-қадам · Міндетті'}[current_user.language] }}</div>
+            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ _('Начальник механического отдела') }}</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ _('Согласующий · Шаг 1 · Обязательно') }}</div>
           </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#faeeda;color:#854f0b">{{ {'ru':'Ожидает отправки','en':'Awaiting submission','kz':'Жіберуді күтуде'}[current_user.language] }}</span>
+          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:#faeeda;color:#854f0b">{{ _('Ожидает отправки') }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
           <div style="width:32px;height:32px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--color-text-tertiary);flex-shrink:0;border:0.5px solid var(--color-border-tertiary)">ТД</div>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Технический директор','en':'Technical director','kz':'Техникалық директор'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Подписант · Шаг 2','en':'Signatory · Step 2','kz':'Қол қоюшы · 2-қадам'}[current_user.language] }}</div>
+            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ _('Технический директор') }}</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ _('Подписант · Шаг 2') }}</div>
           </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
+          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ _('Ожидает') }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:9px 0">
           <div style="width:32px;height:32px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--color-text-tertiary);flex-shrink:0;border:0.5px solid var(--color-border-tertiary)">СН</div>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ {'ru':'Снабжение / Закупки','en':'Procurement / Supply','kz':'Жабдықтау / Сатып алу'}[current_user.language] }}</div>
-            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ {'ru':'Исполнитель · Создаёт ЗП в 1С при необходимости','en':'Executor · Creates PO in 1С if required','kz':'Орындаушы · Қажет болса 1С-те ТТ жасайды'}[current_user.language] }}</div>
+            <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">{{ _('Снабжение / Закупки') }}</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">{{ _('Исполнитель · Создаёт ЗП в 1С при необходимости') }}</div>
           </div>
-          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}</span>
+          <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-secondary)">{{ _('Ожидает') }}</span>
         </div>
       </div>
     </div>
@@ -413,25 +413,25 @@
       <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">
         <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
           <i class="ti ti-notes" style="font-size:15px;color:#C0392B"></i>
-          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Примечание','en':'Notes','kz':'Ескертпе'}[current_user.language] }}</div>
+          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Примечание') }}</div>
         </div>
         <div style="padding:14px 18px">
-          <textarea name="notes" rows="4" placeholder="{{ {'ru':'Дополнительные комментарии, рекомендации по ремонту, контактные лица и т.д...','en':'Additional comments, repair recommendations, contacts, etc...','kz':'Қосымша түсініктемелер, жөндеу бойынша ұсыныстар, байланыс тұлғалары және т.б...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
+          <textarea name="notes" rows="4" placeholder="{{ _('Дополнительные комментарии, рекомендации по ремонту, контактные лица и т.д...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;resize:vertical"></textarea>
         </div>
       </div>
       <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">
         <div style="padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;align-items:center;gap:8px">
           <i class="ti ti-link" style="font-size:15px;color:#C0392B"></i>
-          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ {'ru':'Связанные документы','en':'Linked documents','kz':'Байланысты құжаттар'}[current_user.language] }}</div>
+          <div style="font-size:11px;font-weight:500;color:var(--color-text-primary);text-transform:uppercase;letter-spacing:0.05em">{{ _('Связанные документы') }}</div>
         </div>
         <div style="padding:14px 18px">
-          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">{{ {'ru':'Имеет ссылку с:','en':'Linked to:','kz':'Байланысы бар:'}[current_user.language] }}</div>
-          <input name="linked_docs" type="text" placeholder="{{ {'ru':'Номера связанных документов через запятую...','en':'Linked document numbers separated by comma...','kz':'Байланысты құжат нөмірлері үтірмен...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;margin-bottom:10px">
-          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px">{{ {'ru':'Получатели:','en':'Recipients:','kz':'Алушылар:'}[current_user.language] }}</div>
-          <input name="recipients" type="text" placeholder="{{ {'ru':'ФИО получателей...','en':'Recipient names...','kz':'Алушылардың аты-жөні...'}[current_user.language] }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;margin-bottom:10px">
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">{{ _('Имеет ссылку с:') }}</div>
+          <input name="linked_docs" type="text" placeholder="{{ _('Номера связанных документов через запятую...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;margin-bottom:10px">
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px">{{ _('Получатели:') }}</div>
+          <input name="recipients" type="text" placeholder="{{ _('ФИО получателей...') }}" style="width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-primary);font-family:inherit;margin-bottom:10px">
           <div style="background:#e6f1fb;border:0.5px solid #85b7eb;border-radius:var(--border-radius-md);padding:8px 12px;display:flex;align-items:flex-start;gap:6px">
             <i class="ti ti-robot" style="font-size:13px;color:#185fa5;margin-top:1px"></i>
-            <span style="font-size:10px;color:#185fa5">{{ {'ru':'ИИ автоматически проверит наличие деталей в 1С и уведомит снабжение при необходимости закупки','en':'AI will automatically check part availability in 1С and notify procurement if purchase is needed','kz':'ЖИ 1С-те бөлшектердің болуын автоматты тексеріп, сатып алу қажет болса жабдықтауға хабарлайды'}[current_user.language] }}</span>
+            <span style="font-size:10px;color:#185fa5">{{ _('ИИ автоматически проверит наличие деталей в 1С и уведомит снабжение при необходимости закупки') }}</span>
           </div>
         </div>
       </div>

@@ -16,8 +16,8 @@
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
         <div>
           <div style="font-size:18px;font-weight:500;color:var(--text-1)">
-            {% if doc.doc_type == 'defect_act' %}{{ {'ru':'Дефектный акт','en':'Defect Act','kz':'Ақаулық актісі'}[current_user.language] }}
-            {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ {'ru':'Требование на приобретение','en':'Purchase Requisition','kz':'Сатып алу талаптамасы'}[current_user.language] }}
+            {% if doc.doc_type == 'defect_act' %}{{ _('Дефектный акт') }}
+            {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ _('Требование на приобретение') }}
             {% else %}{{ doc.doc_type }}{% endif %}
           </div>
           <div style="font-size:11px;color:var(--text-3);margin-top:3px">
@@ -25,13 +25,13 @@
           </div>
         </div>
         <span class="pill {% if doc.status in ('approved','executed') %}pill-green{% elif doc.status in ('pending','in_execution') %}pill-amber{% elif doc.status == 'rejected' %}pill-red{% elif doc.status == 'returned' %}pill-amber{% else %}pill-gray{% endif %}">
-          {% if doc.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілген'}[current_user.language] }}
-          {% elif doc.status == 'pending' %}{{ {'ru':'На согласовании','en':'Pending','kz':'Келісімде'}[current_user.language] }}
-          {% elif doc.status == 'in_execution' %}{{ {'ru':'На исполнении','en':'In execution','kz':'Орындалуда'}[current_user.language] }}
-          {% elif doc.status == 'executed' %}{{ {'ru':'Исполнен','en':'Executed','kz':'Орындалды'}[current_user.language] }}
-          {% elif doc.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
-          {% elif doc.status == 'returned' %}{{ {'ru':'Возвращён','en':'Returned','kz':'Қайтарылды'}[current_user.language] }}
-          {% else %}{{ {'ru':'Черновик','en':'Draft','kz':'Жоба'}[current_user.language] }}{% endif %}
+          {% if doc.status == 'approved' %}{{ _('Согласован') }}
+          {% elif doc.status == 'pending' %}{{ _('На согласовании') }}
+          {% elif doc.status == 'in_execution' %}{{ _('На исполнении') }}
+          {% elif doc.status == 'executed' %}{{ _('Исполнен') }}
+          {% elif doc.status == 'rejected' %}{{ _('Отклонён') }}
+          {% elif doc.status == 'returned' %}{{ _('Возвращён') }}
+          {% else %}{{ _('Черновик') }}{% endif %}
         </span>
       </div>
 
@@ -56,10 +56,10 @@
 
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a href="{{ url_for('documents.index') }}" class="btn btn-sm">
-          <i class="ti ti-arrow-left"></i>{{ {'ru':'К реестру','en':'Back','kz':'Тізілімге'}[current_user.language] }}
+          <i class="ti ti-arrow-left"></i>{{ _('К реестру') }}
         </a>
         <button onclick="window.open('{{ url_for('documents.print_doc', doc_id=doc.id) }}', '_blank')" class="btn btn-sm">
-          <i class="ti ti-printer"></i>{{ {'ru':'Печать','en':'Print','kz':'Басып шығару'}[current_user.language] }}
+          <i class="ti ti-printer"></i>{{ _('Печать') }}
         </button>
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <div style="margin-left:auto;display:flex;gap:8px">
@@ -67,13 +67,13 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="reject">
             <input type="hidden" name="comment" value="">
-            <button type="submit" class="btn btn-sm btn-danger"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
+            <button type="submit" class="btn btn-sm btn-danger"><i class="ti ti-x"></i>{{ _('Отклонить') }}</button>
           </form>
           <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="approve">
             <input type="hidden" name="comment" value="">
-            <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
+            <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-check"></i>{{ _('Согласовать') }}</button>
           </form>
         </div>
         {% endif %}
@@ -85,11 +85,11 @@
   <div class="card" style="margin-bottom:14px;border-left:4px solid {% if doc.defect_closed %}#0E7A45{% else %}#A31E08{% endif %}">
     <div class="card-body" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <div>
-        <b>{{ {'ru':'Учётный код','en':'Event code','kz':'Есеп коды'}[current_user.language] }}:
+        <b>{{ _('Учётный код') }}:
           <span class="doc-number">{{ doc.event_code }}</span></b>
         <span class="pill {% if doc.defect_closed %}pill-green{% else %}pill-red{% endif %}" style="margin-left:8px">
-          {% if doc.defect_closed %}{{ {'ru':'Дефект закрыт','en':'Defect closed','kz':'Ақау жабылды'}[current_user.language] }}{% if doc.defect_closed_at %} · {{ doc.defect_closed_at.strftime('%d.%m.%Y') }}{% endif %}
-          {% else %}{{ {'ru':'Дефект открыт','en':'Defect open','kz':'Ақау ашық'}[current_user.language] }}{% endif %}
+          {% if doc.defect_closed %}{{ _('Дефект закрыт') }}{% if doc.defect_closed_at %} · {{ doc.defect_closed_at.strftime('%d.%m.%Y') }}{% endif %}
+          {% else %}{{ _('Дефект открыт') }}{% endif %}
         </span>
         {% if doc.equipment %}
         <div class="text-muted" style="font-size:12px;margin-top:4px">
@@ -99,14 +99,14 @@
       </div>
       <div style="margin-left:auto;display:flex;gap:8px">
         <a href="{{ url_for('documents.new_trebovanie', from_defect=doc.id) }}" class="btn btn-sm">
-          <i class="ti ti-shopping-cart"></i> {{ {'ru':'Создать требование по акту','en':'Create requisition','kz':'Талаптама жасау'}[current_user.language] }}
+          <i class="ti ti-shopping-cart"></i> {{ _('Создать требование по акту') }}
         </a>
         {% if not doc.defect_closed %}
         <form method="POST" action="{{ url_for('documents.close_defect', doc_id=doc.id) }}"
-              onsubmit="return confirm('{{ {'ru':'Закрыть дефект? Обычно это делается записью ремонта.','en':'Close the defect?','kz':'Ақауды жабу керек пе?'}[current_user.language] }}')">
+              onsubmit="return confirm('{{ _('Закрыть дефект? Обычно это делается записью ремонта.') }}')">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm"><i class="ti ti-circle-check"></i>
-            {{ {'ru':'Закрыть дефект','en':'Close defect','kz':'Ақауды жабу'}[current_user.language] }}</button>
+            {{ _('Закрыть дефект') }}</button>
         </form>
         {% endif %}
       </div>
@@ -119,15 +119,15 @@
              or current_user.can_access('documents_procurement')) %}
   <div class="card" style="margin-bottom:14px;border-left:4px solid #001D89">
     <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <b>{{ {'ru':'Снабжение','en':'Procurement','kz':'Жабдықтау'}[current_user.language] }}:</b>
+      <b>{{ _('Снабжение') }}:</b>
       <a href="{{ url_for('documents.new_po_services', from_req=doc.id) }}" class="btn btn-sm btn-primary">
-        <i class="ti ti-file-plus"></i> {{ {'ru':'Создать ПО по требованию','en':'Create PO from requisition','kz':'Талаптама бойынша ПО жасау'}[current_user.language] }}
+        <i class="ti ti-file-plus"></i> {{ _('Создать ПО по требованию') }}
       </a>
       <form method="POST" action="{{ url_for('documents.mark_executed', doc_id=doc.id) }}"
-            onsubmit="return confirm('{{ {'ru':'Отметить требование исполненным?','en':'Mark as executed?','kz':'Орындалды деп белгілеу?'}[current_user.language] }}')">
+            onsubmit="return confirm('{{ _('Отметить требование исполненным?') }}')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-sm"><i class="ti ti-circle-check"></i>
-          {{ {'ru':'Отметить исполненным','en':'Mark executed','kz':'Орындалды'}[current_user.language] }}</button>
+          {{ _('Отметить исполненным') }}</button>
       </form>
     </div>
   </div>
@@ -136,7 +136,7 @@
   {% if doc.doc_type == 'purchase_req' and doc.purchase_orders.count() %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-body" style="font-size:13px">
-      <i class="ti ti-files"></i> {{ {'ru':'Созданные ПО по этому требованию','en':'POs created from this requisition','kz':'Осы талаптама бойынша ПО'}[current_user.language] }}:
+      <i class="ti ti-files"></i> {{ _('Созданные ПО по этому требованию') }}:
       {% for po in doc.purchase_orders %}
       <a href="{{ url_for('documents.view', doc_id=po.id) }}" class="pill pill-gray" style="margin-left:6px;text-decoration:none">{{ po.doc_number }}</a>
       {% endfor %}
@@ -147,7 +147,7 @@
   {% if doc.related_req %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-body" style="font-size:13px">
-      <i class="ti ti-link"></i> {{ {'ru':'Создан по требованию','en':'Created from requisition','kz':'Талаптама негізінде'}[current_user.language] }}:
+      <i class="ti ti-link"></i> {{ _('Создан по требованию') }}:
       <a href="{{ url_for('documents.view', doc_id=doc.related_req.id) }}">{{ doc.related_req.doc_number }}</a>
     </div>
   </div>
@@ -156,11 +156,11 @@
   {% if doc.related_defect %}
   <div class="card" style="margin-bottom:14px">
     <div class="card-body" style="font-size:13px">
-      <i class="ti ti-link"></i> {{ {'ru':'Связано с дефектным актом','en':'Linked to defect act','kz':'Ақаулық актісімен байланысты'}[current_user.language] }}:
+      <i class="ti ti-link"></i> {{ _('Связано с дефектным актом') }}:
       <a href="{{ url_for('documents.view', doc_id=doc.related_defect.id) }}">
         {{ doc.related_defect.event_code or doc.related_defect.doc_number }}</a>
       <span class="pill {% if doc.related_defect.defect_closed %}pill-green{% else %}pill-red{% endif %}" style="margin-left:6px">
-        {% if doc.related_defect.defect_closed %}{{ {'ru':'закрыт','en':'closed','kz':'жабық'}[current_user.language] }}{% else %}{{ {'ru':'открыт','en':'open','kz':'ашық'}[current_user.language] }}{% endif %}</span>
+        {% if doc.related_defect.defect_closed %}{{ _('закрыт') }}{% else %}{{ _('открыт') }}{% endif %}</span>
     </div>
   </div>
   {% endif %}
@@ -173,28 +173,28 @@
         <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:20px;margin-top:2px"></i>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:4px">
-            {{ {'ru':'Документ возвращён на доработку','en':'Returned for revision','kz':'Пысықтауға қайтарылды'}[current_user.language] }}
+            {{ _('Документ возвращён на доработку') }}
           </div>
           {% set ns = namespace(note='') %}
           {% for c in comments %}{% if 'возвращён на доработку' in c.text %}{% set ns.note = c.text %}{% endif %}{% endfor %}
           {% if ns.note %}
           <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:12px">{{ ns.note }}</div>
           {% else %}
-          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">{{ {'ru':'Проверьте историю ниже и внесите правки.','en':'Check the history below and make your edits.','kz':'Төмендегі тарихты қараңыз.'}[current_user.language] }}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">{{ _('Проверьте историю ниже и внесите правки.') }}</div>
           {% endif %}
           <div style="display:flex;gap:8px">
             {% if doc.doc_type == 'po_services' %}
-            <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            <a href="{{ url_for('documents.edit_po_services', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% elif doc.doc_type == 'trebovanie' %}
-            <a href="{{ url_for('documents.edit_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            <a href="{{ url_for('documents.edit_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% elif doc.doc_type == 'po_trebovanie' %}
-            <a href="{{ url_for('documents.edit_po_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            <a href="{{ url_for('documents.edit_po_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% elif doc.doc_type == 'defect_act' %}
-            <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ {'ru':'Редактировать','en':'Edit','kz':'Өңдеу'}[current_user.language] }}</a>
+            <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% endif %}
             <form method="POST" action="{{ url_for('documents.resubmit', doc_id=doc.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-sm"><i class="ti ti-send"></i>{{ {'ru':'Отправить без изменений','en':'Resubmit as-is','kz':'Өзгеріссіз жіберу'}[current_user.language] }}</button>
+              <button type="submit" class="btn btn-sm"><i class="ti ti-send"></i>{{ _('Отправить без изменений') }}</button>
             </form>
           </div>
         </div>
@@ -209,22 +209,22 @@
       <div class="card-header">
         <div class="card-header-left">
           <div class="card-icon"><i class="ti ti-file-description"></i></div>
-          <div class="card-title">{{ {'ru':'Детали','en':'Details','kz':'Мәліметтер'}[current_user.language] }}</div>
+          <div class="card-title">{{ _('Детали') }}</div>
         </div>
       </div>
       <div class="card-body">
         <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ {'ru':'Номер','en':'Number','kz':'Нөмір'}[current_user.language] }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Подразделение','en':'Department','kz':'Бөлім'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Срочность','en':'Urgency','kz':'Шұғылдылық'}[current_user.language] }}</td>
+          <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ _('Номер') }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Тип') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Автор') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Подразделение') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Срочность') }}</td>
           <td style="padding:5px 0;border-top:1px solid var(--border)"><span class="pill {% if doc.urgency == 'critical' %}pill-red{% elif doc.urgency == 'urgent' %}pill-amber{% else %}pill-green{% endif %}">{{ doc.urgency or '—' }}</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Дата') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
         </table>
         {% if doc.purpose %}
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-          <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</div>
+          <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">{{ _('Описание') }}</div>
           <div style="font-size:12px;color:var(--text-1);line-height:1.6">{{ doc.purpose }}</div>
         </div>
         {% endif %}
@@ -235,20 +235,20 @@
       <div class="card-header">
         <div class="card-header-left">
           <div class="card-icon"><i class="ti ti-git-branch"></i></div>
-          <div class="card-title">{{ {'ru':'Результаты согласования','en':'Approval results','kz':'Келісу нәтижелері'}[current_user.language] }}</div>
+          <div class="card-title">{{ _('Результаты согласования') }}</div>
         </div>
       </div>
       <div class="card-body" style="padding:14px 16px">
         {% if approvals %}
         <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
           <div style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px">
-            {{ {'ru':'Версия 1 от','en':'Version 1 of','kz':'1-нұсқа'}[current_user.language] }} {{ doc.created_at.strftime('%d.%m.%Y') }} : {{ doc.doc_number }}
+            {{ _('Версия 1 от') }} {{ doc.created_at.strftime('%d.%m.%Y') }} : {{ doc.doc_number }}
           </div>
           {% set reviewers = approvals | selectattr('step', 'gt', 0) | list %}
           {% set signatories = approvals | selectattr('step', 'equalto', 0) | list %}
           {% if reviewers %}
           <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;margin-bottom:6px">
-            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ {'ru':'Согласующие:','en':'Reviewers:','kz':'Келісушілер:'}[current_user.language] }}</span>
+            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ _('Согласующие:') }}</span>
             <span style="display:flex;flex-wrap:wrap;gap:4px">
               {% for appr in reviewers %}<span style="background:var(--bg-input,#f2f3f5);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-1)">{{ appr.approver.full_name }}</span>{% endfor %}
             </span>
@@ -256,7 +256,7 @@
           {% endif %}
           {% if signatories %}
           <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">
-            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ {'ru':'Подписывающий:','en':'Signatory:','kz':'Қол қоюшы:'}[current_user.language] }}</span>
+            <span style="color:var(--text-3);white-space:nowrap;padding-top:3px">{{ _('Подписывающий:') }}</span>
             <span style="display:flex;flex-wrap:wrap;gap:4px">
               {% for appr in signatories %}<span style="background:var(--bg-input,#f2f3f5);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-1)">{{ appr.approver.full_name }}</span>{% endfor %}
             </span>
@@ -266,37 +266,37 @@
         {% endif %}
         <div class="approver-row">
           <div class="approver-av done">{{ doc.author.initials }}</div>
-          <div style="flex:1"><div class="approver-name">{{ doc.author.full_name }}</div><div class="approver-role">{{ {'ru':'Автор','en':'Author','kz':'Автор'}[current_user.language] }}</div></div>
-          <span class="pill pill-green">{{ {'ru':'Создан','en':'Submitted','kz':'Жасалды'}[current_user.language] }}</span>
+          <div style="flex:1"><div class="approver-name">{{ doc.author.full_name }}</div><div class="approver-role">{{ _('Автор') }}</div></div>
+          <span class="pill pill-green">{{ _('Создан') }}</span>
         </div>
         {% if approvals %}
         {% for appr in approvals %}
         <div class="approver-row" {% if loop.last %}style="border-bottom:none"{% endif %}>
           <div class="approver-av {% if appr.status == 'approved' %}done{% elif appr.status == 'rejected' %}active{% elif appr.status == 'skipped' %}pending{% elif appr.step == doc.current_step %}active{% else %}pending{% endif %}">{{ appr.approver.initials }}</div>
-          <div style="flex:1"><div class="approver-name">{{ appr.approver.full_name }}</div><div class="approver-role">{% if appr.step == 0 %}{{ {'ru':'Подписывающий','en':'Signatory','kz':'Қол қоюшы'}[current_user.language] }}{% else %}{{ {'ru':'Этап','en':'Stage','kz':'Кезең'}[current_user.language] }} {{ appr.step }}{% endif %}</div></div>
+          <div style="flex:1"><div class="approver-name">{{ appr.approver.full_name }}</div><div class="approver-role">{% if appr.step == 0 %}{{ _('Подписывающий') }}{% else %}{{ _('Этап') }} {{ appr.step }}{% endif %}</div></div>
           <span class="pill {% if appr.status == 'approved' %}pill-green{% elif appr.status == 'rejected' %}pill-red{% elif appr.status == 'skipped' %}pill-gray{% elif appr.step == doc.current_step %}pill-amber{% else %}pill-gray{% endif %}">
-            {% if appr.status == 'approved' %}{{ {'ru':'Согласован','en':'Approved','kz':'Келісілді'}[current_user.language] }}
-            {% elif appr.status == 'rejected' %}{{ {'ru':'Отклонён','en':'Rejected','kz':'Қабылданбады'}[current_user.language] }}
-            {% elif appr.status == 'skipped' %}{{ {'ru':'Не потребовалось','en':'Not needed','kz':'Қажет болмады'}[current_user.language] }}
-            {% elif appr.step == doc.current_step %}{{ {'ru':'На рассмотрении','en':'In review','kz':'Қарастырылуда'}[current_user.language] }}
-            {% else %}{{ {'ru':'Ожидает','en':'Waiting','kz':'Күтуде'}[current_user.language] }}{% endif %}
+            {% if appr.status == 'approved' %}{{ _('Согласован') }}
+            {% elif appr.status == 'rejected' %}{{ _('Отклонён') }}
+            {% elif appr.status == 'skipped' %}{{ _('Не потребовалось') }}
+            {% elif appr.step == doc.current_step %}{{ _('На рассмотрении') }}
+            {% else %}{{ _('Ожидает') }}{% endif %}
           </span>
         </div>
         {% endfor %}
         {% else %}
         <div class="approver-row" style="border-bottom:none">
-          <div style="flex:1;font-size:11px;color:var(--text-3)">{{ {'ru':'Маршрут не задан','en':'No route defined','kz':'Маршрут жоқ'}[current_user.language] }}</div>
+          <div style="flex:1;font-size:11px;color:var(--text-3)">{{ _('Маршрут не задан') }}</div>
         </div>
         {% endif %}
 
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ {'ru':'Комментарий (обязателен для возврата)...','en':'Comment (required to return)...','kz':'Түсініктеме (қайтару үшін міндетті)...'}[current_user.language] }}" style="margin-bottom:8px"></textarea>
+          <textarea name="comment" rows="2" class="form-textarea" placeholder="{{ _('Комментарий (обязателен для возврата)...') }}" style="margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
-            <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;justify-content:center"><i class="ti ti-x"></i>{{ {'ru':'Отклонить','en':'Reject','kz':'Қабылдамау'}[current_user.language] }}</button>
-            <button type="submit" name="action" value="return" class="btn" style="flex:1;justify-content:center;background:var(--amber);color:#fff"><i class="ti ti-arrow-back-up"></i>{{ {'ru':'Вернуть','en':'Return','kz':'Қайтару'}[current_user.language] }}</button>
-            <button type="submit" name="action" value="approve" class="btn btn-success" style="flex:1;justify-content:center"><i class="ti ti-check"></i>{{ {'ru':'Согласовать','en':'Approve','kz':'Келісу'}[current_user.language] }}</button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;justify-content:center"><i class="ti ti-x"></i>{{ _('Отклонить') }}</button>
+            <button type="submit" name="action" value="return" class="btn" style="flex:1;justify-content:center;background:var(--amber);color:#fff"><i class="ti ti-arrow-back-up"></i>{{ _('Вернуть') }}</button>
+            <button type="submit" name="action" value="approve" class="btn btn-success" style="flex:1;justify-content:center"><i class="ti ti-check"></i>{{ _('Согласовать') }}</button>
           </div>
         </form>
         {% endif %}
@@ -309,19 +309,19 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-list-check"></i></div>
-        <div class="card-title">{{ {'ru':'Позиции','en':'Items','kz':'Позициялар'}[current_user.language] }} ({{ items|length }})</div>
+        <div class="card-title">{{ _('Позиции') }} ({{ items|length }})</div>
       </div>
     </div>
     <table class="data-table">
       <thead>
         <tr>
           <th style="width:35px">№</th>
-          <th>{{ {'ru':'Наименование','en':'Name','kz':'Атауы'}[current_user.language] }}</th>
-          <th>{{ {'ru':'Характеристика','en':'Spec','kz':'Сипаттама'}[current_user.language] }}</th>
-          <th style="width:70px">{{ {'ru':'Кол-во','en':'Qty','kz':'Саны'}[current_user.language] }}</th>
-          <th style="width:55px">{{ {'ru':'Ед.','en':'Unit','kz':'Өлш.'}[current_user.language] }}</th>
-          <th style="width:90px">{{ {'ru':'Цена','en':'Price','kz':'Бағасы'}[current_user.language] }}</th>
-          <th style="width:100px">{{ {'ru':'Сумма','en':'Sum','kz':'Сомасы'}[current_user.language] }}</th>
+          <th>{{ _('Наименование') }}</th>
+          <th>{{ _('Характеристика') }}</th>
+          <th style="width:70px">{{ _('Кол-во') }}</th>
+          <th style="width:55px">{{ _('Ед.') }}</th>
+          <th style="width:90px">{{ _('Цена') }}</th>
+          <th style="width:100px">{{ _('Сумма') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -338,7 +338,7 @@
         {% endfor %}
         {% if doc.total_cost %}
         <tr>
-          <td colspan="6" style="text-align:right;font-weight:600;border-top:2px solid var(--border)">{{ {'ru':'Итого','en':'Total','kz':'Барлығы'}[current_user.language] }}</td>
+          <td colspan="6" style="text-align:right;font-weight:600;border-top:2px solid var(--border)">{{ _('Итого') }}</td>
           <td style="font-weight:600;border-top:2px solid var(--border)">{{ '%.2f'|format(doc.total_cost) }}</td>
         </tr>
         {% endif %}
@@ -351,7 +351,7 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-paperclip"></i></div>
-        <div class="card-title">{{ {'ru':'Вложения','en':'Attachments','kz':'Тіркемелер'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('Вложения') }}</div>
       </div>
     </div>
     <div class="card-body">
@@ -361,19 +361,19 @@
           <i class="ti ti-menu-2"></i>
           <a class="dlg-chip-name" href="{{ url_for('documents.download_attachment', doc_id=doc.id, attachment_id=a.id) }}" style="color:var(--text-1)">{{ a.original_filename }}</a>
           <span style="font-size:10px;color:var(--text-3);flex-shrink:0">{{ ((a.size_bytes or 0) / 1024)|round(1) }} KB</span>
-          <form method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}" onsubmit="return confirm('{{ {'ru':'Удалить файл?','en':'Delete file?','kz':'Файлды жою керек пе?'}[current_user.language] }}')" style="margin-left:auto;display:flex">
+          <form method="POST" action="{{ url_for('documents.delete_attachment', doc_id=doc.id, attachment_id=a.id) }}" onsubmit="return confirm('{{ _('Удалить файл?') }}')" style="margin-left:auto;display:flex">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="dlg-chip-x">×</button>
           </form>
         </div>
         {% else %}
-        <div class="text-muted text-small">{{ {'ru':'Нет вложений','en':'No attachments yet','kz':'Тіркемелер жоқ'}[current_user.language] }}</div>
+        <div class="text-muted text-small">{{ _('Нет вложений') }}</div>
         {% endfor %}
       </div>
       <form method="POST" action="{{ url_for('documents.upload_attachment', doc_id=doc.id) }}" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="dlg-upl" for="view-att-upload">
-          <i class="ti ti-upload" style="font-size:14px"></i>{{ {'ru':'Загрузить','en':'Upload','kz':'Жүктеу'}[current_user.language] }}
+          <i class="ti ti-upload" style="font-size:14px"></i>{{ _('Загрузить') }}
           <input id="view-att-upload" type="file" name="file" required style="display:none" onchange="this.form.submit()">
         </label>
       </form>
@@ -384,7 +384,7 @@
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-icon"><i class="ti ti-message-circle"></i></div>
-        <div class="card-title">{{ {'ru':'История','en':'History','kz':'Тарих'}[current_user.language] }}</div>
+        <div class="card-title">{{ _('История') }}</div>
       </div>
     </div>
     <div class="card-body">
@@ -394,7 +394,7 @@
           <div class="comment-av" style="background:{% if comment.is_system %}var(--blue){% else %}var(--red){% endif %}">
             {% if comment.is_system %}ИИ{% else %}{{ comment.author.initials }}{% endif %}
           </div>
-          <span class="comment-name">{% if comment.is_system %}{{ {'ru':'Система','en':'System','kz':'Жүйе'}[current_user.language] }}{% else %}{{ comment.author.full_name }}{% endif %}</span>
+          <span class="comment-name">{% if comment.is_system %}{{ _('Система') }}{% else %}{{ comment.author.full_name }}{% endif %}</span>
           <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
         </div>
         <div class="comment-text">{{ comment.text }}</div>
@@ -403,7 +403,7 @@
       <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:flex;gap:8px;margin-top:10px">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="comment">
-        <input name="comment" type="text" class="form-input" placeholder="{{ {'ru':'Добавить комментарий...','en':'Add comment...','kz':'Түсініктеме қосу...'}[current_user.language] }}" style="flex:1">
+        <input name="comment" type="text" class="form-input" placeholder="{{ _('Добавить комментарий...') }}" style="flex:1">
         <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-send"></i></button>
       </form>
     </div>

@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Оборудование{% endblock %}
-{% block page_title %}{{ {'ru':'Оборудование','en':'Equipment','kz':'Жабдықтар'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ _('Оборудование') }}{% endblock %}
 {% block content %}
 <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-tool"></i>{{ {'ru':'Всего','en':'Total','kz':'Барлығы'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-tool"></i>{{ _('Всего') }}</div>
     <div class="kpi-value">{{ counts.total }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ _('В работе') }}</div>
     <div class="kpi-value success">{{ counts.deployed }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-circle-pause"></i>{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-circle-pause"></i>{{ _('Простой') }}</div>
     <div class="kpi-value">{{ counts.idle }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-alert-triangle"></i>{{ _('На ТО') }}</div>
     <div class="kpi-value warning">{{ counts.maintenance }}</div>
   </div>
 </div>
@@ -24,24 +24,24 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-tool"></i></div>
-      <div class="card-title">{{ {'ru':'Все единицы оборудования','en':'All equipment units','kz':'Барлық жабдық бірліктері'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Все единицы оборудования') }}</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       {% if last_sync %}
       <span class="text-muted" style="font-size:12px">
-        {{ {'ru':'Таблица синхр.','en':'Sheet synced','kz':'Кесте синхр.'}[current_user.language] }} {{ last_sync.strftime('%d.%m %H:%M') }} UTC
+        {{ _('Таблица синхр.') }} {{ last_sync.strftime('%d.%m %H:%M') }} UTC
       </span>
       {% endif %}
       {% if sync_configured %}
       <form method="POST" action="{{ url_for('equipment.sync') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-sm"><i class="ti ti-refresh"></i>
-          {{ {'ru':'Обновить из таблицы','en':'Sync from sheet','kz':'Кестеден жаңарту'}[current_user.language] }}
+          {{ _('Обновить из таблицы') }}
         </button>
       </form>
       {% elif current_user.role == 'it_admin' %}
       <a href="{{ url_for('admin.integrations') }}" class="btn btn-sm">
-        {{ {'ru':'Подключить таблицу','en':'Connect sheet','kz':'Кестені қосу'}[current_user.language] }}
+        {{ _('Подключить таблицу') }}
       </a>
       {% endif %}
     </div>
@@ -49,12 +49,12 @@
   <table class="data-table">
     <thead>
       <tr>
-        <th>{{ {'ru':'Единица','en':'Unit','kz':'Бірлік'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Местонахождение','en':'Location','kz':'Орналасқан жері'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Последнее ТО','en':'Last service','kz':'Соңғы ТО'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</th>
+        <th>{{ _('Единица') }}</th>
+        <th>{{ _('Тип') }}</th>
+        <th>{{ _('Местонахождение') }}</th>
+        <th>{{ _('Статус') }}</th>
+        <th>{{ _('Последнее ТО') }}</th>
+        <th>{{ _('Следующее ТО') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -65,9 +65,9 @@
         <td class="text-muted">{{ unit.location or '—' }}</td>
         <td>
           <span class="pill {% if unit.status == 'deployed' %}pill-green{% elif unit.status == 'maintenance' %}pill-amber{% else %}pill-gray{% endif %}">
-            {% if unit.status == 'deployed' %}{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}
-            {% elif unit.status == 'maintenance' %}{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}
-            {% else %}{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}{% endif %}
+            {% if unit.status == 'deployed' %}{{ _('В работе') }}
+            {% elif unit.status == 'maintenance' %}{{ _('На ТО') }}
+            {% else %}{{ _('Простой') }}{% endif %}
           </span>
         </td>
         <td class="text-muted">{{ unit.last_service.strftime('%d.%m.%Y') if unit.last_service else '—' }}</td>

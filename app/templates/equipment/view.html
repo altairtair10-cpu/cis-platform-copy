@@ -5,31 +5,31 @@
 {% block content %}
 <div style="margin-bottom:14px">
   <a href="{{ url_for('equipment.index') }}" class="btn btn-sm">
-    <i class="ti ti-arrow-left"></i>{{ {'ru':'Назад к списку','en':'Back to list','kz':'Тізімге оралу'}[current_user.language] }}
+    <i class="ti ti-arrow-left"></i>{{ _('Назад к списку') }}
   </a>
 </div>
 
 <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-tag"></i>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-tag"></i>{{ _('Тип') }}</div>
     <div class="kpi-value">{{ unit.eq_type or '—' }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-map-pin"></i>{{ {'ru':'Местонахождение','en':'Location','kz':'Орналасқан жері'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-map-pin"></i>{{ _('Местонахождение') }}</div>
     <div class="kpi-value">{{ unit.location or '—' }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-circle-check"></i>{{ _('Статус') }}</div>
     <div class="kpi-value">
       <span class="pill {% if unit.status == 'deployed' %}pill-green{% elif unit.status == 'maintenance' %}pill-amber{% else %}pill-gray{% endif %}">
-        {% if unit.status == 'deployed' %}{{ {'ru':'В работе','en':'Deployed','kz':'Жұмыста'}[current_user.language] }}
-        {% elif unit.status == 'maintenance' %}{{ {'ru':'На ТО','en':'Maintenance','kz':'ТО-да'}[current_user.language] }}
-        {% else %}{{ {'ru':'Простой','en':'Idle','kz':'Бос'}[current_user.language] }}{% endif %}
+        {% if unit.status == 'deployed' %}{{ _('В работе') }}
+        {% elif unit.status == 'maintenance' %}{{ _('На ТО') }}
+        {% else %}{{ _('Простой') }}{% endif %}
       </span>
     </div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-calendar"></i>{{ {'ru':'Следующее ТО','en':'Next service','kz':'Келесі ТО'}[current_user.language] }}</div>
+    <div class="kpi-label"><i class="ti ti-calendar"></i>{{ _('Следующее ТО') }}</div>
     <div class="kpi-value">{{ unit.next_service.strftime('%d.%m.%Y') if unit.next_service else '—' }}</div>
   </div>
 </div>
@@ -38,7 +38,7 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-file-text"></i></div>
-      <div class="card-title">{{ {'ru':'Документы по этой технике','en':'Documents for this unit','kz':'Осы техника бойынша құжаттар'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Документы по этой технике') }}</div>
     </div>
   </div>
   <div class="card-body">
@@ -46,10 +46,10 @@
     <table class="data-table">
       <thead><tr>
         <th>№</th>
-        <th>{{ {'ru':'Тип','en':'Type','kz':'Түрі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Название','en':'Title','kz':'Атауы'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Статус','en':'Status','kz':'Мәртебесі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
+        <th>{{ _('Тип') }}</th>
+        <th>{{ _('Название') }}</th>
+        <th>{{ _('Статус') }}</th>
+        <th>{{ _('Дата') }}</th>
       </tr></thead>
       <tbody>
         {% for d in docs %}
@@ -65,7 +65,7 @@
     </table>
     {% else %}
     <p class="text-muted" style="text-align:center;padding:16px">
-      {{ {'ru':'Документов по этой технике пока нет. Дефектные акты, созданные с выбором этой единицы, появятся здесь.','en':'No documents for this unit yet. Defect acts created for it will appear here.','kz':'Әзірге құжаттар жоқ.'}[current_user.language] }}
+      {{ _('Документов по этой технике пока нет. Дефектные акты, созданные с выбором этой единицы, появятся здесь.') }}
     </p>
     {% endif %}
   </div>
@@ -75,15 +75,13 @@
 <div class="card" style="margin-top:14px;border-left:4px solid #A31E08">
   <div class="card-body">
     <b style="display:block;margin-bottom:6px"><i class="ti ti-alert-triangle" style="color:#A31E08"></i>
-      {{ {'ru':'Открытые дефекты','en':'Open defects','kz':'Ашық ақаулар'}[current_user.language] }} ({{ open_defects|length }})</b>
+      {{ _('Открытые дефекты') }} ({{ open_defects|length }})</b>
     {% for d in open_defects %}
     <a href="{{ url_for('documents.view', doc_id=d.id) }}" class="pill pill-red" style="margin:2px 6px 2px 0;text-decoration:none">
       {{ d.event_code or d.doc_number }}</a>
     {% endfor %}
     <div class="text-muted" style="font-size:12px;margin-top:6px">
-      {{ {'ru':'Дефект закрывается записью ремонта с указанием его кода (например «…-Р») или кнопкой в самом акте.',
-          'en':'A defect closes when a repair record mentions its code, or via the button on the act.',
-          'kz':'Ақау коды көрсетілген жөндеу жазбасымен жабылады.'}[current_user.language] }}
+      {{ _('Дефект закрывается записью ремонта с указанием его кода (например «…-Р») или кнопкой в самом акте.') }}
     </div>
   </div>
 </div>
@@ -94,13 +92,13 @@
   <div class="card-body" style="display:flex;gap:14px;align-items:center">
     <i class="ti ti-engine" style="font-size:26px"></i>
     <div>
-      <b>{% if to_state[0]=='due' %}{{ {'ru':'ТО просрочено','en':'Service overdue','kz':'ТҚ мерзімі өтті'}[current_user.language] }}
-         {% elif to_state[0]=='soon' %}{{ {'ru':'ТО скоро','en':'Service due soon','kz':'ТҚ жақын'}[current_user.language] }}
-         {% else %}{{ {'ru':'ТО в норме','en':'Service on schedule','kz':'ТҚ қалыпты'}[current_user.language] }}{% endif %}</b>
+      <b>{% if to_state[0]=='due' %}{{ _('ТО просрочено') }}
+         {% elif to_state[0]=='soon' %}{{ _('ТО скоро') }}
+         {% else %}{{ _('ТО в норме') }}{% endif %}</b>
       <div class="text-muted" style="font-size:13px">
-        {{ {'ru':'Наработка с последнего ТО','en':'Since last service','kz':'Соңғы ТҚ-дан бері'}[current_user.language] }}:
+        {{ _('Наработка с последнего ТО') }}:
         {{ '%.0f' % to_state[1] }} / {{ to_state[2] }} {{ 'км' if to_state[3]=='km' else 'м/ч' }}
-        {% if unit.last_to_date %} · {{ {'ru':'последнее ТО','en':'last service','kz':'соңғы ТҚ'}[current_user.language] }} {{ unit.last_to_date.strftime('%d.%m.%Y') }}{% endif %}
+        {% if unit.last_to_date %} · {{ _('последнее ТО') }} {{ unit.last_to_date.strftime('%d.%m.%Y') }}{% endif %}
       </div>
     </div>
   </div>
@@ -110,17 +108,17 @@
 <div class="card" style="margin-top:14px">
   <div class="card-header"><div class="card-header-left">
     <div class="card-icon"><i class="ti ti-history"></i></div>
-    <div class="card-title">{{ {'ru':'Последние ТО и ремонты','en':'Recent service & repairs','kz':'Соңғы ТҚ және жөндеулер'}[current_user.language] }}</div>
+    <div class="card-title">{{ _('Последние ТО и ремонты') }}</div>
   </div></div>
   <div class="card-body">
     {% if records %}
     <table class="data-table">
       <thead><tr>
-        <th>{{ {'ru':'Дата','en':'Date','kz':'Күні'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Вид','en':'Kind','kz':'Түрі'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Описание','en':'Description','kz':'Сипаттама'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Наработка','en':'Reading','kz':'Жұмыс уақыты'}[current_user.language] }}</th>
-        <th>{{ {'ru':'Исполнитель','en':'Executor','kz':'Орындаушы'}[current_user.language] }}</th>
+        <th>{{ _('Дата') }}</th>
+        <th>{{ _('Вид') }}</th>
+        <th>{{ _('Описание') }}</th>
+        <th>{{ _('Наработка') }}</th>
+        <th>{{ _('Исполнитель') }}</th>
       </tr></thead>
       <tbody>
         {% for r in records %}
@@ -136,7 +134,7 @@
     </table>
     {% else %}
     <p class="text-muted" style="text-align:center;padding:16px">
-      {{ {'ru':'Записей из реестра пока нет — либо реестр не подключён (Админ-панель → Интеграции), либо вкладка этой машины не сопоставлена по гос. номеру.','en':'No register records yet — either the register is not connected (Admin → Integrations) or this unit\'s tab was not matched by gos number.','kz':'Жазбалар әзірге жоқ.'}[current_user.language] }}
+      {{ _('Записей из реестра пока нет — либо реестр не подключён (Админ-панель → Интеграции), либо вкладка этой машины не сопоставлена по гос. номеру.') }}
     </p>
     {% endif %}
   </div>

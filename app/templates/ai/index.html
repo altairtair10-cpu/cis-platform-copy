@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}{% endblock %}
-{% block page_title %}{{ {'ru':'ИИ-ассистенты','en':'AI assistants','kz':'ЖИ-көмекшілер'}[current_user.language] }}{% endblock %}
+{% block title %}{{ _('ИИ-ассистенты') }}{% endblock %}
+{% block page_title %}{{ _('ИИ-ассистенты') }}{% endblock %}
 
 {% block content %}
 {% if agents %}
@@ -21,7 +21,7 @@
 <div class="card"><div class="card-body" style="text-align:center;padding:40px">
   <i class="ti ti-robot" style="font-size:32px;color:var(--color-text-secondary)"></i>
   <p style="margin-top:12px" class="text-muted">
-    {{ {'ru':'Доступных ассистентов пока нет.','en':'No assistants available yet.','kz':'Көмекшілер әзірге жоқ.'}[current_user.language] }}
+    {{ _('Доступных ассистентов пока нет.') }}
   </p>
 </div></div>
 {% endif %}

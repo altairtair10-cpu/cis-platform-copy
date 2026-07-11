@@ -7,12 +7,12 @@
   <div class="card-body" id="chat-messages"
        style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
     <div style="align-self:flex-start;background:var(--color-background-secondary,#f4f2ee);padding:10px 14px;border-radius:12px 12px 12px 2px;max-width:80%">
-      {{ agent.description or {'ru':'Задайте вопрос.','en':'Ask a question.','kz':'Сұрақ қойыңыз.'}[current_user.language] }}
+      {{ agent.description or _('Задайте вопрос.') }}
     </div>
   </div>
   <div style="display:flex;gap:8px;padding:12px;border-top:1px solid var(--color-border-tertiary,#e3e0da)">
     <input id="chat-input" class="form-input" style="flex:1"
-           placeholder="{{ {'ru':'Ваш вопрос...','en':'Your question...','kz':'Сұрағыңыз...'}[current_user.language] }}"
+           placeholder="{{ _('Ваш вопрос...') }}"
            onkeydown="if(event.key==='Enter')sendMsg()">
     <button id="chat-send" class="btn btn-primary" onclick="sendMsg()">
       <i class="ti ti-send"></i>

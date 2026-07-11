@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Договор ЭМГ 2026{% endblock %}
-{% block page_title %}{{ {'ru':'Исполнение договора ЭМГ 2026','en':'EMG 2026 Contract Execution','kz':'ЭМГ 2026 келісімшарт орындалуы'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ _('Исполнение договора ЭМГ 2026') }}{% endblock %}
 
 {% block content %}
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
   <div>
-    <div style="font-size:13px;color:var(--text-3)">{{ {'ru':'Клиент','en':'Client','kz':'Клиент'}[current_user.language] }}: <span style="font-weight:500;color:var(--text-1)">{{ data.client }}</span> · {{ data.period }}</div>
-    <div style="font-size:11px;color:var(--text-4);margin-top:2px">{{ {'ru':'Обновлено','en':'Updated','kz':'Жаңартылды'}[current_user.language] }}: {{ data.updated }} · <span style="color:var(--green);font-weight:500"><i class="ti ti-circle-check" style="font-size:11px"></i> {{ {'ru':'Данные актуальны','en':'Data is current','kz':'Деректер өзекті'}[current_user.language] }}</span></div>
+    <div style="font-size:13px;color:var(--text-3)">{{ _('Клиент') }}: <span style="font-weight:500;color:var(--text-1)">{{ data.client }}</span> · {{ data.period }}</div>
+    <div style="font-size:11px;color:var(--text-4);margin-top:2px">{{ _('Обновлено') }}: {{ data.updated }} · <span style="color:var(--green);font-weight:500"><i class="ti ti-circle-check" style="font-size:11px"></i> {{ _('Данные актуальны') }}</span></div>
   </div>
-  <a href="{{ url_for('contracts.index') }}" class="btn btn-sm"><i class="ti ti-refresh"></i>{{ {'ru':'Обновить','en':'Refresh','kz':'Жаңарту'}[current_user.language] }}</a>
+  <a href="{{ url_for('contracts.index') }}" class="btn btn-sm"><i class="ti ti-refresh"></i>{{ _('Обновить') }}</a>
 </div>
 
 <!-- STAT CARDS -->
@@ -28,18 +28,18 @@
     <div style="padding:14px">
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px">
         <span style="font-size:36px;font-weight:500;color:{{ c.text }};line-height:1">{{ row.fact_q }}</span>
-        <span style="font-size:13px;color:var(--text-3)">/ {{ row.plan_q }} {{ {'ru':'план Q1','en':'Q1 plan','kz':'Q1 жоспары'}[current_user.language] }}</span>
+        <span style="font-size:13px;color:var(--text-3)">/ {{ row.plan_q }} {{ _('план Q1') }}</span>
       </div>
       <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px">
         <div style="height:100%;width:{{ [row.pct,100]|min }}%;background:{{ c.bar }};border-radius:3px"></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--text-3)">{{ {'ru':'План год','en':'Year plan','kz':'Жыл жоспары'}[current_user.language] }}: <strong style="color:var(--text-1)">{{ row.plan_year }}</strong></span>
+        <span style="font-size:11px;color:var(--text-3)">{{ _('План год') }}: <strong style="color:var(--text-1)">{{ row.plan_year }}</strong></span>
         <span style="display:inline-flex;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:{{ c.pill_bg }};color:{{ c.pill_text }}">{{ row.deviation }} · {{ row.pct }}%</span>
       </div>
       {% if current_user.role == 'it_admin' or current_user.can_access('kpi') %}
       <details style="margin-top:8px">
-        <summary style="font-size:10px;color:var(--text-3);cursor:pointer">{{ {'ru':'Изменить факт','en':'Edit actual','kz':'Дерексіз өзгерту'}[current_user.language] }}</summary>
+        <summary style="font-size:10px;color:var(--text-3);cursor:pointer">{{ _('Изменить факт') }}</summary>
         <form method="POST" action="{{ url_for('contracts.update_fact', row_id=row.id) }}" style="display:flex;gap:6px;margin-top:6px">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="number" name="fact_q" class="form-input" value="{{ row.fact_q }}" style="padding:4px 8px;font-size:12px">
@@ -57,18 +57,18 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-table"></i></div>
-      <div class="card-title">{{ {'ru':'Детализация по месторождениям','en':'Field breakdown','kz':'Кен орындары бойынша'}[current_user.language] }}</div>
+      <div class="card-title">{{ _('Детализация по месторождениям') }}</div>
     </div>
     <span style="font-size:10px;color:var(--text-3)">ЭМГ · Q1 2026</span>
   </div>
   <table class="data-table">
     <thead>
       <tr>
-        <th>{{ {'ru':'Месторождение','en':'Field','kz':'Кен орны'}[current_user.language] }}</th>
-        <th style="text-align:center">{{ {'ru':'По договору','en':'Contract','kz':'Келісімшарт'}[current_user.language] }}</th>
-        <th style="text-align:center">{{ {'ru':'Выполнено','en':'Done','kz':'Орындалды'}[current_user.language] }}</th>
-        <th style="text-align:center">{{ {'ru':'Остаток','en':'Remainder','kz':'Қалдық'}[current_user.language] }}</th>
-        <th style="text-align:center;width:140px">{{ {'ru':'Исполнение','en':'Execution','kz':'Орындалу'}[current_user.language] }}</th>
+        <th>{{ _('Месторождение') }}</th>
+        <th style="text-align:center">{{ _('По договору') }}</th>
+        <th style="text-align:center">{{ _('Выполнено') }}</th>
+        <th style="text-align:center">{{ _('Остаток') }}</th>
+        <th style="text-align:center;width:140px">{{ _('Исполнение') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -99,7 +99,7 @@
 
 <div class="banner banner-blue" style="margin-top:14px">
   <i class="ti ti-cloud"></i>
-  {{ {'ru':'Данные будут автоматически синхронизированы с Excel в SharePoint после подключения Microsoft Graph API','en':'Data will automatically sync with Excel in SharePoint once Microsoft Graph API is connected','kz':'Microsoft Graph API қосылғаннан кейін SharePoint Excel-мен автоматты синхрондалады'}[current_user.language] }}
+  {{ _('Данные будут автоматически синхронизированы с Excel в SharePoint после подключения Microsoft Graph API') }}
 </div>
 
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}New document{% endblock %}
-{% block page_title %}{{ {'ru':'Новый документ','en':'New document','kz':'Жаңа құжат'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ _('Новый документ') }}{% endblock %}
 {% block content %}
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;max-width:900px">
 
