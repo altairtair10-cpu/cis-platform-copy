@@ -24,6 +24,7 @@ def index():
     status = request.args.get('status')
     year = request.args.get('year', type=int)
     doc_type = request.args.get('doc_type')
+    q = (request.args.get('q') or '').strip()
     page = request.args.get('page', 1, type=int)
 
     panel_counts = _panel_counts(doc_type)
@@ -36,6 +37,8 @@ def index():
     if year:
         from sqlalchemy import extract
         query = query.filter(extract('year', Document.created_at) == year)
+    if q:
+        query = _apply_search(query, q)
     query = query.order_by(Document.created_at.desc())
 
     pagination = query.paginate(page=page, per_page=25, error_out=False)
@@ -45,7 +48,7 @@ def index():
     years = sorted({y for (y,) in db.session.query(
         distinct(extract('year', Document.created_at))).all() if y}, reverse=True)
     return render_template('documents/index.html', docs=docs, panel_counts=panel_counts,
-                           years=years, sel_year=year, sel_type=doc_type,
+                           years=years, sel_year=year, sel_type=doc_type, q=q,
                            pagination=pagination,
                            doc_types=DOC_TYPES, statuses=DOC_STATUSES)
 
@@ -151,6 +154,8 @@ def print_doc(doc_id):
         template = 'documents/print_po_services.html'
     elif doc.doc_type == 'po_trebovanie':
         template = 'documents/print_po_goods.html'
+    elif doc.doc_type == 'defect_act':
+        template = 'documents/print_defect.html'
     else:
         template = 'documents/print.html'
     return render_template(template, doc=doc, items=items, extras=extras,
@@ -251,3 +256,34 @@ def export_xlsx():
     return send_file(buf, as_attachment=True,
                      download_name=f'documents{suffix}.xlsx',
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+def _apply_search(query, q):
+    """Поиск как в Google-строке: подстроки («улит» найдёт «улитку») и
+    нечувствительность к пробелам («хим станция» = «химстанция»).
+    Ищет по номеру, коду, содержанию и автору; все слова запроса должны найтись."""
+    import re as _re
+    from sqlalchemy import func, or_
+
+    hay = func.lower(
+        func.coalesce(Document.doc_number, '') + ' '
+        + func.coalesce(Document.event_code, '') + ' '
+        + func.coalesce(Document.title, '') + ' '
+        + func.coalesce(Document.purpose, '') + ' '
+        + func.coalesce(Document.justification, ''))
+    hay_ns = func.replace(hay, ' ', '')
+
+    author_hay = func.lower(User.first_name + ' ' + User.last_name)
+
+    for token in _re.split(r'\s+', q.lower()):
+        if not token:
+            continue
+        tn = token.replace(' ', '')
+        author_ids = db.session.query(User.id).filter(
+            author_hay.like(f'%{token}%')).subquery()
+        query = query.filter(or_(
+            hay.like(f'%{token}%'),
+            hay_ns.like(f'%{tn}%'),
+            Document.author_id.in_(db.session.query(author_ids.c.id)),
+        ))
+    return query

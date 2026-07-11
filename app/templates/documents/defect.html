@@ -56,10 +56,7 @@
         <i class="ti ti-device-floppy" style="font-size:13px"></i>
         {{ _('Сохранить черновик') }}
       </button>
-      <button type="button" onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);font-family:inherit">
-        <i class="ti ti-printer" style="font-size:13px"></i>
-        {{ _('Печать') }}
-      </button>
+      
       <a href="{{ url_for('documents.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);text-decoration:none;margin-left:auto">
         <i class="ti ti-x" style="font-size:13px"></i>
         {{ _('Отмена') }}

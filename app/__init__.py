@@ -9,6 +9,18 @@ from flask_limiter.util import get_remote_address
 from config.config import config
 
 db = SQLAlchemy()
+
+# SQLite (dev/tests) не понижает регистр кириллицы в lower() — Postgres на проде
+# делает это сам. Выравниваем поведение, чтобы поиск работал одинаково везде.
+from sqlalchemy import event as _sa_event
+from sqlalchemy.engine import Engine as _SAEngine
+
+
+@_sa_event.listens_for(_SAEngine, 'connect')
+def _sqlite_unicode_functions(dbapi_conn, _record):
+    if type(dbapi_conn).__module__.startswith('sqlite3'):
+        dbapi_conn.create_function(
+            'lower', 1, lambda v: v.lower() if isinstance(v, str) else v)
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
