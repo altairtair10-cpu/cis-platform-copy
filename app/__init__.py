@@ -107,6 +107,11 @@ def create_app(config_name='default'):
         start_scheduler(app)
 
     @app.context_processor
+    def inject_ms_sso():
+        from app.services.ms_auth import enabled
+        return dict(ms_sso_enabled=enabled())
+
+    @app.context_processor
     def inject_branding():
         from app.models import AppSetting
         try:
