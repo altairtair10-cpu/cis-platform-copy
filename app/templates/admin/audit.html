@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ {'ru':'Аудит действий','en':'Audit log','kz':'Аудит'}[current_user.language] }}{% endblock %}
+{% block page_title %}{{ {'ru':'Аудит действий','en':'Audit log','kz':'Әрекеттер аудиті'}[current_user.language] }}{% endblock %}
+
+{% block content %}
+<form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+  <select name="user_id" class="form-select" style="max-width:220px;font-size:12px" onchange="this.form.submit()">
+    <option value="">{{ {'ru':'Пользователь: все','en':'User: all','kz':'Пайдаланушы: барлығы'}[current_user.language] }}</option>
+    {% for u in users %}
+    <option value="{{ u.id }}" {% if f_user == u.id %}selected{% endif %}>{{ u.full_name }}</option>
+    {% endfor %}
+  </select>
+  <input type="text" name="action" class="form-input" style="max-width:200px;font-size:12px"
+         placeholder="{{ {'ru':'Действие (напр. login)','en':'Action (e.g. login)','kz':'Әрекет'}[current_user.language] }}"
+         value="{{ f_action }}">
+  <input type="date" name="date_from" class="form-input" style="max-width:150px;font-size:12px" value="{{ f_from }}">
+  <input type="date" name="date_to" class="form-input" style="max-width:150px;font-size:12px" value="{{ f_to }}">
+  <button type="submit" class="btn btn-sm">{{ {'ru':'Фильтр','en':'Filter','kz':'Сүзгі'}[current_user.language] }}</button>
+  <a href="{{ url_for('admin.audit') }}" class="btn btn-sm">{{ {'ru':'Сброс','en':'Reset','kz':'Тазарту'}[current_user.language] }}</a>
+  <span class="text-muted" style="font-size:12px;margin-left:auto">{{ pagination.total }} {{ {'ru':'записей','en':'entries','kz':'жазба'}[current_user.language] }}</span>
+</form>
+
+<div class="card"><div class="card-body" style="overflow-x:auto">
+  <table class="data-table" style="font-size:12px">
+    <thead><tr>
+      <th>{{ {'ru':'Когда (UTC)','en':'When (UTC)','kz':'Қашан'}[current_user.language] }}</th>
+      <th>{{ {'ru':'Кто','en':'Who','kz':'Кім'}[current_user.language] }}</th>
+      <th>{{ {'ru':'Действие','en':'Action','kz':'Әрекет'}[current_user.language] }}</th>
+      <th>{{ {'ru':'Объект','en':'Entity','kz':'Нысан'}[current_user.language] }}</th>
+      <th>{{ {'ru':'Детали','en':'Details','kz':'Егжей'}[current_user.language] }}</th>
+      <th>IP</th>
+    </tr></thead>
+    <tbody>
+      {% for e in entries %}
+      <tr>
+        <td style="white-space:nowrap">{{ e.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+        <td>{{ e.user.full_name if e.user else '—' }}</td>
+        <td style="font-family:ui-monospace,monospace">{{ e.action }}</td>
+        <td>{{ e.entity_type or '' }}{% if e.entity_id %} #{{ e.entity_id }}{% endif %}</td>
+        <td style="max-width:360px;overflow:hidden;text-overflow:ellipsis">{{ e.details or '' }}</td>
+        <td class="text-muted">{{ e.ip or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">
+        {{ {'ru':'Записей нет','en':'No entries','kz':'Жазбалар жоқ'}[current_user.language] }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div style="display:flex;gap:6px;justify-content:center;margin-top:12px">
+    {% if pagination.has_prev %}
+    <a class="btn btn-sm" href="{{ url_for('admin.audit', page=pagination.prev_num, user_id=f_user, action=f_action, date_from=f_from, date_to=f_to) }}">←</a>
+    {% endif %}
+    <span class="text-muted" style="font-size:12px;align-self:center">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a class="btn btn-sm" href="{{ url_for('admin.audit', page=pagination.next_num, user_id=f_user, action=f_action, date_from=f_from, date_to=f_to) }}">→</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div></div>
+{% endblock %}

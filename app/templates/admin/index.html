@@ -59,6 +59,16 @@
     </div>
   </a>
 
+  <a href="{{ url_for('admin.audit') }}" class="card" style="text-decoration:none">
+    <div class="card-body" style="display:flex;gap:12px;align-items:center">
+      <div class="card-icon"><i class="ti ti-shield-search"></i></div>
+      <div>
+        <div class="card-title">{{ {'ru':'Аудит действий','en':'Audit log','kz':'Әрекеттер аудиті'}[current_user.language] }}</div>
+        <div class="text-muted" style="font-size:12px">{{ {'ru':'Кто, что и когда сделал в системе','en':'Who did what and when','kz':'Кім не істеді'}[current_user.language] }}</div>
+      </div>
+    </div>
+  </a>
+
   <a href="{{ url_for('admin.agents') }}" class="card" style="text-decoration:none">
     <div class="card-body" style="display:flex;gap:12px;align-items:center">
       <div class="card-icon"><i class="ti ti-robot"></i></div>
