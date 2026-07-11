@@ -49,3 +49,33 @@ def test_inactive_target_blocked(client, app):
     login(client, 'admin@test.kz', 'adminpass123')
     r = client.post(f'/auth/users/{gone_id}/impersonate', follow_redirects=True)
     assert 'деактивирован' in r.get_data(as_text=True)
+
+
+def test_admin_cannot_demote_self(client, app):
+    with app.app_context():
+        admin_id = User.query.filter_by(email='admin@test.kz').first().id
+    login(client, 'admin@test.kz', 'adminpass123')
+    r = client.post(f'/auth/users/{admin_id}/edit', data={
+        'full_name': 'Admin Test', 'email': 'admin@test.kz', 'role': 'mechanic',
+        'department': 'it', 'language': 'ru', 'is_active': 'y',
+    }, follow_redirects=True)
+    assert 'с самого себя' in r.get_data(as_text=True)
+    with app.app_context():
+        assert db.session.get(User, admin_id).role == 'it_admin'
+
+
+def test_cannot_remove_last_admin_via_other_admin(client, app):
+    with app.app_context():
+        admin2 = User(first_name='Second', last_name='Admin', email='admin2@test.kz',
+                      role='it_admin', is_active=True)
+        admin2.set_password('adminpass456')
+        db.session.add(admin2); db.session.commit()
+        a2_id = admin2.id
+    login(client, 'admin@test.kz', 'adminpass123')
+    # понизить второго админа можно — первый остаётся
+    client.post(f'/auth/users/{a2_id}/edit', data={
+        'full_name': 'Second Admin', 'email': 'admin2@test.kz', 'role': 'field',
+        'department': 'it', 'language': 'ru', 'is_active': 'y',
+    })
+    with app.app_context():
+        assert db.session.get(User, a2_id).role == 'field'

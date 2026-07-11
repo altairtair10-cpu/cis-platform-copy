@@ -250,6 +250,16 @@ def edit_user(user_id):
     if request.method == 'GET':
         form.full_name.data = user.full_name
     if form.validate_on_submit():
+        # защита: нельзя снять it_admin с себя и нельзя лишить систему последнего админа
+        if user.role == 'it_admin' and form.role.data != 'it_admin':
+            if user.id == current_user.id:
+                flash('Нельзя снять роль IT Admin с самого себя — попросите другого администратора.', 'danger')
+                return redirect(url_for('auth.edit_user', user_id=user.id))
+            admins_left = User.query.filter_by(role='it_admin', is_active=True)\
+                                    .filter(User.id != user.id).count()
+            if admins_left == 0:
+                flash('Это последний активный IT Admin — сначала назначьте другого.', 'danger')
+                return redirect(url_for('auth.edit_user', user_id=user.id))
         first, last = _split_name(form.full_name.data)
         user.first_name = first
         user.last_name  = last
