@@ -24,13 +24,13 @@
       {% endif %}
     </form>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
-      <a href="{{ url_for('documents.new_defect_act') }}" class="btn">
-        <i class="ti ti-alert-triangle"></i>
-        {{ _('Дефектный акт') }}
-      </a>
-      <a href="{{ url_for('documents.new_trebovanie_new') }}" class="btn btn-primary">
+      {% set create_map = {'purchase_req': url_for('documents.new_trebovanie_new'),
+                           'po_services': url_for('documents.new_po_services'),
+                           'po_trebovanie': url_for('documents.new_po_trebovanie'),
+                           'defect_act': url_for('documents.new_defect_act')} %}
+      <a href="{{ create_map.get(sel_type, url_for('documents.new')) }}" class="btn btn-primary">
         <i class="ti ti-plus"></i>
-        {{ _('Требование') }}
+        {{ doc_types_all.get(sel_type) if sel_type in create_map else _('Новый документ') }}
       </a>
     </div>
 

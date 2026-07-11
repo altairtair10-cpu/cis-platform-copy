@@ -754,3 +754,22 @@ class Counterparty(db.Model):
     is_active      = db.Column(db.Boolean, nullable=False, default=True)
     created_by     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ToPart(db.Model):
+    """Материалы для ТО конкретной единицы техники (фильтры, масла...).
+    Название должно совпадать с колонкой «Материал» складской таблицы —
+    тогда система сама проверяет наличие на складе."""
+    __tablename__ = 'to_parts'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'),
+                             nullable=False, index=True)
+    name         = db.Column(db.String(256), nullable=False)
+    qty          = db.Column(db.Float, nullable=True)      # сколько нужно на одно ТО
+    unit         = db.Column(db.String(32), nullable=True)
+    note         = db.Column(db.String(256), nullable=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    equipment    = db.relationship('Equipment',
+                                   backref=db.backref('to_parts', lazy='dynamic'))

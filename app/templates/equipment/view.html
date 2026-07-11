@@ -139,4 +139,58 @@
     {% endif %}
   </div>
 </div>
+
+<div class="card" style="margin-top:14px">
+  <div class="card-header"><div class="card-header-left">
+    <div class="card-icon"><i class="ti ti-oil"></i></div>
+    <div class="card-title">{{ _('Материалы для ТО (фильтры, масла)') }}</div>
+  </div></div>
+  <div class="card-body">
+    {% if to_parts_status %}
+    <table class="data-table">
+      <thead><tr>
+        <th>{{ _('Материал') }}</th>
+        <th>{{ _('Нужно на ТО') }}</th>
+        <th>{{ _('На складе') }}</th>
+        <th>{{ _('Статус') }}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        {% for row in to_parts_status %}
+        <tr>
+          <td>{{ row.part.name }}{% if row.part.note %} <span class="text-muted" style="font-size:11px">({{ row.part.note }})</span>{% endif %}</td>
+          <td>{{ '%.0f' % row.part.qty if row.part.qty else '—' }} {{ row.part.unit or '' }}</td>
+          <td>{{ '%.0f' % row.in_stock if row.in_stock is not none else '—' }}</td>
+          <td>
+            {% if row.enough is none %}<span class="pill pill-gray">{{ _('нет данных склада') }}</span>
+            {% elif row.enough %}<span class="pill pill-green">{{ _('есть') }}</span>
+            {% else %}<span class="pill pill-red">{{ _('не хватает') }}</span>{% endif %}
+          </td>
+          <td style="text-align:right">
+            <form method="POST" action="{{ url_for('equipment.delete_to_part', part_id=row.part.id) }}"
+                  onsubmit="return confirm('{{ _('Убрать материал из списка ТО?') }}')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm" style="color:#A31E08">×</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="font-size:12px">
+      {{ _('Добавьте фильтры и масла для ТО этой машины — система будет сама проверять их наличие на складе. Название пишите как в складской таблице.') }}</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('equipment.add_to_part', unit_id=unit.id) }}"
+          style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="name" class="form-input" required style="flex:2;min-width:200px"
+             placeholder="{{ _('Материал (как на складе), напр. LF17473') }}">
+      <input type="text" name="qty" class="form-input" style="max-width:90px" placeholder="{{ _('Кол-во') }}">
+      <input type="text" name="unit" class="form-input" style="max-width:80px" placeholder="{{ _('Ед.') }}">
+      <input type="text" name="note" class="form-input" style="flex:1;min-width:140px" placeholder="{{ _('Примечание') }}">
+      <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-plus"></i></button>
+    </form>
+  </div>
+</div>
 {% endblock %}

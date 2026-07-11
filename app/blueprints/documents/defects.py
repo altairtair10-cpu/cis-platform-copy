@@ -24,7 +24,10 @@ def new_defect_act():
     from app.models import Equipment
     equipment = Equipment.query.order_by(Equipment.unit_id).all()
     now = datetime.now().strftime('%d.%m.%Y %H:%M')
-    return render_template('documents/defect.html', equipment=equipment, now=now)
+    executors = User.query.filter_by(is_active=True)\
+                          .order_by(User.first_name, User.last_name).all()
+    return render_template('documents/defect.html', equipment=equipment, now=now,
+                           executors=executors)
 
 
 @documents.route('/defect-act/submit', methods=['POST'])
@@ -32,14 +35,17 @@ def new_defect_act():
 def submit_defect_act():
     action = request.form.get('action', 'draft')
 
-    # Auto-assign the approving signatory: department head, else director, else IT admin
-    signatory = (User.query.filter_by(role='dept_head', is_active=True).first()
-                 or User.query.filter_by(role='director', is_active=True).first()
-                 or User.query.filter_by(role='it_admin', is_active=True).first())
-
-    if action == 'submit' and not signatory:
+    # Маршрут как у всех документов: утверждающий выбирается в форме.
+    # Если не выбран — fallback на начальника отдела/директора (как раньше).
+    signatory_id = request.form.get('signatory_id', type=int)
+    if not signatory_id:
+        fallback = (User.query.filter_by(role='dept_head', is_active=True).first()
+                    or User.query.filter_by(role='director', is_active=True).first()
+                    or User.query.filter_by(role='it_admin', is_active=True).first())
+        signatory_id = fallback.id if fallback else None
+    if action == 'submit' and not signatory_id:
         action = 'draft'
-        flash('Документ сохранён как черновик: не найден ответственный для согласования (нет активного руководителя подразделения, директора или IT-админа). Обратитесь к администратору.', 'warning')
+        flash('Документ сохранён как черновик: не выбран утверждающий. Укажите маршрут и отправьте ещё раз.', 'warning')
 
     equipment_id = request.form.get('equipment_id', type=int)
     doc = Document(
@@ -78,8 +84,7 @@ def submit_defect_act():
                 price       = _to_float(costs[i]) if i < len(costs) else None,
             ))
 
-    if action == 'submit' and signatory:
-        db.session.add(DocumentApproval(document_id=doc.id, approver_id=signatory.id, step=0, status='pending'))
+    _build_route(doc, action, signatory_id)
 
     db.session.add(DocumentComment(
         document_id = doc.id,
@@ -90,14 +95,8 @@ def submit_defect_act():
 
     db.session.commit()
 
-    if action == 'submit' and signatory:
-        db.session.add(Notification(
-            user_id = signatory.id,
-            title   = f'Документ на согласование: {doc.doc_number}',
-            body    = doc.title[:100],
-            link    = f'/documents/{doc.id}',
-            is_read = False,
-        ))
+    if action == 'submit':
+        _notify_approvers(doc)
         db.session.commit()
 
     flash(f'Документ {doc.doc_number}'

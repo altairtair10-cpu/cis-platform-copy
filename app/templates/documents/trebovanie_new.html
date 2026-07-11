@@ -370,7 +370,23 @@ function recalc() {
   });
   document.getElementById('grand-total').textContent = g.toFixed(2);
 }
-window.addEventListener('load', recalc);
+const PREFILL_ITEMS = {{ prefill_items|tojson if prefill_items else '[]' }};
+window.addEventListener('load', function() {
+  if (PREFILL_ITEMS.length) {
+    const tb = document.getElementById('items-body');
+    while (tb.rows.length < PREFILL_ITEMS.length) addRow();
+    PREFILL_ITEMS.forEach((p, i) => {
+      const tr = tb.rows[i];
+      tr.querySelector('textarea[name="item_name[]"]').value = p.name || '';
+      const spec = tr.querySelector('textarea[name="item_spec[]"]');
+      if (spec) spec.value = p.note || '';
+      tr.querySelector('input[name="item_qty[]"]').value = p.qty || 1;
+      tr.querySelector('input[name="item_unit[]"]').value = p.unit || 'шт';
+      if (p.price != null) tr.querySelector('input[name="item_cost[]"]').value = p.price;
+    });
+  }
+  recalc();
+});
 
 // ── ROUTE TEMPLATES ──
 const ROUTE_TEMPLATES = {{ templates_json|safe if templates_json else '[]' }};

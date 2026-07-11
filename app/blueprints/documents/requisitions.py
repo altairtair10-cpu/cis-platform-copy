@@ -133,13 +133,22 @@ def new_trebovanie_new():
     open_defects = Document.query.filter_by(doc_type='defect_act', defect_closed=False)\
                                  .order_by(Document.created_at.desc()).limit(100).all()
     from_defect = request.args.get('from_defect', type=int)
+    prefill_items = []
+    if from_defect:
+        src = Document.query.filter_by(id=from_defect, doc_type='defect_act').first()
+        if src:
+            prefill_items = [{'name': it.name, 'qty': float(it.quantity or 1),
+                              'unit': it.unit or 'шт', 'note': it.note or '',
+                              'price': float(it.price) if it.price is not None else None}
+                             for it in src.items]
     route_templates = RouteTemplate.query.order_by(RouteTemplate.name).all()
     templates_json = _json.dumps(
         [{'id': t.id, 'name': t.name, 'data': _json.loads(t.data)} for t in route_templates],
         ensure_ascii=False)
     return render_template('documents/trebovanie_new.html', now=now, executors=executors,
                            approvers=approvers, open_defects=open_defects,
-                           from_defect=from_defect, templates_json=templates_json)
+                           from_defect=from_defect, templates_json=templates_json,
+                           prefill_items=prefill_items)
 
 
 @documents.route('/trebovanie-new/submit', methods=['POST'])
