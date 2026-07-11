@@ -66,6 +66,17 @@ def create_app(config_name='default'):
     app.register_blueprint(admin_bp)
     app.register_blueprint(errors_bp)
 
+    @app.after_request
+    def security_headers(resp):
+        resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+        resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        resp.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+        if not app.debug and not app.testing:
+            resp.headers.setdefault('Strict-Transport-Security',
+                                    'max-age=31536000; includeSubDomains')
+        return resp
+
     @app.before_request
     def enforce_password_change():
         """Users flagged with a temporary password must set a new one first."""
@@ -78,6 +89,12 @@ def create_app(config_name='default'):
                 and request.endpoint not in allowed):
             flash('Please set a new password before continuing. / Пожалуйста, смените временный пароль.', 'warning')
             return redirect(url_for('auth.settings'))
+
+    import os as _os
+    if (config_name == 'production'
+            and _os.environ.get('ENABLE_SCHEDULER', '1') == '1'):
+        from app.scheduler import start_scheduler
+        start_scheduler(app)
 
     @app.context_processor
     def inject_branding():

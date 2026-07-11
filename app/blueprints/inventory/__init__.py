@@ -24,19 +24,37 @@ def get_gc():
 def get_spreadsheet():
     return get_gc().open_by_key(os.environ["SPREADSHEET_ID"])
 
+_CACHE = {}
+_CACHE_TTL = 300   # 5 минут — таблица обновляется ботом нечасто
+
+
+def _cached(key, loader):
+    import time
+    now = time.time()
+    hit = _CACHE.get(key)
+    if hit and now - hit[0] < _CACHE_TTL:
+        return hit[1]
+    data = loader()
+    _CACHE[key] = (now, data)
+    return data
+
+
 def get_inventory_rows():
-    ws = get_spreadsheet().worksheet(os.environ.get("SHEET_NAME", "Остатки по базам"))
-    rows = ws.get_all_records()
-    return rows
+    def load():
+        ws = get_spreadsheet().worksheet(os.environ.get("SHEET_NAME", "Остатки по базам"))
+        return ws.get_all_records()
+    return _cached('inventory', load)
 
 def get_sheet_rows(sheet_name):
-    ws = get_spreadsheet().worksheet(sheet_name)
-    rows = ws.get_all_values()
-    if not rows:
-        return []
-    headers = rows[0]
-    result = [dict(zip(headers, row)) for row in rows[1:]]
-    return [row for row in result if any(v.strip() for v in row.values())]
+    def load():
+        ws = get_spreadsheet().worksheet(sheet_name)
+        rows = ws.get_all_values()
+        if not rows:
+            return []
+        headers = rows[0]
+        result = [dict(zip(headers, row)) for row in rows[1:]]
+        return [row for row in result if any(v.strip() for v in row.values())]
+    return _cached(f'sheet:{sheet_name}', load)
 
 @inventory.route('/')
 @login_required
