@@ -478,3 +478,43 @@ def agent_delete_file(file_id):
     db.session.commit()
     flash('Файл удалён из базы знаний.', 'success')
     return redirect(url_for('admin.agent_form', agent_id=agent_id))
+
+
+# ── AUDIT LOG VIEWER ─────────────────────────────────────────────────────────
+
+@admin.route('/audit')
+@login_required
+@requires_role('it_admin')
+def audit():
+    from app.models import AuditLog, User
+    from datetime import datetime as _dt
+
+    page = request.args.get('page', 1, type=int)
+    user_id = request.args.get('user_id', type=int)
+    action = (request.args.get('action') or '').strip()
+    date_from = (request.args.get('date_from') or '').strip()
+    date_to = (request.args.get('date_to') or '').strip()
+
+    query = AuditLog.query
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    if action:
+        query = query.filter(AuditLog.action.ilike(f'%{action}%'))
+    if date_from:
+        try:
+            query = query.filter(AuditLog.created_at >= _dt.strptime(date_from, '%Y-%m-%d'))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            query = query.filter(AuditLog.created_at
+                                 < _dt.strptime(date_to, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
+        except ValueError:
+            pass
+    pagination = query.order_by(AuditLog.created_at.desc())\
+                      .paginate(page=page, per_page=50, error_out=False)
+    users = User.query.order_by(User.first_name).all()
+    return render_template('admin/audit.html', pagination=pagination,
+                           entries=pagination.items, users=users,
+                           f_user=user_id, f_action=action,
+                           f_from=date_from, f_to=date_to)
