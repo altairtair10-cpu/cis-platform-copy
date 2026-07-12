@@ -78,3 +78,9 @@ def test_saved_view_lifecycle(client, app):
     client.post(f'/documents/views/{vid}/delete')
     with app.app_context():
         assert db.session.get(SavedView, vid) is None
+
+
+def test_sidebar_has_my_documents_tab(client):
+    login(client, 'mech@test.kz', 'mechpass123')
+    body = client.get('/dashboard').get_data(as_text=True)
+    assert 'mine=inbox' in body and 'Мои документы' in body

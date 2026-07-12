@@ -57,7 +57,10 @@
       </a>
       {% endif %}
       <a href="{{ url_for('inventory.index') }}" class="sb-item {% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}"><i class="ti ti-packages"></i><span>{{ _('Склад') }}</span></a>
-      <a href="{{ url_for('documents.index') }}" class="sb-item {% if request.endpoint == 'documents.index' %}active{% endif %}">
+      <a href="{{ url_for('documents.index', mine='inbox') }}" class="sb-item {% if request.endpoint == 'documents.index' and request.args.get('mine') %}active{% endif %}">
+        <i class="ti ti-inbox"></i><span>{{ _('Мои документы') }}</span>
+      </a>
+      <a href="{{ url_for('documents.index') }}" class="sb-item {% if request.endpoint == 'documents.index' and not request.args.get('mine') %}active{% endif %}">
         <i class="ti ti-files"></i><span>{{ _('Все документы') }}</span>
       </a>
       <a href="{{ url_for('documents.new') }}" class="sb-item {% if request.endpoint == 'documents.new' %}active{% endif %}">
