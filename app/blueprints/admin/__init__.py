@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from flask import (Blueprint, render_template, redirect, url_for, flash,
                    request, abort)
 from flask_login import login_required, current_user
-from app.models import (EquipmentType, ReferenceDepartment, Location,
+from app.models import (EquipmentType, ReferenceDepartment, Location, BudgetLine,
                         AppSetting, DocNumberSetting, RolePermission, ROLES,
                         PERMISSIONS, all_permission_modules, DOC_TYPES, db)
 from app.audit import log_action
@@ -21,6 +21,7 @@ _SECTIONS = {
     'equipment-types': (EquipmentType, 'equipment type'),
     'departments':     (ReferenceDepartment, 'department'),
     'locations':       (Location, 'location'),
+    'budget-lines':    (BudgetLine, 'budget line'),
 }
 
 
@@ -40,6 +41,7 @@ def index():
         'equipment_types': EquipmentType.query.count(),
         'departments':     ReferenceDepartment.query.count(),
         'locations':       Location.query.count(),
+        'budget_lines':    BudgetLine.query.count(),
     }
     return render_template('admin/index.html', counts=counts)
 
@@ -53,10 +55,15 @@ def reference_data():
     equipment_types = EquipmentType.query.order_by(EquipmentType.name).all()
     departments = ReferenceDepartment.query.order_by(ReferenceDepartment.name).all()
     locations = Location.query.order_by(Location.name).all()
+    from app.blueprints.documents.helpers import _budget_year_spent
+    budget_lines = BudgetLine.query.order_by(BudgetLine.name).all()
+    budget_spent = {bl.id: _budget_year_spent(bl.id) for bl in budget_lines}
     return render_template('admin/reference_data.html',
                            equipment_types=equipment_types,
                            departments=departments,
-                           locations=locations)
+                           locations=locations,
+                           budget_lines=budget_lines,
+                           budget_spent=budget_spent)
 
 
 @admin.route('/reference-data/<section>/add', methods=['POST'])
@@ -109,6 +116,31 @@ def ref_toggle(section, row_id):
     log_action(f'ref_{section}_{"activated" if row.is_active else "deactivated"}',
                section, row.id, details=row.name)
     db.session.commit()
+    return redirect(url_for('admin.reference_data'))
+
+
+@admin.route('/reference-data/budget-lines/<int:row_id>/limit', methods=['POST'])
+@login_required
+@requires_role('it_admin')
+def budget_line_limit(row_id):
+    from decimal import Decimal, InvalidOperation
+    row = BudgetLine.query.get_or_404(row_id)
+    raw = (request.form.get('yearly_limit') or '').strip().replace(' ', '').replace(',', '.')
+    if raw == '':
+        row.yearly_limit = None
+    else:
+        try:
+            val = Decimal(raw)
+            if val < 0:
+                raise InvalidOperation
+            row.yearly_limit = val
+        except InvalidOperation:
+            flash('Некорректная сумма лимита.', 'warning')
+            return redirect(url_for('admin.reference_data'))
+    log_action('ref_budget-lines_limit_set', 'budget-lines', row.id,
+               details=f'{row.name}: {row.yearly_limit}')
+    db.session.commit()
+    flash('Лимит обновлён.', 'success')
     return redirect(url_for('admin.reference_data'))
 
 

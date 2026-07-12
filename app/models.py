@@ -162,6 +162,7 @@ class Document(db.Model):
     related_req_id    = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     paid_at           = db.Column(db.DateTime, nullable=True)
     counterparty_id   = db.Column(db.Integer, db.ForeignKey('counterparties.id'), nullable=True)
+    budget_line_id    = db.Column(db.Integer, db.ForeignKey('budget_lines.id'), nullable=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -179,6 +180,8 @@ class Document(db.Model):
     related_req    = db.relationship('Document', remote_side='Document.id',
                                      foreign_keys=[related_req_id],
                                      backref=db.backref('purchase_orders', lazy='dynamic'))
+    budget_line    = db.relationship('BudgetLine',
+                                     backref=db.backref('documents', lazy='dynamic'))
 
     def assign_event_code(self):
         """Per-unit sequential code for defect acts: <unit_id>-ДА<n>."""
@@ -464,6 +467,21 @@ class ReferenceDepartment(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     name      = db.Column(db.String(64), unique=True, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+
+
+class BudgetLine(db.Model):
+    """Справочник статей бюджета с годовым лимитом (идея из ERPNext Budget:
+    контроль на этапе создания РО в режиме Warn — предупреждаем, не блокируем).
+    yearly_limit = None означает «без лимита» (статья только для унификации)."""
+    __tablename__ = 'budget_lines'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    name         = db.Column(db.String(128), unique=True, nullable=False)
+    yearly_limit = db.Column(db.Numeric(14, 2), nullable=True)
+    is_active    = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return f'<BudgetLine {self.name} limit={self.yearly_limit}>'
 
 
 # ── DOCUMENT ATTACHMENTS ────────────────────────────────────────────────────────
