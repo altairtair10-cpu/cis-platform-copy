@@ -98,3 +98,37 @@ def test_drafts_do_not_count_against_budget(client, app):
     }, content_type='multipart/form-data')
     resp = _submit_po(client, app, 'Спецодежда', cost='100000')
     assert 'превышен годовой лимит' not in resp.get_data(as_text=True)
+
+
+def test_over_limit_banner_shown_on_document_page(client, app):
+    _add_line(app, 'Аренда техники', limit=150000)
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_po(client, app, 'Аренда техники', cost='200000')
+    with app.app_context():
+        doc_id = Document.query.filter_by(doc_type='po_services').first().id
+    resp = client.get(f'/documents/{doc_id}')
+    html = resp.get_data(as_text=True)
+    assert 'Превышен годовой лимит' in html
+    assert 'Аренда техники' in html
+
+
+def test_no_banner_within_limit(client, app):
+    _add_line(app, 'Связь', limit=500000)
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_po(client, app, 'Связь', cost='100000')
+    with app.app_context():
+        doc_id = Document.query.filter_by(doc_type='po_services').first().id
+    resp = client.get(f'/documents/{doc_id}')
+    assert 'Превышен годовой лимит' not in resp.get_data(as_text=True)
+
+
+def test_approver_sees_over_limit_banner(client, app):
+    _add_line(app, 'Инструмент', limit=50000)
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_po(client, app, 'Инструмент', cost='90000')
+    with app.app_context():
+        doc_id = Document.query.filter_by(doc_type='po_services').first().id
+    client.get('/auth/logout')
+    login(client, 'head@test.kz', 'headpass123')
+    resp = client.get(f'/documents/{doc_id}')
+    assert 'Превышен годовой лимит' in resp.get_data(as_text=True)

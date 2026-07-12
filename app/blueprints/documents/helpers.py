@@ -96,6 +96,26 @@ def _warn_if_budget_exceeded(doc, bl):
               'warning')
 
 
+def _budget_banner(doc):
+    """Данные для постоянного баннера на странице документа: если у документа
+    есть статья бюджета с лимитом — возвращает dict с потраченным за год,
+    лимитом и флагом превышения. Иначе None."""
+    if not doc.budget_line_id or doc.status in ('draft', 'rejected', 'archived'):
+        return None
+    bl = doc.budget_line
+    if not bl or bl.yearly_limit is None:
+        return None
+    spent = _budget_year_spent(bl.id)  # включая этот документ
+    limit = float(bl.yearly_limit)
+    return {
+        'name': bl.name,
+        'spent': spent,
+        'limit': limit,
+        'over': spent > limit,
+        'excess': max(0.0, spent - limit),
+    }
+
+
 def _assigned_doc_ids_subquery(user):
     """Document IDs where this user is (or was) an assigned approver at any step —
     regardless of their role's blanket permissions. Being routed to a document
