@@ -74,10 +74,10 @@ def view(doc_id):
     comments  = doc.comments.order_by('created_at').all()
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
     panel_counts = _panel_counts()
-    from .helpers import _budget_banner
+    from .helpers import _budget_info
     return render_template('documents/view.html', doc=doc, items=items,
                            comments=comments, approvals=approvals,
-                           panel_counts=panel_counts, budget_banner=_budget_banner(doc),
+                           panel_counts=panel_counts, budget_info=_budget_info(doc),
                            my_counts=_my_counts(), saved_views=_saved_views())
 
 

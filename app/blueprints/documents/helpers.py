@@ -96,23 +96,23 @@ def _warn_if_budget_exceeded(doc, bl):
               'warning')
 
 
-def _budget_banner(doc):
-    """Данные для постоянного баннера на странице документа: если у документа
-    есть статья бюджета с лимитом — возвращает dict с потраченным за год,
-    лимитом и флагом превышения. Иначе None."""
+def _budget_info(doc):
+    """Сводка по статье бюджета документа для страницы просмотра:
+    название, потрачено за год, лимит (или None) и флаг превышения.
+    None — если статья не привязана или документ не считается в бюджете."""
     if not doc.budget_line_id or doc.status in ('draft', 'rejected', 'archived'):
         return None
     bl = doc.budget_line
-    if not bl or bl.yearly_limit is None:
+    if not bl:
         return None
+    limit = float(bl.yearly_limit) if bl.yearly_limit is not None else None
     spent = _budget_year_spent(bl.id)  # включая этот документ
-    limit = float(bl.yearly_limit)
     return {
         'name': bl.name,
         'spent': spent,
         'limit': limit,
-        'over': spent > limit,
-        'excess': max(0.0, spent - limit),
+        'over': limit is not None and spent > limit,
+        'excess': max(0.0, spent - limit) if limit is not None else 0.0,
     }
 
 

@@ -100,29 +100,30 @@ def test_drafts_do_not_count_against_budget(client, app):
     assert 'превышен годовой лимит' not in resp.get_data(as_text=True)
 
 
-def test_over_limit_banner_shown_on_document_page(client, app):
+def test_details_show_budget_line_and_over_limit(client, app):
     _add_line(app, 'Аренда техники', limit=150000)
     login(client, 'mech@test.kz', 'mechpass123')
     _submit_po(client, app, 'Аренда техники', cost='200000')
     with app.app_context():
         doc_id = Document.query.filter_by(doc_type='po_services').first().id
-    resp = client.get(f'/documents/{doc_id}')
-    html = resp.get_data(as_text=True)
-    assert 'Превышен годовой лимит' in html
-    assert 'Аренда техники' in html
+    html = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert 'Статья бюджета' in html and 'Аренда техники' in html
+    assert 'Потрачено за год' in html
+    assert 'Лимит бюджета превышен' in html
 
 
-def test_no_banner_within_limit(client, app):
+def test_details_within_limit_no_red_pill(client, app):
     _add_line(app, 'Связь', limit=500000)
     login(client, 'mech@test.kz', 'mechpass123')
     _submit_po(client, app, 'Связь', cost='100000')
     with app.app_context():
         doc_id = Document.query.filter_by(doc_type='po_services').first().id
-    resp = client.get(f'/documents/{doc_id}')
-    assert 'Превышен годовой лимит' not in resp.get_data(as_text=True)
+    html = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert 'Статья бюджета' in html and 'Потрачено за год' in html
+    assert 'Лимит бюджета превышен' not in html
 
 
-def test_approver_sees_over_limit_banner(client, app):
+def test_approver_sees_over_limit_pill(client, app):
     _add_line(app, 'Инструмент', limit=50000)
     login(client, 'mech@test.kz', 'mechpass123')
     _submit_po(client, app, 'Инструмент', cost='90000')
@@ -130,5 +131,16 @@ def test_approver_sees_over_limit_banner(client, app):
         doc_id = Document.query.filter_by(doc_type='po_services').first().id
     client.get('/auth/logout')
     login(client, 'head@test.kz', 'headpass123')
-    resp = client.get(f'/documents/{doc_id}')
-    assert 'Превышен годовой лимит' in resp.get_data(as_text=True)
+    html = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert 'Лимит бюджета превышен' in html
+
+
+def test_budget_line_without_limit_shows_name_only(client, app):
+    _add_line(app, 'Канцелярия', limit=None)
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_po(client, app, 'Канцелярия', cost='100000')
+    with app.app_context():
+        doc_id = Document.query.filter_by(doc_type='po_services').first().id
+    html = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert 'Канцелярия' in html
+    assert 'Потрачено за год' not in html
