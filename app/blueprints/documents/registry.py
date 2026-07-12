@@ -25,6 +25,7 @@ def index():
     year = request.args.get('year', type=int)
     doc_type = request.args.get('doc_type')
     q = (request.args.get('q') or '').strip()
+    mine = request.args.get('mine') or None
     page = request.args.get('page', 1, type=int)
 
     panel_counts = _panel_counts(doc_type)
@@ -39,6 +40,8 @@ def index():
         query = query.filter(extract('year', Document.created_at) == year)
     if q:
         query = _apply_search(query, q)
+    if mine:
+        query = _apply_mine(query, mine)
     query = query.order_by(Document.created_at.desc())
 
     pagination = query.paginate(page=page, per_page=25, error_out=False)
@@ -48,6 +51,8 @@ def index():
     years = sorted({y for (y,) in db.session.query(
         distinct(extract('year', Document.created_at))).all() if y}, reverse=True)
     return render_template('documents/index.html', docs=docs, panel_counts=panel_counts,
+                           my_counts=_my_counts(), saved_views=_saved_views(),
+                           sel_mine=mine,
                            years=years, sel_year=year, sel_type=doc_type, q=q,
                            pagination=pagination,
                            doc_types=DOC_TYPES, statuses=DOC_STATUSES)
@@ -70,7 +75,9 @@ def view(doc_id):
     approvals = doc.approvals.order_by(DocumentApproval.step).all()
     panel_counts = _panel_counts()
     return render_template('documents/view.html', doc=doc, items=items,
-                           comments=comments, approvals=approvals, panel_counts=panel_counts)
+                           comments=comments, approvals=approvals,
+                           panel_counts=panel_counts,
+                           my_counts=_my_counts(), saved_views=_saved_views())
 
 
 @documents.route('/<int:doc_id>/attachments/upload', methods=['POST'])
@@ -287,3 +294,78 @@ def _apply_search(query, q):
             Document.author_id.in_(db.session.query(author_ids.c.id)),
         ))
     return query
+
+
+def _my_counts():
+    """Счётчики для секции «Мои документы» левой панели."""
+    from sqlalchemy import func
+    inbox = Document.query.filter(
+        Document.status == 'pending',
+        Document.id.in_(
+            db.session.query(DocumentApproval.document_id).filter(
+                DocumentApproval.approver_id == current_user.id,
+                DocumentApproval.status == 'pending',
+                DocumentApproval.step == Document.current_step)
+            .correlate(Document))).count()
+    created = Document.query.filter_by(author_id=current_user.id).count()
+    decided = db.session.query(func.count(func.distinct(DocumentApproval.document_id)))\
+        .filter(DocumentApproval.approver_id == current_user.id,
+                DocumentApproval.status != 'pending').scalar() or 0
+    return {'inbox': inbox, 'created': created, 'decided': decided}
+
+
+def _apply_mine(query, mine):
+    if mine == 'created':
+        return query.filter(Document.author_id == current_user.id)
+    if mine == 'inbox':
+        return query.filter(
+            Document.status == 'pending',
+            Document.id.in_(
+                db.session.query(DocumentApproval.document_id).filter(
+                    DocumentApproval.approver_id == current_user.id,
+                    DocumentApproval.status == 'pending',
+                    DocumentApproval.step == Document.current_step)
+                .correlate(Document)))
+    if mine == 'decided':
+        return query.filter(Document.id.in_(
+            db.session.query(DocumentApproval.document_id).filter(
+                DocumentApproval.approver_id == current_user.id,
+                DocumentApproval.status != 'pending')))
+    return query
+
+
+def _saved_views():
+    from app.models import SavedView
+    return SavedView.query.filter_by(user_id=current_user.id)\
+                          .order_by(SavedView.name).all()
+
+
+@documents.route('/views/save', methods=['POST'])
+@login_required
+def save_view():
+    from app.models import SavedView
+    name = (request.form.get('name') or '').strip()[:128]
+    params = (request.form.get('params') or '').strip()[:2000].lstrip('?')
+    if not name:
+        flash('Укажите название вида.', 'warning')
+        return redirect(url_for('documents.index'))
+    view = SavedView.query.filter_by(user_id=current_user.id, name=name).first()
+    if view is None:
+        view = SavedView(user_id=current_user.id, name=name)
+        db.session.add(view)
+    view.params = params
+    db.session.commit()
+    flash(f'Вид «{name}» сохранён.', 'success')
+    return redirect(url_for('documents.index') + ('?' + params if params else ''))
+
+
+@documents.route('/views/<int:view_id>/delete', methods=['POST'])
+@login_required
+def delete_view(view_id):
+    from app.models import SavedView
+    view = SavedView.query.get_or_404(view_id)
+    if view.user_id != current_user.id:
+        abort(403)
+    db.session.delete(view)
+    db.session.commit()
+    return redirect(url_for('documents.index'))
