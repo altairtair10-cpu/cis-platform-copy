@@ -19,7 +19,37 @@
     </div>
     <div style="padding:6px 0">
       {% set cur_status = request.args.get('status') or '' %}
-      <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status %}active{% endif %}">
+      {% if my_counts is defined and my_counts %}
+      <div class="dl-section">{{ _('Мои документы') }}</div>
+      <a href="{{ url_for('documents.index', mine='inbox') }}" class="dl-item {% if request.args.get('mine') == 'inbox' %}active{% endif %}">
+        <span>{{ _('Ждут моего решения') }}</span>
+        <span class="dl-count" {% if my_counts.inbox %}style="background:#FDECEA;color:#A31E08;font-weight:700"{% endif %}>{{ my_counts.inbox }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', mine='created') }}" class="dl-item {% if request.args.get('mine') == 'created' %}active{% endif %}">
+        <span>{{ _('Созданные мной') }}</span><span class="dl-count">{{ my_counts.created }}</span>
+      </a>
+      <a href="{{ url_for('documents.index', mine='decided') }}" class="dl-item {% if request.args.get('mine') == 'decided' %}active{% endif %}">
+        <span>{{ _('Решённые мной') }}</span><span class="dl-count">{{ my_counts.decided }}</span>
+      </a>
+      {% endif %}
+
+      {% if saved_views is defined and saved_views %}
+      <div class="dl-section">{{ _('Мои виды') }}</div>
+      {% for v in saved_views %}
+      <div style="display:flex;align-items:center">
+        <a href="{{ url_for('documents.index') }}?{{ v.params }}" class="dl-item" style="flex:1">
+          <span><i class="ti ti-bookmark" style="font-size:11px"></i> {{ v.name }}</span>
+        </a>
+        <form method="POST" action="{{ url_for('documents.delete_view', view_id=v.id) }}" style="margin-right:8px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" title="{{ _('Удалить вид') }}"
+                  style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:12px">×</button>
+        </form>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <a href="{{ url_for('documents.index', doc_type=cur_type or None) }}" class="dl-item {% if not cur_status and not request.args.get('mine') %}active{% endif %}">
         <span>Все</span><span class="dl-count">{{ panel_counts.get('_total', 0) }}</span>
       </a>
 

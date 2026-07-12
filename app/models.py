@@ -773,3 +773,14 @@ class ToPart(db.Model):
 
     equipment    = db.relationship('Equipment',
                                    backref=db.backref('to_parts', lazy='dynamic'))
+
+
+class SavedView(db.Model):
+    """Сохранённый вид реестра документов: имя + параметры фильтров пользователя."""
+    __tablename__ = 'saved_views'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    name       = db.Column(db.String(128), nullable=False)
+    params     = db.Column(db.Text, nullable=False, default='')   # querystring
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

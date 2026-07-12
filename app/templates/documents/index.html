@@ -23,6 +23,10 @@
         {% endfor %}
       </select>
       
+      {% if request.args and (q or sel_type or sel_year or request.args.get('status') or sel_mine) %}
+      <button type="button" class="btn btn-sm" onclick="saveCurrentView()">
+        <i class="ti ti-bookmark-plus"></i> {{ _('Сохранить вид') }}</button>
+      {% endif %}
       {% if current_user.can_access('documents') or current_user.can_access('documents_read') or current_user.can_access('documents_procurement') %}
       <a href="{{ url_for('documents.export_xlsx', doc_type=sel_type, year=sel_year, month=request.args.get('month')) }}" class="btn btn-sm">
         <i class="ti ti-file-spreadsheet"></i> {{ _('Экспорт в Excel') }}
@@ -65,7 +69,7 @@
         </thead>
         <tbody>
           {% for doc in docs %}
-          <tr onclick="window.location='{{ url_for('documents.view', doc_id=doc.id) }}'">
+          <tr data-doc-row onclick="window.location='{{ url_for('documents.view', doc_id=doc.id) }}'">
             <td><span class="doc-number">{{ doc.doc_number or 'Черновик' }}</span></td>
             <td>
               <span class="pill pill-blue">
@@ -109,4 +113,18 @@
     </div>
   </div>
 </div>
+<form id="save-view-form" method="POST" action="{{ url_for('documents.save_view') }}" style="display:none">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="name" id="sv-name">
+  <input type="hidden" name="params" id="sv-params">
+</form>
+<script>
+function saveCurrentView() {
+  const name = prompt('{{ _('Название вида (например: «Мои ПО на оплате»)') }}');
+  if (!name) return;
+  document.getElementById('sv-name').value = name;
+  document.getElementById('sv-params').value = window.location.search.replace(/^\?/, '').replace(/(^|&)page=\d+/, '');
+  document.getElementById('save-view-form').submit();
+}
+</script>
 {% endblock %}

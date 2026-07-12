@@ -1308,3 +1308,27 @@ msgstr "Copied"
 msgid "Поиск: номер, содержание, автор..."
 msgstr "Search: number, subject, author..."
 
+msgid "Мои документы"
+msgstr "My documents"
+
+msgid "Ждут моего решения"
+msgstr "Awaiting my decision"
+
+msgid "Созданные мной"
+msgstr "Created by me"
+
+msgid "Решённые мной"
+msgstr "Decided by me"
+
+msgid "Мои виды"
+msgstr "My views"
+
+msgid "Удалить вид"
+msgstr "Delete view"
+
+msgid "Сохранить вид"
+msgstr "Save view"
+
+msgid "Название вида (например: «Мои ПО на оплате»)"
+msgstr "View name (e.g. "My POs awaiting payment")"
+
