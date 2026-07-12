@@ -70,5 +70,55 @@
   {{ ref_section(_('Отделы'),
                  'ti-building', 'departments', departments,
                  _('Новый отдел')) }}
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-wallet"></i></div>
+        <div class="card-title">{{ _('Статьи бюджета') }}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('admin.ref_add', section='budget-lines') }}" style="display:flex;gap:8px;margin-bottom:14px">
+        <input name="name" class="form-input" placeholder="{{ _('Новая статья, напр. Запчасти спецтехники') }}" required style="flex:1">
+        <button type="submit" class="btn btn-primary btn-sm">{{ _('Добавить') }}</button>
+      </form>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="text-align:left;color:var(--color-text-secondary)">
+            <th style="padding:4px 8px">{{ _('Статья') }}</th>
+            <th style="padding:4px 8px">{{ _('Годовой лимит') }}</th>
+            <th style="padding:4px 8px">{{ _('Потрачено (год)') }}</th>
+            <th style="padding:4px 8px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bl in budget_lines %}
+          {% set spent = budget_spent.get(bl.id, 0) %}
+          <tr style="border-top:0.5px solid var(--color-border-tertiary);{% if not bl.is_active %}opacity:.5{% endif %}">
+            <td style="padding:6px 8px">{{ bl.name }}</td>
+            <td style="padding:6px 8px">
+              <form method="POST" action="{{ url_for('admin.budget_line_limit', row_id=bl.id) }}" style="display:flex;gap:6px">
+                <input name="yearly_limit" class="form-input" style="width:130px" value="{{ bl.yearly_limit if bl.yearly_limit is not none else '' }}" placeholder="{{ _('без лимита') }}">
+                <button type="submit" class="btn btn-sm">{{ _('Сохранить') }}</button>
+              </form>
+            </td>
+            <td style="padding:6px 8px;white-space:nowrap;{% if bl.yearly_limit is not none and spent > bl.yearly_limit|float %}color:#C0392B;font-weight:600{% endif %}">
+              {{ '{:,.2f}'.format(spent) }}
+              {% if bl.yearly_limit is not none %} / {{ '{:,.2f}'.format(bl.yearly_limit|float) }}{% endif %}
+            </td>
+            <td style="padding:6px 8px;text-align:right">
+              <form method="POST" action="{{ url_for('admin.ref_toggle', section='budget-lines', row_id=bl.id) }}">
+                <button type="submit" class="btn btn-sm">{{ _('Выключить') if bl.is_active else _('Включить') }}</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="padding:10px 8px;color:var(--color-text-tertiary)">{{ _('Статей пока нет. Добавьте первую — она появится подсказкой в формах РО.') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 {% endblock %}

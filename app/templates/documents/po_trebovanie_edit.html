@@ -111,7 +111,7 @@
       <div class="form-group"><label class="form-label">Условия оплаты</label><input name="payment_terms" type="text" class="form-input" value="{{ extras.get('payment_terms','') }}"></div>
       <div class="form-group"><label class="form-label">Условия оказания услуг</label><input name="service_terms" type="text" class="form-input" value="{{ extras.get('service_terms','') }}"></div>
       <div class="form-group"><label class="form-label">Срок оказания услуг</label><input name="service_date" type="date" class="form-input" value="{{ extras.get('service_date','') }}"></div>
-      <div class="form-group"><label class="form-label">Статья бюджета</label><input name="budget_line" type="text" class="form-input" value="{{ extras.get('budget_line','') }}"></div>
+      <div class="form-group"><label class="form-label">Статья бюджета</label><input name="budget_line" type="text" class="form-input" list="budget-lines-dl" value="{{ extras.get('budget_line','') }}"><datalist id="budget-lines-dl">{% for bl in budget_lines %}<option value="{{ bl.name }}">{% endfor %}</datalist></div>
     </div>
   </div>
 </div>

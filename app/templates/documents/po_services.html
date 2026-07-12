@@ -122,7 +122,7 @@
         </div>
         <div class="dlg-row">
           <div class="dlg-label">Статья бюджета:<span class="dlg-req">*</span></div>
-          <div><input name="budget_line" type="text" class="dlg-input" required></div>
+          <div><input name="budget_line" type="text" class="dlg-input" list="budget-lines-dl" required><datalist id="budget-lines-dl">{% for bl in budget_lines %}<option value="{{ bl.name }}">{% endfor %}</datalist></div>
         </div>
       </div>
     </div>

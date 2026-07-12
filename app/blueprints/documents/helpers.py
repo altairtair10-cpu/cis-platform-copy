@@ -42,6 +42,60 @@ def _unpack_extras(justification):
     return out
 
 
+# ── БЮДЖЕТНЫЙ КОНТРОЛЬ (режим Warn, по мотивам ERPNext Budget) ────────────────
+
+def _budget_year_spent(budget_line_id, year=None, exclude_doc_id=None):
+    """Сумма всех РО по статье бюджета за календарный год (кроме черновиков
+    и отклонённых). Считается по позициям: qty × price."""
+    from datetime import datetime as _dt
+    from sqlalchemy import func, extract
+    from app.models import DocumentItem
+    year = year or _dt.utcnow().year
+    q = (db.session.query(
+            func.coalesce(func.sum(
+                func.coalesce(DocumentItem.quantity, 0) *
+                func.coalesce(DocumentItem.price, 0)), 0))
+         .join(Document, DocumentItem.document_id == Document.id)
+         .filter(Document.budget_line_id == budget_line_id,
+                 Document.doc_type.in_(('po_services', 'po_trebovanie')),
+                 Document.status.notin_(('draft', 'rejected', 'archived')),
+                 extract('year', Document.created_at) == year))
+    if exclude_doc_id:
+        q = q.filter(Document.id != exclude_doc_id)
+    return float(q.scalar() or 0)
+
+
+def _apply_budget_line(doc, budget_line_name):
+    """Привязывает документ к статье бюджета из справочника (по точному
+    совпадению названия). Свободный текст остаётся в extras как раньше."""
+    from app.models import BudgetLine
+    doc.budget_line_id = None
+    name = (budget_line_name or '').strip()
+    if not name:
+        return None
+    bl = BudgetLine.query.filter_by(name=name, is_active=True).first()
+    if bl:
+        doc.budget_line_id = bl.id
+    return bl
+
+
+def _warn_if_budget_exceeded(doc, bl):
+    """Если по статье задан лимит и сумма РО за год его превышает —
+    предупреждаем автора (не блокируем: режим Warn)."""
+    if not bl or bl.yearly_limit is None or doc.status == 'draft':
+        return
+    spent_before = _budget_year_spent(bl.id, exclude_doc_id=doc.id)
+    doc_total = float(doc.total_cost or 0)
+    limit = float(bl.yearly_limit)
+    if spent_before + doc_total > limit:
+        over = spent_before + doc_total - limit
+        flash(f'Внимание: по статье бюджета «{bl.name}» превышен годовой лимит. '
+              f'Лимит: {limit:,.2f}, с учётом этого документа: '
+              f'{spent_before + doc_total:,.2f} (превышение {over:,.2f}). '
+              f'Документ отправлен, но обратите внимание согласующих.',
+              'warning')
+
+
 def _assigned_doc_ids_subquery(user):
     """Document IDs where this user is (or was) an assigned approver at any step —
     regardless of their role's blanket permissions. Being routed to a document

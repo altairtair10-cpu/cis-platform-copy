@@ -15,7 +15,8 @@ from . import documents
 from .helpers import (_to_float, _unpack_extras, _is_assigned_approver,
                       _can_view_doc, _visible_docs_query, _panel_counts,
                       _build_route, _save_form_attachments, _notify_approvers,
-                      _notify_current_approvers, PROCUREMENT_DOC_TYPES)
+                      _notify_current_approvers, PROCUREMENT_DOC_TYPES,
+                      _apply_budget_line, _warn_if_budget_exceeded)
 
 
 def _resolve_counterparty():
@@ -37,8 +38,10 @@ def new_po_services():
     if from_req:
         linked_req = Document.query.filter_by(id=from_req, doc_type='purchase_req').first()
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
+    from app.models import BudgetLine
+    budget_lines = BudgetLine.query.filter_by(is_active=True).order_by(BudgetLine.name).all()
     return render_template('documents/po_services.html', executors=executors,
-                           linked_req=linked_req)
+                           linked_req=linked_req, budget_lines=budget_lines)
 
 
 @documents.route('/po-services/submit', methods=['POST'])
@@ -115,6 +118,8 @@ def submit_po_services():
     ))
 
     _build_route(doc, action, signatory_id)
+    bl = _apply_budget_line(doc, request.form.get('budget_line'))
+    _warn_if_budget_exceeded(doc, bl)
     _save_form_attachments(doc)
 
     req_id = request.form.get('related_req_id', type=int)
@@ -147,7 +152,10 @@ def edit_po_services(doc_id):
         return redirect(url_for('documents.view', doc_id=doc_id))
     extras = _unpack_extras(doc.justification)
     items = doc.items.all()
-    return render_template('documents/po_services_edit.html', doc=doc, extras=extras, items=items)
+    from app.models import BudgetLine
+    budget_lines = BudgetLine.query.filter_by(is_active=True).order_by(BudgetLine.name).all()
+    return render_template('documents/po_services_edit.html', doc=doc, extras=extras,
+                           items=items, budget_lines=budget_lines)
 
 
 @documents.route('/po-services/<int:doc_id>/update', methods=['POST'])
@@ -202,6 +210,7 @@ def update_po_services(doc_id):
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
 
+    bl = _apply_budget_line(doc, request.form.get('budget_line'))
     _save_form_attachments(doc)
 
     action = request.form.get('action', 'save')
@@ -213,6 +222,7 @@ def update_po_services(doc_id):
             is_system=True,
         ))
         _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+        _warn_if_budget_exceeded(doc, bl)
         msg = 'Документ отредактирован и отправлен на согласование.'
     else:
         db.session.add(DocumentComment(
@@ -235,8 +245,10 @@ def new_po_trebovanie():
         Document.doc_type == 'purchase_req',
         Document.status != 'draft')\
         .order_by(Document.created_at.desc()).limit(200).all()
+    from app.models import BudgetLine
+    budget_lines = BudgetLine.query.filter_by(is_active=True).order_by(BudgetLine.name).all()
     return render_template('documents/po_trebovanie.html', executors=executors,
-                           requisitions=requisitions)
+                           requisitions=requisitions, budget_lines=budget_lines)
 
 
 @documents.route('/po-trebovanie/submit', methods=['POST'])
@@ -323,6 +335,8 @@ def submit_po_trebovanie():
     ))
 
     _build_route(doc, action, signatory_id)
+    bl = _apply_budget_line(doc, request.form.get('budget_line'))
+    _warn_if_budget_exceeded(doc, bl)
     _save_form_attachments(doc)
 
     db.session.commit()
@@ -346,7 +360,10 @@ def edit_po_trebovanie(doc_id):
         return redirect(url_for('documents.view', doc_id=doc_id))
     extras = _unpack_extras(doc.justification)
     items = doc.items.all()
-    return render_template('documents/po_trebovanie_edit.html', doc=doc, extras=extras, items=items)
+    from app.models import BudgetLine
+    budget_lines = BudgetLine.query.filter_by(is_active=True).order_by(BudgetLine.name).all()
+    return render_template('documents/po_trebovanie_edit.html', doc=doc, extras=extras,
+                           items=items, budget_lines=budget_lines)
 
 
 @documents.route('/po-trebovanie/<int:doc_id>/update', methods=['POST'])
@@ -405,6 +422,7 @@ def update_po_trebovanie(doc_id):
                 price=_to_float(costs[i]) if i < len(costs) else None,
             ))
 
+    bl = _apply_budget_line(doc, request.form.get('budget_line'))
     _save_form_attachments(doc)
 
     action = request.form.get('action', 'save')
@@ -416,6 +434,7 @@ def update_po_trebovanie(doc_id):
             is_system=True,
         ))
         _notify_current_approvers(doc, f'Документ повторно на согласовании: {doc.doc_number}')
+        _warn_if_budget_exceeded(doc, bl)
         msg = 'Документ отредактирован и отправлен на согласование.'
     else:
         db.session.add(DocumentComment(
