@@ -240,15 +240,22 @@ def update_po_services(doc_id):
 @documents.route('/po-trebovanie/new', methods=['GET'])
 @login_required
 def new_po_trebovanie():
+    from_req = request.args.get('from_req', type=int)
+    linked_req = None
+    if from_req:
+        linked_req = Document.query.filter_by(id=from_req, doc_type='purchase_req').first()
     executors = User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()
     requisitions = Document.query.filter(
         Document.doc_type == 'purchase_req',
         Document.status != 'draft')\
         .order_by(Document.created_at.desc()).limit(200).all()
+    if linked_req and linked_req not in requisitions:
+        requisitions.insert(0, linked_req)
     from app.models import BudgetLine
     budget_lines = BudgetLine.query.filter_by(is_active=True).order_by(BudgetLine.name).all()
     return render_template('documents/po_trebovanie.html', executors=executors,
-                           requisitions=requisitions, budget_lines=budget_lines)
+                           requisitions=requisitions, linked_req=linked_req,
+                           budget_lines=budget_lines)
 
 
 @documents.route('/po-trebovanie/submit', methods=['POST'])

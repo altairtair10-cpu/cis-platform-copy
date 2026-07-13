@@ -147,3 +147,39 @@ def test_index_year_filter(client, app):
     assert 'ТМЦ-' not in body or 'Пока пусто' in body or True
     resp = client.get('/documents/?year=2026')
     assert resp.status_code == 200
+
+
+def test_create_po_button_leads_to_goods_po(client, app):
+    """Кнопка «Создать ПО по требованию» ведёт на ПО на товары (po_trebovanie)."""
+    with app.app_context():
+        head_id = User.query.filter_by(email='head@test.kz').first().id
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_req(client, signatory_id=head_id)
+    with app.app_context():
+        doc_id = Document.query.first().id
+    client.get('/auth/logout')
+    login(client, 'head@test.kz', 'headpass123')
+    client.post(f'/documents/{doc_id}/approve', data={'action': 'approve'})
+    client.get('/auth/logout')
+    with app.app_context():
+        proc = User(first_name='Snab', last_name='Proc', email='proc2@test.kz',
+                    role='procurement', is_active=True)
+        proc.set_password('procpass123')
+        db.session.add(proc); db.session.commit()
+    login(client, 'proc2@test.kz', 'procpass123')
+    body = client.get(f'/documents/{doc_id}').get_data(as_text=True)
+    assert f'/documents/po-trebovanie/new?from_req={doc_id}' in body
+    assert '/documents/po-services/new' not in body
+
+
+def test_new_po_trebovanie_preselects_requisition(client, app):
+    """from_req автоматически подставляет требование в форму ПО на товары."""
+    with app.app_context():
+        head_id = User.query.filter_by(email='head@test.kz').first().id
+    login(client, 'mech@test.kz', 'mechpass123')
+    _submit_req(client, signatory_id=head_id)
+    with app.app_context():
+        doc_id = Document.query.first().id
+    body = client.get(f'/documents/po-trebovanie/new?from_req={doc_id}')\
+        .get_data(as_text=True)
+    assert f'<option value="{doc_id}" selected>' in body
