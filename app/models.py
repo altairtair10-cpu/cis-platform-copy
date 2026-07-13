@@ -68,7 +68,13 @@ class User(UserMixin, db.Model):
                                     foreign_keys='Document.author_id')
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+        from flask import current_app
+        method = "pbkdf2:sha256"
+        try:
+            method = current_app.config.get('PASSWORD_HASH_METHOD', method)
+        except RuntimeError:
+            pass   # вне контекста приложения — безопасный прод-дефолт
+        self.password_hash = generate_password_hash(password, method=method)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)

@@ -43,6 +43,9 @@ class ProductionConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    # 1 итерация PBKDF2 вместо сотен тысяч: криптостойкость в тестах не нужна,
+    # а хеширование паролей — главный тормоз сюиты (4 пользователя × каждый тест)
+    PASSWORD_HASH_METHOD = 'pbkdf2:sha256:1'
     DEBUG = False
     WTF_CSRF_ENABLED = False            # forms tested without tokens
     RATELIMIT_ENABLED = False
