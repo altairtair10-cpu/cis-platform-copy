@@ -10,20 +10,7 @@
 
   <div style="flex:1;min-width:0;max-width:960px">
 
-  {% if budget_banner and budget_banner.over %}
-  <div style="background:#FEF9E7;border:1px solid #F9E79F;color:#7D6608;border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px">
-    <i class="ti ti-alert-triangle" style="font-size:18px;flex-shrink:0;margin-top:1px"></i>
-    <div style="font-size:12.5px;line-height:1.5">
-      <b>{{ _('Превышен годовой лимит по статье бюджета') }} «{{ budget_banner.name }}»</b><br>
-      {{ _('Потрачено за год') }}: {{ '{:,.2f}'.format(budget_banner.spent) }}
-      {{ _('из') }} {{ '{:,.2f}'.format(budget_banner.limit) }}
-      ({{ _('превышение') }} {{ '{:,.2f}'.format(budget_banner.excess) }}).
-      {{ _('Учитываются все РО по статье, кроме черновиков и отклонённых.') }}
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- HEADER CARD -->
+    <!-- HEADER CARD -->
   <div class="card" style="margin-bottom:14px">
     <div class="card-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
@@ -51,6 +38,14 @@
           {% else %}{{ _('Черновик') }}{% endif %}
         </span>
       </div>
+      {% if budget_info and budget_info.over %}
+      <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px">
+        <span class="pill pill-red" title="{{ _('Потрачено за год') }}: {{ '{:,.2f}'.format(budget_info.spent) }} {{ _('из') }} {{ '{:,.2f}'.format(budget_info.limit) }}">
+          <i class="ti ti-alert-triangle" style="font-size:11px"></i>
+          {{ _('Лимит бюджета превышен') }}
+        </span>
+      </div>
+      {% endif %}
 
       <div class="stepper" style="margin-bottom:18px">
         {% set steps_ru = ['Создание','Согласование','Подпись','На исполнении','Исполнен'] %}
@@ -270,6 +265,18 @@
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Подразделение') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Срочность') }}</td>
           <td style="padding:5px 0;border-top:1px solid var(--border)"><span class="pill {% if doc.urgency == 'critical' %}pill-red{% elif doc.urgency == 'urgent' %}pill-amber{% else %}pill-green{% endif %}">{{ doc.urgency or '—' }}</span></td></tr>
+          {% if budget_info %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Статья бюджета') }}</td>
+          <td style="padding:5px 0;border-top:1px solid var(--border)">
+            <div>{{ budget_info.name }}</div>
+            {% if budget_info.limit is not none %}
+            <div style="font-size:11px;margin-top:2px;{% if budget_info.over %}color:#C0392B;font-weight:600{% else %}color:var(--text-3){% endif %}">
+              {{ _('Потрачено за год') }}: {{ '{:,.2f}'.format(budget_info.spent) }} {{ _('из') }} {{ '{:,.2f}'.format(budget_info.limit) }}
+              {% if budget_info.over %}· {{ _('превышение') }} {{ '{:,.2f}'.format(budget_info.excess) }}{% endif %}
+            </div>
+            {% endif %}
+          </td></tr>
+          {% endif %}
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Дата') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
         </table>
         {% if doc.purpose %}
