@@ -165,7 +165,7 @@
   <div class="card" style="margin-bottom:14px;border-left:4px solid #001D89">
     <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <b>{{ _('Снабжение') }}:</b>
-      <a href="{{ url_for('documents.new_po_services', from_req=doc.id) }}" class="btn btn-sm btn-primary">
+      <a href="{{ url_for('documents.new_po_trebovanie', from_req=doc.id) }}" class="btn btn-sm btn-primary">
         <i class="ti ti-file-plus"></i> {{ _('Создать ПО по требованию') }}
       </a>
       <form method="POST" action="{{ url_for('documents.mark_executed', doc_id=doc.id) }}"

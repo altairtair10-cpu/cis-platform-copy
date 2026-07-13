@@ -42,7 +42,7 @@
           <div class="dlg-label">Требование на приобретение материалов:</div>
           <div><select name="related_req_id" class="dlg-select">
             <option value="">— Не связано —</option>
-            {% for r in requisitions %}<option value="{{ r.id }}">{{ r.doc_number }} — {{ r.title[:48] }}</option>{% endfor %}
+            {% for r in requisitions %}<option value="{{ r.id }}"{% if linked_req and r.id == linked_req.id %} selected{% endif %}>{{ r.doc_number }} — {{ r.title[:48] }}</option>{% endfor %}
           </select></div>
         </div>
         <div class="dlg-row">
