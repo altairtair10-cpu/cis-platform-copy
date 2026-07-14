@@ -46,11 +46,11 @@
     <div class="form-section-body">
       <div class="form-group">
         <label class="form-label">Вид документа<span class="req">*</span></label>
-        <select name="doc_type" class="form-select">
-          {% for t, label in internal_types.items() %}
-          <option value="{{ t }}" {% if t == sel_type %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" name="doc_type" value="{{ doc.doc_type if doc else 'memo' }}">
+        <div class="picker" onclick="openSummaryModal()">
+          <span class="picker-ph" id="doctype_display">— Выбрать вид документа —</span><i class="ti ti-list-search"></i>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px">Выберите вид — «Краткое содержание» заполнится автоматически.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Индекс дела</label>
@@ -149,18 +149,22 @@
   <div class="form-section-body">
     <div class="form-group" style="max-width:720px">
       <label class="form-label">Краткое содержание<span class="req">*</span></label>
-      <div style="display:flex;gap:8px;align-items:flex-start">
-        <textarea name="summary" id="summary-field" class="form-textarea" required placeholder="Заголовок (о чём?)" style="flex:1">{{ doc.purpose or '' if doc else '' }}</textarea>
-        <button type="button" class="btn btn-sm" onclick="openSummaryModal()" style="white-space:nowrap;align-self:stretch"><i class="ti ti-list-search"></i> Выбрать</button>
-      </div>
-      <div style="font-size:11px;color:var(--text-3);margin-top:4px">Нажмите «Выбрать», чтобы вставить готовую формулировку и заполнить поля в фигурных скобках.</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 10px">
-        <span style="font-size:11px;color:var(--text-2);font-weight:600">Даты:</span>
-        <input type="date" id="sum-date-from" class="form-input" style="width:auto">
-        <span style="font-size:12px;color:var(--text-3)">—</span>
-        <input type="date" id="sum-date-to" class="form-input" style="width:auto">
-        <button type="button" class="btn btn-sm" onclick="insertDates()"><i class="ti ti-calendar-plus"></i> Вставить даты</button>
-        <span style="font-size:11px;color:var(--text-3)">заменит «{даты}» в тексте выше</span>
+      <textarea name="summary" id="summary-field" class="form-textarea" required placeholder="Заполнится автоматически после выбора вида документа">{{ doc.purpose or '' if doc else '' }}</textarea>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px">Заполняется из «Вид документа». Затем подставьте сотрудника и даты ниже (Ctrl/Cmd+Enter — к следующему {блоку}).</div>
+      <div style="display:flex;gap:18px;align-items:flex-start;margin-top:8px;flex-wrap:wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text-2);font-weight:600">Сотрудник:</span>
+          <button type="button" class="btn btn-sm" onclick="openStructure('fio')"><i class="ti ti-user"></i> Выбрать сотрудника</button>
+          <span style="font-size:11px;color:var(--text-3)">заменит «{ФИО}»</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-2);font-weight:600">Даты:</span>
+          <input type="date" id="sum-date-from" class="form-input" style="width:auto">
+          <span style="font-size:12px;color:var(--text-3)">—</span>
+          <input type="date" id="sum-date-to" class="form-input" style="width:auto">
+          <button type="button" class="btn btn-sm" onclick="insertDates()"><i class="ti ti-calendar-plus"></i> Вставить даты</button>
+          <span style="font-size:11px;color:var(--text-3)">заменит «{даты}»</span>
+        </div>
       </div>
     </div>
     <div class="form-group" style="max-width:720px">
@@ -247,7 +251,7 @@
 <!-- SUMMARY PRESET PICKER MODAL -->
 <div id="summary-modal" class="modal">
   <div class="modal-content" style="max-width:860px">
-    <div class="modal-header"><span class="modal-title">Краткое содержание — выбор формулировки</span><button type="button" class="modal-close" onclick="closeSummaryModal()">×</button></div>
+    <div class="modal-header"><span class="modal-title">Вид документа — выбор формулировки</span><button type="button" class="modal-close" onclick="closeSummaryModal()">×</button></div>
     <div class="modal-body">
       <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="summary-search" oninput="filterSummary()" placeholder="Поиск формулировки..." class="form-input"></div>
       <table class="data-table" style="width:100%">
@@ -383,6 +387,13 @@ function pickSummary(row){
   const tpl = row.dataset.tpl || '';
   const ta = document.getElementById('summary-field');
   ta.value = tpl;
+  // reflect the choice in «Вид документа»
+  const disp = document.getElementById('doctype_display');
+  if (disp){
+    let label = tpl.split('{')[0].replace(/[\s(]+$/,'').trim();
+    if (!label) label = row.dataset.cat ? row.dataset.cat : 'Служебная записка (свободная тема)';
+    disp.textContent = label; disp.style.color = 'var(--text-1)';
+  }
   closeSummaryModal();
   ta.focus();
   const i = tpl.indexOf('{');
@@ -434,7 +445,7 @@ function closeStructure(){ document.getElementById('structure-modal').classList.
 function filterStructure(){ const q = document.getElementById('structure-search').value.toLowerCase();
   document.querySelectorAll('.structure-item').forEach(el=>{ el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none'; }); }
 function toggleStructure(el){
-  if (structureTarget === 'signatory'){
+  if (structureTarget === 'signatory' || structureTarget === 'fio'){
     document.querySelectorAll('.structure-item').forEach(x=>{ x.classList.remove('selected'); x.querySelector('.structure-cb').checked = false; });
     el.classList.add('selected'); el.querySelector('.structure-cb').checked = true;
   } else { el.classList.toggle('selected'); el.querySelector('.structure-cb').checked = el.classList.contains('selected'); }
@@ -453,6 +464,20 @@ function confirmStructure(){
     const inp = document.getElementById('signatory_id'), disp = document.getElementById('signatory_display');
     inp.value=''; disp.textContent='— Выбрать —'; disp.style.color='';
     if (sel.length){ inp.value = sel[0].dataset.id; disp.textContent = `${sel[0].dataset.name} (${sel[0].dataset.pos})`; disp.style.color='var(--text-1)'; }
+  } else if (structureTarget === 'fio'){
+    if (sel.length){
+      const name = sel[0].dataset.name;
+      const ta = document.getElementById('summary-field');
+      if (ta.value.includes('{ФИО}')){
+        const at = ta.value.indexOf('{ФИО}');
+        ta.value = ta.value.replace('{ФИО}', name);
+        ta.focus(); ta.setSelectionRange(at + name.length, at + name.length);
+      } else {
+        const a = ta.selectionStart, b = ta.selectionEnd;
+        ta.value = ta.value.slice(0, a) + name + ta.value.slice(b);
+        ta.focus(); ta.setSelectionRange(a + name.length, a + name.length);
+      }
+    }
   } else if (structureTarget === 'recipients'){
     const wrap = document.getElementById('recipients-chips'); wrap.innerHTML='';
     sel.forEach(el=>wrap.appendChild(personChip(el.dataset.id, el.dataset.name, initials(el.dataset.name), 'recipient_ids[]')));
