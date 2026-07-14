@@ -149,7 +149,19 @@
   <div class="form-section-body">
     <div class="form-group" style="max-width:720px">
       <label class="form-label">Краткое содержание<span class="req">*</span></label>
-      <textarea name="summary" class="form-textarea" required placeholder="Заголовок (о чём?)">{{ doc.purpose or '' if doc else '' }}</textarea>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <textarea name="summary" id="summary-field" class="form-textarea" required placeholder="Заголовок (о чём?)" style="flex:1">{{ doc.purpose or '' if doc else '' }}</textarea>
+        <button type="button" class="btn btn-sm" onclick="openSummaryModal()" style="white-space:nowrap;align-self:stretch"><i class="ti ti-list-search"></i> Выбрать</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px">Нажмите «Выбрать», чтобы вставить готовую формулировку и заполнить поля в фигурных скобках.</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 10px">
+        <span style="font-size:11px;color:var(--text-2);font-weight:600">Даты:</span>
+        <input type="date" id="sum-date-from" class="form-input" style="width:auto">
+        <span style="font-size:12px;color:var(--text-3)">—</span>
+        <input type="date" id="sum-date-to" class="form-input" style="width:auto">
+        <button type="button" class="btn btn-sm" onclick="insertDates()"><i class="ti ti-calendar-plus"></i> Вставить даты</button>
+        <span style="font-size:11px;color:var(--text-3)">заменит «{даты}» в тексте выше</span>
+      </div>
     </div>
     <div class="form-group" style="max-width:720px">
       <label class="form-label">Является ответным на</label>
@@ -232,6 +244,72 @@
   </div>
 </div>
 
+<!-- SUMMARY PRESET PICKER MODAL -->
+<div id="summary-modal" class="modal">
+  <div class="modal-content" style="max-width:860px">
+    <div class="modal-header"><span class="modal-title">Краткое содержание — выбор формулировки</span><button type="button" class="modal-close" onclick="closeSummaryModal()">×</button></div>
+    <div class="modal-body">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="summary-search" oninput="filterSummary()" placeholder="Поиск формулировки..." class="form-input"></div>
+      <table class="data-table" style="width:100%">
+        <thead><tr><th style="width:190px">Категория</th><th>Формулировка</th></tr></thead>
+        <tbody id="summary-list">
+          {% set SUMMARY_PRESETS = [
+            ('Командировки', [
+              'Командирование {ФИО} ({даты}) для скв {№}, {месторождение}',
+              'Командирование группы работников ({даты}) для скв {№}, {месторождение}',
+              'Командирование (дефектовка) {ФИО} ({даты})',
+              'Продление командирования {ФИО} ({даты})',
+              'Отзыв {ФИО} из командировки',
+              'Отзыв (продление) {ФИО} ({даты})',
+              'Продление отзыва {ФИО}',
+              'Отчёт о командировке {ФИО}',
+            ]),
+            ('Персонал / график работы', [
+              'Привлечение на работу в выходные дни {ФИО} ({даты}) для скв {№}',
+              'Привлечение на работу в праздничные дни {ФИО} ({даты})',
+              'Привлечение на ночную смену {ФИО}',
+              'Привлечение к сверхурочной работе {ФИО} ({даты})',
+              'Продление отзыва машинистов',
+            ]),
+            ('Отпуск', [
+              'Предоставление ежегодного трудового отпуска {ФИО}',
+              'Предоставление отпуска без сохранения зарплаты {ФИО}',
+              'Отзыв из отпуска {ФИО}',
+            ]),
+            ('Кадры', [
+              'Предложение кандидатуры {ФИО} на должность {должность}',
+              'Служебная записка о закреплении техники за {ФИО}',
+              'О премировании работника {ФИО} (сумма {сумма} тг, период {период})',
+            ]),
+            ('Финансы', [
+              'Возмещение денежных средств {ФИО}',
+              'Возмещение суммы {сумма} тг ({основание})',
+              'Перевыставление затрат за {услуга} ({контрагент})',
+              'Расчёт платежей за эмиссии в окружающую среду за {период}',
+              'Оплата станционных сборов за {наименование}',
+            ]),
+            ('Производство / логистика', [
+              'Мобилизация флота ГРП ({месторождение})',
+              'Мобилизация флота ГРП (продление)',
+            ]),
+          ] %}
+          {% for cat, items in SUMMARY_PRESETS %}
+            {% for tpl in items %}
+            <tr class="summary-item" data-cat="{{ cat }}" data-tpl="{{ tpl }}" onclick="pickSummary(this)">
+              <td class="text-muted">{{ cat }}</td><td style="font-weight:500">{{ tpl }}</td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+          <tr class="summary-item" data-cat="Прочее" data-tpl="" onclick="pickSummary(this)">
+            <td class="text-muted">Прочее</td><td style="font-weight:500">Служебная записка (свободная тема) — ввести вручную</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn" onclick="closeSummaryModal()">Отмена</button></div>
+  </div>
+</div>
+
 <style>
 /* internal-document form — refined, native app style (scoped, minimal) */
 .mini-av{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
@@ -263,9 +341,69 @@
 .editor-area:focus{box-shadow:inset 0 0 0 2px rgba(192,57,43,.08)}
 .structure-item.selected{background:#FDECEA}
 .structure-item{cursor:pointer}
+.summary-item{cursor:pointer}
+.summary-item:hover{background:#FDECEA}
 </style>
 
 <script>
+/* ── DATE RANGE → SUMMARY ───────────────────────────────────────────── */
+function fmtDate(v){ if(!v) return ''; const p = v.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
+function insertDates(){
+  const f = fmtDate(document.getElementById('sum-date-from').value);
+  const t = fmtDate(document.getElementById('sum-date-to').value);
+  if (!f && !t){ alert('Выберите дату (с и/или по).'); return; }
+  const s = (f && t) ? `${f} - ${t}` : (f || t);
+  const ta = document.getElementById('summary-field');
+  if (ta.value.includes('{даты}')){
+    const at = ta.value.indexOf('{даты}');
+    ta.value = ta.value.replace('{даты}', s);
+    ta.focus(); ta.setSelectionRange(at + s.length, at + s.length);
+  } else {
+    const a = ta.selectionStart, b = ta.selectionEnd;
+    ta.value = ta.value.slice(0, a) + s + ta.value.slice(b);
+    ta.focus(); ta.setSelectionRange(a + s.length, a + s.length);
+  }
+}
+
+/* ── SUMMARY PRESET PICKER ──────────────────────────────────────────── */
+function openSummaryModal(){
+  document.getElementById('summary-modal').classList.add('active');
+  document.getElementById('summary-search').value='';
+  filterSummary();
+}
+function closeSummaryModal(){ document.getElementById('summary-modal').classList.remove('active'); }
+function filterSummary(){
+  const q = document.getElementById('summary-search').value.toLowerCase();
+  document.querySelectorAll('#summary-list .summary-item').forEach(el=>{
+    const hay = (el.dataset.cat + ' ' + el.dataset.tpl).toLowerCase();
+    el.style.display = hay.includes(q) ? '' : 'none';
+  });
+}
+function pickSummary(row){
+  const tpl = row.dataset.tpl || '';
+  const ta = document.getElementById('summary-field');
+  ta.value = tpl;
+  closeSummaryModal();
+  ta.focus();
+  const i = tpl.indexOf('{');
+  if (i >= 0){ const j = tpl.indexOf('}', i); ta.setSelectionRange(i, j >= 0 ? j+1 : tpl.length); }
+  else { ta.setSelectionRange(tpl.length, tpl.length); }
+}
+/* Ctrl/Cmd+Enter in the summary field jumps to the next {…} blank */
+document.addEventListener('DOMContentLoaded', function(){
+  const ta = document.getElementById('summary-field');
+  if (!ta) return;
+  ta.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+      e.preventDefault();
+      const from = ta.selectionEnd;
+      let i = ta.value.indexOf('{', from);
+      if (i < 0) i = ta.value.indexOf('{');           // wrap to first
+      if (i >= 0){ const j = ta.value.indexOf('}', i); ta.setSelectionRange(i, j >= 0 ? j+1 : ta.value.length); }
+    }
+  });
+});
+
 function edCmd(cmd, val){ document.getElementById('editor').focus(); document.execCommand(cmd, false, val || null); }
 function syncEditor(){ document.getElementById('body_html_input').value = document.getElementById('editor').innerHTML; }
 document.getElementById('internal-form').addEventListener('submit', syncEditor);
