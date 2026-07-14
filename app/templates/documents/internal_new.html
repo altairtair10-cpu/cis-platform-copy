@@ -54,8 +54,11 @@
       </div>
       <div class="form-group">
         <label class="form-label">Индекс дела</label>
-        <input name="case_index" class="form-input" maxlength="64"
-               value="{{ doc.case_index or '' if doc else '' }}" placeholder="например: 03-05">
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input name="case_index" id="case_index_input" class="form-input" maxlength="64"
+                 value="{{ doc.case_index or '' if doc else '' }}" placeholder="например: 03-05" style="flex:1">
+          <button type="button" class="btn btn-sm" onclick="openNomenclatureModal()" style="white-space:nowrap"><i class="ti ti-list-search"></i> Выбрать</button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Приложения</label>
@@ -248,6 +251,48 @@
   </div>
 </div>
 
+<!-- НОМЕНКЛАТУРА ДЕЛ (Индекс дела) PICKER MODAL -->
+<div id="nomenclature-modal" class="modal">
+  <div class="modal-content" style="max-width:900px">
+    <div class="modal-header"><span class="modal-title">Номенклатура дел</span><button type="button" class="modal-close" onclick="closeNomenclatureModal()">×</button></div>
+    <div class="modal-body">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="nom-search" oninput="filterNomenclature()" placeholder="Поиск по индексу или наименованию..." class="form-input"></div>
+      <table class="data-table" style="width:100%">
+        <thead><tr><th style="width:150px">Дело</th><th style="width:210px">Подразделение</th><th style="width:90px">Индекс дела</th><th>Заголовок дела</th></tr></thead>
+        <tbody id="nom-list">
+          {% set OKMTS = 'Отдел контрактов и материально-технического снабжения' %}
+          {% set CIS = '"CASPIAN INTEGRATED SERVICES"' %}
+          {% set NOMENCLATURE = [
+            ('03-01', OKMTS, '', 'PN - положения и инстуркции'),
+            ('03-02', OKMTS, '', 'Договоры'),
+            ('03-03', OKMTS, '', 'Требование на приобретение материалов'),
+            ('03-04', OKMTS, '', 'Заявка на покупку (РО)'),
+            ('03-05', OKMTS, '', 'Сравнительный анализ ценовых предложений'),
+            ('03-06', OKMTS, '', 'Реестр требований на приобретение материалов'),
+            ('03-07', OKMTS, '', 'Реестр договоров'),
+            ('03-08', OKMTS, '', 'Реестр заявок на покупку'),
+            ('03-09', OKMTS, '', 'Карточка договора'),
+            ('03-10', OKMTS, '', 'Техническое задание'),
+            ('03-11', OKMTS, '', 'Реестр офисной техники'),
+            ('03-12', OKMTS, '', 'Предоставление доступа к сетевым ресурсам'),
+            ('Входящие документы', CIS, '', 'Входящие документы'),
+            ('Планы', CIS, 'AT01', 'Action Tracker'),
+            ('Поставка насосов', CIS, '', 'Договор на поставку насосов высокого давления'),
+            ('проект Инвест трейд', CIS, '', 'проект Инвест трейд'),
+            ('Сметы ГРП и согласование КП', CIS, '№1', 'Калькуляция ГРП и Коммерческое предложение'),
+          ] %}
+          {% for delo, div, idx, title in NOMENCLATURE %}
+          <tr class="nom-item" data-idx="{{ delo }}" onclick="pickNomenclature(this)">
+            <td style="font-weight:600">{{ delo }}</td><td class="text-muted">{{ div }}</td><td class="text-muted">{{ idx }}</td><td>{{ title }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn" onclick="closeNomenclatureModal()">Отмена</button></div>
+  </div>
+</div>
+
 <!-- SUMMARY PRESET PICKER MODAL -->
 <div id="summary-modal" class="modal">
   <div class="modal-content" style="max-width:860px">
@@ -347,6 +392,8 @@
 .structure-item{cursor:pointer}
 .summary-item{cursor:pointer}
 .summary-item:hover{background:#FDECEA}
+.nom-item{cursor:pointer}
+.nom-item:hover{background:#FDECEA}
 </style>
 
 <script>
@@ -367,6 +414,23 @@ function insertDates(){
     ta.value = ta.value.slice(0, a) + s + ta.value.slice(b);
     ta.focus(); ta.setSelectionRange(a + s.length, a + s.length);
   }
+}
+
+/* ── НОМЕНКЛАТУРА ДЕЛ (Индекс дела) ──────────────────────────────────── */
+function openNomenclatureModal(){
+  document.getElementById('nomenclature-modal').classList.add('active');
+  document.getElementById('nom-search').value=''; filterNomenclature();
+}
+function closeNomenclatureModal(){ document.getElementById('nomenclature-modal').classList.remove('active'); }
+function filterNomenclature(){
+  const q = document.getElementById('nom-search').value.toLowerCase();
+  document.querySelectorAll('#nom-list .nom-item').forEach(el=>{
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+function pickNomenclature(row){
+  document.getElementById('case_index_input').value = row.dataset.idx;
+  closeNomenclatureModal();
 }
 
 /* ── SUMMARY PRESET PICKER ──────────────────────────────────────────── */
