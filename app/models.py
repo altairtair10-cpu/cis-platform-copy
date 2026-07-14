@@ -169,6 +169,12 @@ class Document(db.Model):
     paid_at           = db.Column(db.DateTime, nullable=True)
     counterparty_id   = db.Column(db.Integer, db.ForeignKey('counterparties.id'), nullable=True)
     budget_line_id    = db.Column(db.Integer, db.ForeignKey('budget_lines.id'), nullable=True)
+    # Внутренние документы (Documentolog-style): СЗ / приказ / акт / вх / исх
+    body_html      = db.Column(db.Text, nullable=True)          # текст документа (rich text)
+    doc_language   = db.Column(db.String(8), nullable=True)     # ru / kk / en
+    case_index     = db.Column(db.String(64), nullable=True)    # индекс дела
+    in_reply_to_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
+    registered_at  = db.Column(db.DateTime, nullable=True)      # момент регистрации (после подписи)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -188,6 +194,11 @@ class Document(db.Model):
                                      backref=db.backref('purchase_orders', lazy='dynamic'))
     budget_line    = db.relationship('BudgetLine',
                                      backref=db.backref('documents', lazy='dynamic'))
+    in_reply_to    = db.relationship('Document', remote_side='Document.id',
+                                     foreign_keys=[in_reply_to_id],
+                                     backref=db.backref('replies', lazy='dynamic'))
+    recipients     = db.relationship('DocumentRecipient', backref='document',
+                                     lazy='dynamic', cascade='all, delete-orphan')
 
     def assign_event_code(self):
         """Per-unit sequential code for defect acts: <unit_id>-ДА<n>."""
@@ -260,6 +271,22 @@ class DocumentApproval(db.Model):
     decided_at  = db.Column(db.DateTime, nullable=True)
 
     approver    = db.relationship('User', foreign_keys=[approver_id])
+
+
+class DocumentRecipient(db.Model):
+    """Получатель внутреннего документа. После регистрации документ уходит
+    получателям «На исполнении»; каждый отмечает исполнение — когда все
+    отметили, документ становится «Исполнен»."""
+    __tablename__ = 'document_recipients'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
+    user_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status      = db.Column(db.String(16), default='pending')   # pending / done
+    done_at     = db.Column(db.DateTime, nullable=True)
+    note        = db.Column(db.String(256), nullable=True)
+
+    user        = db.relationship('User', foreign_keys=[user_id])
 
 
 class DocumentComment(db.Model):

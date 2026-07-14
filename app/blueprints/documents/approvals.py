@@ -15,7 +15,8 @@ from . import documents
 from .helpers import (_to_float, _unpack_extras, _is_assigned_approver,
                       _can_view_doc, _visible_docs_query, _panel_counts,
                       _build_route, _save_form_attachments, _notify_approvers,
-                      _notify_current_approvers, PROCUREMENT_DOC_TYPES)
+                      _notify_current_approvers, PROCUREMENT_DOC_TYPES,
+                      INTERNAL_DOC_TYPES)
 
 
 @documents.route('/<int:doc_id>/approve', methods=['POST'])
@@ -139,6 +140,31 @@ def approve(doc_id):
                                 title=f'Требование подписано: {doc.doc_number}',
                                 body=(doc.title or '')[:100],
                                 link=f'/documents/{doc.id}', is_read=False))
+                    if doc.doc_type in INTERNAL_DOC_TYPES:
+                        # подписанный внутренний документ регистрируется и
+                        # уходит получателям на исполнение
+                        from app.models import DocumentRecipient
+                        doc.registered_at = datetime.utcnow()
+                        recips = DocumentRecipient.query.filter_by(
+                            document_id=doc.id).all()
+                        if recips:
+                            doc.status = 'in_execution'
+                            for r in recips:
+                                db.session.add(Notification(
+                                    user_id=r.user_id,
+                                    title=f'Документ на исполнение: {doc.doc_number}',
+                                    body=(doc.title or '')[:100],
+                                    link=f'/documents/{doc.id}', is_read=False))
+                        else:
+                            doc.status = 'executed'
+                        db.session.add(DocumentComment(
+                            document_id=doc.id, author_id=current_user.id,
+                            text=(f'Документ подписан и зарегистрирован '
+                                  f'({doc.doc_number}). '
+                                  + ('Отправлен получателям на исполнение.'
+                                     if recips else 'Получатели не указаны — '
+                                     'документ считается исполненным.')),
+                            is_system=True))
 
         text = comment_text or f'Документ {"согласован" if action == "approve" else "отклонён"} пользователем {current_user.full_name}.'
         db.session.add(DocumentComment(

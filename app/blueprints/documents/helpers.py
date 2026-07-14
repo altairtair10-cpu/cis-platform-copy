@@ -9,6 +9,11 @@ from app.storage import save_upload, allowed_file, MAX_FILE_SIZE_MB
 
 PROCUREMENT_DOC_TYPES = ('purchase_req', 'po_services')
 
+# Внутренние документы (Documentolog-style): проходят полный цикл
+# Создание → Согласование → Подпись → Регистрация → На исполнении → Исполнен
+INTERNAL_DOC_TYPES = ('memo', 'order', 'act', 'incoming', 'outgoing')
+
+
 def _to_float(value):
     try:
         return float(value)
@@ -127,15 +132,30 @@ def _is_assigned_approver(doc, user):
     return DocumentApproval.query.filter_by(document_id=doc.id, approver_id=user.id).first() is not None
 
 
+def _is_recipient(doc, user):
+    from app.models import DocumentRecipient
+    return DocumentRecipient.query.filter_by(
+        document_id=doc.id, user_id=user.id).first() is not None
+
+
+def _recipient_doc_ids_subquery(user):
+    """Document IDs where this user is a recipient — being routed a document
+    for execution is its own authorization to see it."""
+    from app.models import DocumentRecipient
+    return db.session.query(DocumentRecipient.document_id).filter_by(user_id=user.id)
+
+
 PROCUREMENT_DOC_TYPES = ('purchase_req', 'po_services')
 
 
 def _can_view_doc(user, doc):
-    """View access: broad permission, own doc, routed approver, or procurement
-    for procurement document types."""
+    """View access: broad permission, own doc, routed approver, recipient,
+    or procurement for procurement document types."""
     if user.can_access('documents') or user.can_access('documents_read'):
         return True
     if doc.author_id == user.id or _is_assigned_approver(doc, user):
+        return True
+    if _is_recipient(doc, user):
         return True
     return (doc.doc_type in PROCUREMENT_DOC_TYPES
             and user.can_access('documents_procurement'))
@@ -151,6 +171,7 @@ def _visible_docs_query(user):
     conditions = [
         Document.author_id == user.id,
         Document.id.in_(_assigned_doc_ids_subquery(user)),
+        Document.id.in_(_recipient_doc_ids_subquery(user)),
     ]
     if user.can_access('documents_procurement'):
         conditions.append(Document.doc_type.in_(PROCUREMENT_DOC_TYPES))
@@ -230,6 +251,108 @@ def _save_form_attachments(doc):
             size_bytes=size_bytes,
             uploaded_by=current_user.id,
         ))
+
+
+# ── САНИТАЙЗЕР ТЕКСТА ДОКУМЕНТА (rich text из редактора) ──────────────────────
+# Без новых зависимостей: html.parser + allowlist тегов/атрибутов/CSS-свойств.
+
+_ALLOWED_TAGS = {
+    'p', 'br', 'div', 'span', 'b', 'strong', 'i', 'em', 'u', 's', 'strike',
+    'ol', 'ul', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'hr',
+    'table', 'thead', 'tbody', 'tr', 'td', 'th', 'sub', 'sup', 'a', 'font',
+}
+_VOID_TAGS = {'br', 'hr'}
+# у этих тегов выбрасывается не только тег, но и всё содержимое
+_DROP_CONTENT_TAGS = {'script', 'style', 'iframe', 'object', 'embed',
+                      'svg', 'math', 'template', 'noscript'}
+_ALLOWED_CSS = {
+    'font-size', 'font-family', 'font-weight', 'font-style', 'text-align',
+    'text-decoration', 'color', 'background-color', 'margin-left',
+    'padding-left', 'line-height', 'text-indent',
+}
+
+
+def _clean_style(value):
+    out = []
+    for decl in (value or '').split(';'):
+        if ':' not in decl:
+            continue
+        prop, val = decl.split(':', 1)
+        prop, val = prop.strip().lower(), val.strip()
+        if prop in _ALLOWED_CSS and 'url(' not in val.lower() \
+                and 'expression' not in val.lower():
+            out.append(f'{prop}: {val}')
+    return '; '.join(out)
+
+
+def _sanitize_html(html_text):
+    """Оставляет только безопасные теги/атрибуты. Возвращает чистый HTML."""
+    from html.parser import HTMLParser
+    from html import escape
+
+    class _Cleaner(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.out = []
+            self.open_stack = []
+            self.skip_depth = 0
+
+        def handle_starttag(self, tag, attrs):
+            if tag in _DROP_CONTENT_TAGS:
+                self.skip_depth += 1
+                return
+            if self.skip_depth or tag not in _ALLOWED_TAGS:
+                return
+            keep = []
+            for name, value in attrs:
+                name = name.lower()
+                value = value or ''
+                if name == 'style':
+                    cleaned = _clean_style(value)
+                    if cleaned:
+                        keep.append(f'style="{escape(cleaned, quote=True)}"')
+                elif name == 'href' and tag == 'a':
+                    v = value.strip()
+                    if v.lower().startswith(('http://', 'https://', 'mailto:')):
+                        keep.append(f'href="{escape(v, quote=True)}" rel="noopener"')
+                elif name in ('align', 'color', 'face', 'size'):
+                    keep.append(f'{name}="{escape(value, quote=True)}"')
+            attrs_s = (' ' + ' '.join(keep)) if keep else ''
+            if tag in _VOID_TAGS:
+                self.out.append(f'<{tag}{attrs_s}>')
+            else:
+                self.out.append(f'<{tag}{attrs_s}>')
+                self.open_stack.append(tag)
+
+        def handle_endtag(self, tag):
+            if tag in _DROP_CONTENT_TAGS:
+                if self.skip_depth:
+                    self.skip_depth -= 1
+                return
+            if self.skip_depth:
+                return
+            if tag in _ALLOWED_TAGS and tag not in _VOID_TAGS \
+                    and tag in self.open_stack:
+                # close any unclosed inner tags up to this one
+                while self.open_stack:
+                    t = self.open_stack.pop()
+                    self.out.append(f'</{t}>')
+                    if t == tag:
+                        break
+
+        def handle_data(self, data):
+            if not self.skip_depth:
+                self.out.append(escape(data))
+
+        def close(self):
+            super().close()
+            while self.open_stack:
+                self.out.append(f'</{self.open_stack.pop()}>')
+
+    cleaner = _Cleaner()
+    cleaner.feed(html_text or '')
+    cleaner.close()
+    return ''.join(cleaner.out)
 
 
 def _notify_approvers(doc):
