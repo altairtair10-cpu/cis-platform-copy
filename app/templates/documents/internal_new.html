@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+{% set type_label = internal_types.get(sel_type, 'Внутренний документ') %}
+{% block title %}{{ 'Проект внутреннего документа' if not doc else doc.doc_number }}{% endblock %}
+{% block page_title %}{{ 'Внутренние документы' }}{% endblock %}
+{% block content %}
+{% include 'documents/_dlog_style.html' %}
+
+<form id="internal-form" method="POST"
+      action="{{ url_for('documents.update_internal', doc_id=doc.id) if doc else url_for('documents.submit_internal') }}"
+      enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="body_html" id="body_html_input">
+
+<!-- STICKY TOP TOOLBAR -->
+<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
+  <button type="submit" name="action" value="submit" class="btn btn-primary" onclick="syncEditor()">
+    <i class="ti ti-device-floppy"></i> Сохранить</button>
+  <button type="submit" name="action" value="{{ 'save' if doc and doc.status == 'returned' else 'draft' }}" class="btn" onclick="syncEditor()">
+    <i class="ti ti-file"></i> Черновик</button>
+  <button type="button" onclick="window.history.back()" class="btn"><i class="ti ti-x"></i> Отмена</button>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">Версия 1</div>
+</div>
+
+<!-- TITLE -->
+<div class="dlg-title" style="margin-bottom:14px">
+  {% if doc %}{{ type_label }} {{ doc.doc_number }}{% else %}ПРОЕКТ ВНУТРЕННЕГО ДОКУМЕНТА № ОТ{% endif %}
+</div>
+
+<!-- WORKFLOW CHEVRONS (как в Documentolog) -->
+<div class="dlg-steps" style="margin-bottom:26px">
+  <div class="dlg-step active">Создание</div>
+  <div class="dlg-step">Согласование</div>
+  <div class="dlg-step">Подпись</div>
+  <div class="dlg-step">Регистрация</div>
+  <div class="dlg-step">На исполнении</div>
+  <div class="dlg-step">Выполнен</div>
+  <div class="dlg-step">Исполнен</div>
+</div>
+
+<!-- TWO-COLUMN REQUISITES -->
+<div class="dlg-cols" style="margin-bottom:8px">
+  <div>
+    <div class="dlg-h">Регистрационные реквизиты</div>
+    <div class="dlg-row">
+      <div class="dlg-label">Вид документа:<span class="dlg-req">*</span></div>
+      <div>
+        <select name="doc_type" class="dlg-select">
+          {% for t, label in internal_types.items() %}
+          <option value="{{ t }}" {% if t == sel_type %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="dlg-row">
+      <div class="dlg-label">Индекс дела:</div>
+      <div><input name="case_index" class="dlg-input" maxlength="64"
+                  value="{{ doc.case_index or '' if doc else '' }}"
+                  placeholder="например: 03-05"></div>
+    </div>
+    <div class="dlg-row">
+      <div class="dlg-label">Приложения:</div>
+      <div>
+        <label for="attachments" class="dlg-upl"><i class="ti ti-upload"></i> Загрузить
+          <input id="attachments" name="attachments" type="file" multiple
+                 accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display:none"
+                 onchange="showAttachmentsList(this)">
+        </label>
+        <div id="attachment-list" class="dlg-chips" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="dlg-h">Реквизиты присвоенные отправителем</div>
+    <div class="dlg-row">
+      <div class="dlg-label">Автор:</div>
+      <div class="dlg-static"><i class="ti ti-user" style="font-size:12px;color:var(--text-3)"></i>
+        {{ current_user.full_name }}</div>
+    </div>
+    <div class="dlg-row">
+      <div class="dlg-label">Получатели:<span class="dlg-req">*</span></div>
+      <div>
+        <div class="dlg-picker" onclick="openStructure('recipients')">
+          <span class="dlg-picker-ph">— Выбрать —</span><i class="ti ti-sitemap"></i>
+        </div>
+        <div class="dlg-chips" id="recipients-chips">
+          {% if doc %}{% for r in doc.recipients %}
+          <div class="dlg-chip" data-id="{{ r.user_id }}" data-name="{{ r.user.full_name }}">
+            <i class="ti ti-menu-2"></i><span class="dlg-chip-name">{{ r.user.full_name }}</span>
+            <button type="button" class="dlg-chip-x" onclick="this.closest('.dlg-chip').remove()">×</button>
+            <input type="hidden" name="recipient_ids[]" value="{{ r.user_id }}">
+          </div>
+          {% endfor %}{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="dlg-row">
+      <div class="dlg-label">Язык документа:</div>
+      <div>
+        <select name="doc_language" class="dlg-select">
+          <option value="ru" {% if doc and doc.doc_language == 'ru' %}selected{% endif %}>Русский</option>
+          <option value="kk" {% if doc and doc.doc_language == 'kk' %}selected{% endif %}>Қазақша</option>
+          <option value="en" {% if doc and doc.doc_language == 'en' %}selected{% endif %}>English</option>
+        </select>
+      </div>
+    </div>
+    <div class="dlg-row">
+      <div class="dlg-label">Срок исполнения:</div>
+      <div><input name="needed_by" type="date" class="dlg-input"
+                  value="{{ doc.needed_by.strftime('%Y-%m-%d') if doc and doc.needed_by else '' }}"></div>
+    </div>
+  </div>
+</div>
+
+{% if not doc or doc.status == 'draft' %}
+<!-- ROUTE -->
+<div class="dlg-h">Маршрут документа</div>
+<div class="dlg-row">
+  <div class="dlg-label">Подписывающий:<span class="dlg-req">*</span></div>
+  <div style="max-width:440px">
+    <input type="hidden" name="signatory_id" id="signatory_id" value="">
+    <div class="dlg-picker" onclick="openStructure('signatory')">
+      <span class="dlg-picker-ph" id="signatory_display">— Выбрать —</span><i class="ti ti-sitemap"></i>
+    </div>
+  </div>
+</div>
+<div class="dlg-row">
+  <div class="dlg-label" style="padding-top:4px">Согласующие:</div>
+  <div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <select id="route-template-select" class="dlg-select" style="max-width:260px">
+        <option value="">— готовый маршрут —</option>
+      </select>
+      <button type="button" class="dlg-textbtn" onclick="applySelectedTemplate()">Выбрать маршрут</button>
+      <button type="button" class="dlg-textbtn" onclick="clearStages()">Очистить маршрут</button>
+      <button type="button" class="dlg-textbtn" onclick="saveRouteTemplate()">Сохранить как маршрут</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <button type="button" onclick="addStage()" class="btn btn-sm"><i class="ti ti-plus"></i> Добавить этап</button>
+    </div>
+    <div id="stages-container"></div>
+  </div>
+</div>
+{% else %}
+<div class="dlg-h">Маршрут документа</div>
+<div style="font-size:12px;color:var(--text-3);margin-bottom:16px">
+  Маршрут уже задан — после отправки документ вернётся к текущему этапу согласования.
+</div>
+{% endif %}
+
+<!-- SUMMARY + RELATED -->
+<div class="dlg-h">Краткое содержание, связанные документы</div>
+<div class="dlg-row">
+  <div class="dlg-label">Краткое содержание:<span class="dlg-req">*</span></div>
+  <div><textarea name="summary" class="dlg-textarea" required
+                 placeholder="Заголовок (о чем?)">{{ doc.purpose or '' if doc else '' }}</textarea></div>
+</div>
+<div class="dlg-row">
+  <div class="dlg-label">Является ответным на:</div>
+  <div>
+    <select name="in_reply_to_id" class="dlg-select">
+      <option value="">—</option>
+      {% for rc in reply_candidates %}
+      <option value="{{ rc.id }}" {% if doc and doc.in_reply_to_id == rc.id %}selected{% endif %}>
+        {{ rc.doc_number }} — {{ (rc.title or '')[:60] }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<!-- BODY (RICH TEXT) -->
+<div class="dlg-h">Текст документа <span class="dlg-req">*</span></div>
+<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;margin-bottom:30px">
+  <div id="ed-toolbar" style="display:flex;flex-wrap:wrap;gap:2px;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--bg-input,#f7f8fa);align-items:center">
+    <select onchange="edCmd('fontName', this.value)" class="dlg-select" style="width:150px;padding:4px 6px">
+      <option value="Times New Roman" selected>Times New Roman</option>
+      <option value="Arial">Arial</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Courier New">Courier New</option>
+    </select>
+    <select onchange="edCmd('fontSize', this.value)" class="dlg-select" style="width:70px;padding:4px 6px">
+      <option value="1">8pt</option><option value="2">10pt</option>
+      <option value="3" selected>11pt</option><option value="4">14pt</option>
+      <option value="5">18pt</option><option value="6">24pt</option>
+    </select>
+    <span class="ed-sep"></span>
+    <button type="button" class="ed-btn" onclick="edCmd('undo')" title="Отменить"><i class="ti ti-arrow-back-up"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('redo')" title="Повторить"><i class="ti ti-arrow-forward-up"></i></button>
+    <span class="ed-sep"></span>
+    <button type="button" class="ed-btn" onclick="edCmd('bold')" title="Жирный"><b>B</b></button>
+    <button type="button" class="ed-btn" onclick="edCmd('italic')" title="Курсив"><i>I</i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('underline')" title="Подчёркнутый"><u>U</u></button>
+    <button type="button" class="ed-btn" onclick="edCmd('strikeThrough')" title="Зачёркнутый"><s>S</s></button>
+    <span class="ed-sep"></span>
+    <button type="button" class="ed-btn" onclick="edCmd('justifyLeft')"><i class="ti ti-align-left"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('justifyCenter')"><i class="ti ti-align-center"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('justifyRight')"><i class="ti ti-align-right"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('justifyFull')"><i class="ti ti-align-justified"></i></button>
+    <span class="ed-sep"></span>
+    <button type="button" class="ed-btn" onclick="edCmd('insertUnorderedList')"><i class="ti ti-list"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('insertOrderedList')"><i class="ti ti-list-numbers"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('outdent')"><i class="ti ti-indent-decrease"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('indent')"><i class="ti ti-indent-increase"></i></button>
+    <span class="ed-sep"></span>
+    <button type="button" class="ed-btn" onclick="edCmd('insertHorizontalRule')"><i class="ti ti-minus"></i></button>
+    <button type="button" class="ed-btn" onclick="edCmd('removeFormat')" title="Очистить форматирование"><i class="ti ti-clear-formatting"></i></button>
+  </div>
+  <div id="editor" contenteditable="true"
+       style="min-height:260px;padding:18px 22px;font-size:13px;line-height:1.65;color:var(--text-1);outline:none;font-family:'Times New Roman',serif">
+    {{- (doc.body_html if doc and doc.body_html else default_body) | safe -}}
+  </div>
+</div>
+
+</form>
+
+<!-- STRUCTURE (PEOPLE) MODAL -->
+<div id="structure-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
+    <div style="background:#2563eb;padding:13px 18px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;font-weight:600;color:#fff">Структура</span>
+      <button type="button" onclick="closeStructure()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;line-height:1">×</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+      <input type="text" id="structure-search" oninput="filterStructure()" placeholder="Найти..." class="dlg-input" style="border-color:#2563eb">
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr;padding:8px 18px;font-size:11px;font-weight:600;color:var(--text-3);border-bottom:1px solid var(--border)">
+        <span></span><span>Сокращенное имя</span><span>Должность</span><span>Подразделение</span>
+      </div>
+      <div id="structure-list">
+        {% for u in executors %}
+        <div class="structure-item" data-id="{{ u.id }}" data-name="{{ u.full_name }}" data-pos="{{ u.position_display }}" onclick="toggleStructure(this)"
+             style="display:grid;grid-template-columns:24px 1fr 1fr 1fr;padding:9px 18px;cursor:pointer;font-size:12px;color:var(--text-1);border-bottom:1px solid var(--border);align-items:center">
+          <input type="checkbox" class="structure-cb" style="accent-color:#2563eb;pointer-events:none">
+          <span><i class="ti ti-user" style="font-size:12px;color:var(--text-3);margin-right:5px"></i>{{ u.full_name }}</span>
+          <span style="color:var(--text-2)">{{ u.position_display }}</span>
+          <span style="color:var(--text-2)">{{ u.department or '—' }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+      <button type="button" onclick="confirmStructure()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:7px 22px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">Ок</button>
+      <button type="button" onclick="closeStructure()" style="background:#fff;color:var(--text-1);border:1px solid var(--border);border-radius:6px;padding:7px 22px;font-size:12px;cursor:pointer;font-family:inherit">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.ed-btn{background:none;border:1px solid transparent;border-radius:5px;min-width:28px;height:28px;font-size:13px;color:var(--text-2);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.ed-btn:hover{background:#e8edf5;color:#2563eb}
+.ed-sep{width:1px;height:18px;background:var(--border);margin:0 6px}
+.structure-item.selected{background:#eff6ff}
+#editor:focus{box-shadow:inset 0 0 0 1px #2563eb}
+</style>
+
+<script>
+/* ── EDITOR ─────────────────────────────────────────────────────────── */
+function edCmd(cmd, val){
+  document.getElementById('editor').focus();
+  document.execCommand(cmd, false, val || null);
+}
+function syncEditor(){
+  document.getElementById('body_html_input').value =
+    document.getElementById('editor').innerHTML;
+}
+document.getElementById('internal-form').addEventListener('submit', syncEditor);
+
+/* ── ATTACHMENTS PREVIEW ────────────────────────────────────────────── */
+function showAttachmentsList(input){
+  const list = document.getElementById('attachment-list');
+  list.innerHTML = '';
+  Array.from(input.files).forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'dlg-chip';
+    chip.innerHTML = `<i class="ti ti-paperclip"></i><span class="dlg-chip-name">${f.name}</span>` +
+      `<span style="font-size:10px;color:var(--text-3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;
+    list.appendChild(chip);
+  });
+}
+
+/* ── STRUCTURE PICKER (signatory: одиночный, recipients/этапы: множественный) ── */
+let structureTarget = null;
+let stageCount = 0;
+
+function openStructure(target){
+  structureTarget = target;
+  document.querySelectorAll('.structure-item').forEach(el=>{
+    el.classList.remove('selected');
+    el.querySelector('.structure-cb').checked = false;
+  });
+  let preset = [];
+  if (target === 'signatory'){
+    const v = document.getElementById('signatory_id');
+    if (v && v.value) preset = [v.value];
+  } else if (target === 'recipients'){
+    preset = Array.from(document.querySelectorAll('#recipients-chips .dlg-chip')).map(c=>c.dataset.id);
+  } else {
+    preset = Array.from(document.querySelectorAll(`#stage-people-${target} .dlg-chip`)).map(c=>c.dataset.id);
+  }
+  preset.forEach(id=>{
+    const it = document.querySelector(`.structure-item[data-id="${id}"]`);
+    if(it){ it.classList.add('selected'); it.querySelector('.structure-cb').checked = true; }
+  });
+  document.getElementById('structure-modal').style.display = 'flex';
+  document.getElementById('structure-search').value = '';
+  filterStructure();
+}
+function closeStructure(){ document.getElementById('structure-modal').style.display = 'none'; }
+function filterStructure(){
+  const q = document.getElementById('structure-search').value.toLowerCase();
+  document.querySelectorAll('.structure-item').forEach(el=>{
+    el.style.display = el.dataset.name.toLowerCase().includes(q) ? 'grid' : 'none';
+  });
+}
+function toggleStructure(el){
+  if (structureTarget === 'signatory'){
+    document.querySelectorAll('.structure-item').forEach(x=>{
+      x.classList.remove('selected'); x.querySelector('.structure-cb').checked = false;
+    });
+    el.classList.add('selected'); el.querySelector('.structure-cb').checked = true;
+  } else {
+    el.classList.toggle('selected');
+    el.querySelector('.structure-cb').checked = el.classList.contains('selected');
+  }
+}
+function personChip(id, name, inputName){
+  const chip = document.createElement('div');
+  chip.className = 'dlg-chip';
+  chip.dataset.id = id; chip.dataset.name = name;
+  chip.innerHTML = `<i class="ti ti-menu-2"></i><span class="dlg-chip-name">${name}</span>` +
+    `<button type="button" class="dlg-chip-x" onclick="this.closest('.dlg-chip').remove()">×</button>` +
+    (inputName ? `<input type="hidden" name="${inputName}" value="${id}">` : '');
+  return chip;
+}
+function confirmStructure(){
+  const sel = document.querySelectorAll('.structure-item.selected');
+  if (structureTarget === 'signatory'){
+    const inp = document.getElementById('signatory_id');
+    const disp = document.getElementById('signatory_display');
+    inp.value = '';
+    disp.textContent = '— Выбрать —';
+    if (sel.length){
+      inp.value = sel[0].dataset.id;
+      disp.textContent = `${sel[0].dataset.name} (${sel[0].dataset.pos})`;
+      disp.style.color = 'var(--text-1)';
+    }
+  } else if (structureTarget === 'recipients'){
+    const wrap = document.getElementById('recipients-chips');
+    wrap.innerHTML = '';
+    sel.forEach(el=>wrap.appendChild(personChip(el.dataset.id, el.dataset.name, 'recipient_ids[]')));
+  } else {
+    const wrap = document.getElementById(`stage-people-${structureTarget}`);
+    wrap.innerHTML = '';
+    sel.forEach(el=>wrap.appendChild(personChip(el.dataset.id, el.dataset.name, `stage_reviewer_${structureTarget}[]`)));
+  }
+  closeStructure();
+}
+
+/* ── ROUTE STAGES ───────────────────────────────────────────────────── */
+function addStage(){
+  stageCount++;
+  const n = stageCount;
+  const div = document.createElement('div');
+  div.className = 'dlg-stage';
+  div.id = 'stage-' + n;
+  div.innerHTML = `
+    <i class="ti ti-menu-2"></i>
+    <span class="dlg-stage-num">${n}</span>
+    <input type="hidden" name="stage_no[]" value="${n}">
+    <select name="stage_type[]" class="dlg-select">
+      <option value="parallel">Параллельное</option>
+      <option value="sequential">Последовательное</option>
+    </select>
+    <div>
+      <div class="dlg-picker" onclick="openStructure(${n})"><span class="dlg-picker-ph">— Выбрать —</span><i class="ti ti-sitemap"></i></div>
+      <div class="dlg-chips" id="stage-people-${n}"></div>
+    </div>
+    <button type="button" class="dlg-chip-x" style="margin-top:8px" onclick="document.getElementById('stage-${n}').remove()">×</button>`;
+  document.getElementById('stages-container').appendChild(div);
+}
+function clearStages(){
+  document.getElementById('stages-container').innerHTML = '';
+  stageCount = 0;
+}
+
+/* ── ROUTE TEMPLATES ────────────────────────────────────────────────── */
+const ROUTE_TEMPLATES = {{ templates_json|safe if templates_json else '[]' }};
+const CSRF = document.querySelector('input[name=csrf_token]').value;
+
+(function initTemplates(){
+  const sel = document.getElementById('route-template-select');
+  if (!sel) return;
+  ROUTE_TEMPLATES.forEach(t=>{
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+})();
+
+function applySelectedTemplate(){
+  const sel = document.getElementById('route-template-select');
+  if (!sel) return;
+  const tpl = ROUTE_TEMPLATES.find(t=>String(t.id) === sel.value);
+  if (!tpl) return;
+  const d = tpl.data;
+  if (d.signatory && d.signatory.id){
+    document.getElementById('signatory_id').value = d.signatory.id;
+    const disp = document.getElementById('signatory_display');
+    disp.textContent = d.signatory.name; disp.style.color = 'var(--text-1)';
+  }
+  clearStages();
+  (d.stages || []).forEach(st=>{
+    addStage();
+    const box = document.getElementById('stage-' + stageCount);
+    box.querySelector('select[name="stage_type[]"]').value =
+        st.type === 'sequential' ? 'sequential' : 'parallel';
+    const people = document.getElementById('stage-people-' + stageCount);
+    (st.reviewers || []).forEach(rv=>{
+      people.appendChild(personChip(rv.id, rv.name, `stage_reviewer_${stageCount}[]`));
+    });
+  });
+}
+
+function collectRoute(){
+  const sig_id = document.getElementById('signatory_id').value;
+  const sig_name = document.getElementById('signatory_display').textContent.trim();
+  const stages = [];
+  document.querySelectorAll('#stages-container > div').forEach(box=>{
+    const type = box.querySelector('select[name="stage_type[]"]').value;
+    const reviewers = [];
+    box.querySelectorAll('.dlg-chip').forEach(chip=>{
+      reviewers.push({id: parseInt(chip.dataset.id), name: chip.dataset.name || ''});
+    });
+    if (reviewers.length) stages.push({type, reviewers});
+  });
+  return {signatory: sig_id ? {id: parseInt(sig_id), name: sig_name} : null, stages};
+}
+
+function saveRouteTemplate(){
+  const route = collectRoute();
+  if (!route.stages.length && !route.signatory){
+    alert('Сначала соберите маршрут (подписывающий и/или согласующие).'); return;
+  }
+  const name = prompt('Название маршрута (например: «Стандарт: нач. отдела → директор»):');
+  if (!name) return;
+  const fd = new FormData();
+  fd.append('template_name', name);
+  fd.append('template_json', JSON.stringify(route));
+  fd.append('csrf_token', CSRF);
+  fetch('{{ url_for("documents.save_route_template") }}', {method:'POST', body:fd})
+    .then(r=>r.json())
+    .then(j=>{
+      if (j.ok){
+        ROUTE_TEMPLATES.push({id: j.id, name: j.name, data: route});
+        const sel = document.getElementById('route-template-select');
+        const o = document.createElement('option');
+        o.value = j.id; o.textContent = j.name; sel.appendChild(o); sel.value = j.id;
+        alert('Маршрут сохранён.');
+      } else { alert('Ошибка: ' + (j.error || '')); }
+    });
+}
+</script>
+{% endblock %}

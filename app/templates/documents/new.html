@@ -28,6 +28,36 @@
     <div class="doc-card-sub">Defect Act</div>
   </a>
 
+  <a href="{{ url_for('documents.new_internal', doc_type='memo') }}" class="doc-card">
+    <div class="doc-card-icon"><i class="ti ti-notes"></i></div>
+    <div class="doc-card-title">Записка служебная</div>
+    <div class="doc-card-sub">Internal Memo</div>
+  </a>
+
+  <a href="{{ url_for('documents.new_internal', doc_type='order') }}" class="doc-card">
+    <div class="doc-card-icon"><i class="ti ti-gavel"></i></div>
+    <div class="doc-card-title">Приказ</div>
+    <div class="doc-card-sub">Order</div>
+  </a>
+
+  <a href="{{ url_for('documents.new_internal', doc_type='act') }}" class="doc-card">
+    <div class="doc-card-icon"><i class="ti ti-file-certificate"></i></div>
+    <div class="doc-card-title">Акт</div>
+    <div class="doc-card-sub">Act</div>
+  </a>
+
+  <a href="{{ url_for('documents.new_internal', doc_type='incoming') }}" class="doc-card">
+    <div class="doc-card-icon"><i class="ti ti-mail-down"></i></div>
+    <div class="doc-card-title">Входящее письмо</div>
+    <div class="doc-card-sub">Incoming Letter</div>
+  </a>
+
+  <a href="{{ url_for('documents.new_internal', doc_type='outgoing') }}" class="doc-card">
+    <div class="doc-card-icon"><i class="ti ti-mail-up"></i></div>
+    <div class="doc-card-title">Исходящее письмо</div>
+    <div class="doc-card-sub">Outgoing Letter</div>
+  </a>
+
 </div>
 
 <style>

@@ -18,6 +18,11 @@
           <div style="font-size:18px;font-weight:500;color:var(--text-1)">
             {% if doc.doc_type == 'defect_act' %}{{ _('Дефектный акт') }}
             {% elif doc.doc_type in ['purchase_req','trebovanie'] %}{{ _('Требование на приобретение') }}
+            {% elif doc.doc_type == 'memo' %}{{ _('Записка служебная') }}
+            {% elif doc.doc_type == 'order' %}{{ _('Приказ') }}
+            {% elif doc.doc_type == 'act' %}{{ _('Акт') }}
+            {% elif doc.doc_type == 'incoming' %}{{ _('Входящее письмо') }}
+            {% elif doc.doc_type == 'outgoing' %}{{ _('Исходящее письмо') }}
             {% else %}{{ doc.doc_type }}{% endif %}
           </div>
           <div style="font-size:11px;color:var(--text-3);margin-top:3px">
@@ -58,6 +63,12 @@
           {% set steps_kz = ['Жасалды','Келісім','Қол қою','Төлемде','Төленді','Жабу құжаттары'] %}
           {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
           {% set cur = {'draft':1,'returned':1,'pending':2,'awaiting_payment':4,'paid':5,'closing_docs':6,'closed':7,'rejected':2}.get(doc.status,1) %}
+        {% elif doc.doc_type in ('memo', 'order', 'act', 'incoming', 'outgoing') %}
+          {% set steps_ru = ['Создание','Согласование','Подпись','Регистрация','На исполнении','Исполнен'] %}
+          {% set steps_en = ['Created','Approval','Signature','Registration','In execution','Completed'] %}
+          {% set steps_kz = ['Жасалды','Келісім','Қол қою','Тіркеу','Орындауда','Орындалды'] %}
+          {% set steps = steps_ru if current_user.language == 'ru' else (steps_en if current_user.language == 'en' else steps_kz) %}
+          {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':5,'executed':7,'rejected':2}.get(doc.status,1) %}
         {% else %}
           {% set cur = {'draft':1,'returned':1,'pending':2,'approved':4,'in_execution':4,'executed':5,'rejected':2}.get(doc.status,1) %}
         {% endif %}
@@ -132,6 +143,52 @@
       </div>
     </div>
   </div>
+  {% endif %}
+
+  {# ── ВНУТРЕННИЕ ДОКУМЕНТЫ: получатели и исполнение ── #}
+  {% if doc.doc_type in ('memo', 'order', 'act', 'incoming', 'outgoing') %}
+  {% set doc_recipients = doc.recipients.all() %}
+  {% if doc_recipients %}
+  <div class="card" style="margin-bottom:14px{% if doc.status == 'in_execution' %};border-left:4px solid var(--amber){% endif %}">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-users"></i></div>
+        <div class="card-title">{{ _('Получатели') }} ({{ doc_recipients|length }})</div>
+      </div>
+      {% if doc.registered_at %}
+      <span style="font-size:11px;color:var(--text-3)">{{ _('Зарегистрирован') }}: {{ doc.registered_at.strftime('%d.%m.%Y %H:%M') }}</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% for r in doc_recipients %}
+      <div class="approver-row" {% if loop.last %}style="border-bottom:none"{% endif %}>
+        <div class="approver-av {% if r.status == 'done' %}done{% elif doc.status == 'in_execution' %}active{% else %}pending{% endif %}">{{ r.user.initials }}</div>
+        <div style="flex:1">
+          <div class="approver-name">{{ r.user.full_name }}</div>
+          <div class="approver-role">{{ _('Получатель') }}{% if r.note %} · {{ r.note }}{% endif %}</div>
+        </div>
+        <span class="pill {% if r.status == 'done' %}pill-green{% elif doc.status == 'in_execution' %}pill-amber{% else %}pill-gray{% endif %}">
+          {% if r.status == 'done' %}{{ _('Исполнено') }}{% if r.done_at %} · {{ r.done_at.strftime('%d.%m') }}{% endif %}
+          {% elif doc.status == 'in_execution' %}{{ _('На исполнении') }}
+          {% else %}{{ _('Ожидает') }}{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+      {% set my_pending = doc_recipients | selectattr('user_id', 'equalto', current_user.id)
+                                         | selectattr('status', 'equalto', 'pending') | list %}
+      {% if doc.status == 'in_execution' and (my_pending or current_user.role == 'it_admin') %}
+      <form method="POST" action="{{ url_for('documents.recipient_done', doc_id=doc.id) }}"
+            style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-start">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="note" class="form-input" style="flex:1"
+               placeholder="{{ _('Комментарий об исполнении (необязательно)...') }}">
+        <button type="submit" class="btn btn-sm btn-success"><i class="ti ti-circle-check"></i>
+          {{ _('Отметить исполнение') }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
   {% endif %}
 
   {% if doc.doc_type in ('po_services', 'po_trebovanie') and doc.status in ('awaiting_payment', 'closing_docs')
@@ -236,6 +293,8 @@
             <a href="{{ url_for('documents.edit_po_trebovanie', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% elif doc.doc_type == 'defect_act' %}
             <a href="{{ url_for('documents.edit_defect_act', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
+            {% elif doc.doc_type in ('memo', 'order', 'act', 'incoming', 'outgoing') %}
+            <a href="{{ url_for('documents.edit_internal', doc_id=doc.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i>{{ _('Редактировать') }}</a>
             {% endif %}
             <form method="POST" action="{{ url_for('documents.resubmit', doc_id=doc.id) }}" style="display:inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -260,7 +319,22 @@
       <div class="card-body">
         <table style="width:100%;font-size:12px;border-collapse:collapse">
           <tr><td style="padding:5px 0;color:var(--text-3);width:42%;font-size:11px">{{ _('Номер') }}</td><td style="padding:5px 0"><span class="doc-number">{{ doc.doc_number }}</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Тип') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Тип') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_type == 'defect_act' %}Дефектный акт{% elif doc.doc_type in ['purchase_req','trebovanie'] %}Требование{% elif doc.doc_type == 'po_services' %}РО на услуги{% elif doc.doc_type == 'po_trebovanie' %}РО на товары{% elif doc.doc_type == 'memo' %}Записка служебная{% elif doc.doc_type == 'order' %}Приказ{% elif doc.doc_type == 'act' %}Акт{% elif doc.doc_type == 'incoming' %}Входящее письмо{% elif doc.doc_type == 'outgoing' %}Исходящее письмо{% else %}{{ doc.doc_type }}{% endif %}</td></tr>
+          {% if doc.case_index %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Индекс дела') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.case_index }}</td></tr>
+          {% endif %}
+          {% if doc.doc_language %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Язык документа') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{% if doc.doc_language == 'ru' %}Русский{% elif doc.doc_language == 'kk' %}Қазақша{% elif doc.doc_language == 'en' %}English{% else %}{{ doc.doc_language }}{% endif %}</td></tr>
+          {% endif %}
+          {% if doc.needed_by %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Срок исполнения') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.needed_by.strftime('%d.%m.%Y') }}</td></tr>
+          {% endif %}
+          {% if doc.in_reply_to %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Является ответным на') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)"><a href="{{ url_for('documents.view', doc_id=doc.in_reply_to.id) }}">{{ doc.in_reply_to.doc_number }}</a></td></tr>
+          {% endif %}
+          {% if doc.registered_at %}
+          <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Зарегистрирован') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.registered_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
+          {% endif %}
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Автор') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.author.full_name }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Подразделение') }}</td><td style="padding:5px 0;border-top:1px solid var(--border)">{{ doc.department or '—' }}</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-3);font-size:11px;border-top:1px solid var(--border)">{{ _('Срочность') }}</td>
@@ -360,6 +434,23 @@
       </div>
     </div>
   </div>
+
+  {% if doc.body_html %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-file-text"></i></div>
+        <div class="card-title">{{ _('Текст документа') }}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      {# body_html санитизируется на сервере при сохранении (_sanitize_html) #}
+      <div style="font-size:13px;line-height:1.65;color:var(--text-1);font-family:'Times New Roman',serif">
+        {{ doc.body_html | safe }}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {% if items %}
   <div class="card" style="margin-bottom:14px">
