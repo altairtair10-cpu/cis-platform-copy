@@ -140,6 +140,22 @@ def approve(doc_id):
                                 title=f'Требование подписано: {doc.doc_number}',
                                 body=(doc.title or '')[:100],
                                 link=f'/documents/{doc.id}', is_read=False))
+                    if doc.doc_type == 'hr_order':
+                        # Кадровый приказ НЕ регистрируется автоматически:
+                        # номер и дату кадровик ставит ВРУЧНУЮ (задним числом
+                        # разрешено — требование законодательства РК).
+                        # Ознакомляющиеся получат уведомление после регистрации.
+                        for hr_u in User.query.filter_by(role='hr', is_active=True).all():
+                            db.session.add(Notification(
+                                user_id=hr_u.id,
+                                title=f'Приказ подписан — требуется регистрация: {doc.doc_number}',
+                                body=(doc.title or '')[:100],
+                                link='/hr/orders', is_read=False))
+                        db.session.add(DocumentComment(
+                            document_id=doc.id, author_id=current_user.id,
+                            text='Приказ подписан. Ожидает регистрации кадровой службой '
+                                 '(номер и дата присваиваются вручную).',
+                            is_system=True))
                     if doc.doc_type in INTERNAL_DOC_TYPES or doc.doc_type == 'purchase_req':
                         # подписанный документ регистрируется и уходит
                         # получателям на исполнение (Documentolog-цикл).

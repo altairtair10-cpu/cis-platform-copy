@@ -96,3 +96,6 @@ def pto_approve(req_id):
 @requires_permission('hr')
 def pto_deny(req_id):
     return _decide_pto(req_id, 'deny')
+
+
+from . import orders  # noqa: E402,F401  (HR-приказы: приём, журнал, карточки)
