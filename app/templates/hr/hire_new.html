@@ -1,111 +1,380 @@
 {% extends "base.html" %}
-{% block title %}Приём сотрудника{% endblock %}
-{% block page_title %}Приём сотрудника — приказ о приёме{% endblock %}
+{% block title %}Приказ о приёме на работу{% endblock %}
+{% block page_title %}Приказ о приёме на работу{% endblock %}
 
 {% block content %}
 <form method="POST" action="{{ url_for('hr.hire_submit') }}" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-  <div style="display:flex;gap:10px;margin-bottom:18px">
-    <button type="submit" name="action" value="submit" class="btn btn-primary">
-      <i class="ti ti-send"></i> Отправить на согласование</button>
-    <button type="submit" name="action" value="draft" class="btn">
-      <i class="ti ti-device-floppy"></i> Сохранить проект</button>
-    <a href="{{ url_for('hr.index') }}" class="btn">Отмена</a>
-  </div>
+<!-- STICKY TOOLBAR -->
+<div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
+  <button type="submit" name="action" value="submit" class="btn btn-primary"><i class="ti ti-send"></i> Отправить на согласование</button>
+  <button type="submit" name="action" value="draft" class="btn"><i class="ti ti-device-floppy"></i> Сохранить проект</button>
+  <a href="{{ url_for('hr.index') }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-3)">Проект · Версия 1</div>
+</div>
 
-  <div class="form-grid-2" style="gap:22px;margin-bottom:22px">
-    <div class="form-section" style="margin:0">
-      <div class="form-section-header"><i class="ti ti-user"></i><span class="form-section-title">Сотрудник (двуязычно — приказы на рус. и каз.)</span></div>
-      <div class="form-section-body">
-        <div class="form-group"><label class="form-label">ФИО (рус.)<span class="req">*</span></label>
-          <input name="full_name_ru" class="form-input" required></div>
-        <div class="form-group"><label class="form-label">ФИО (каз.)</label>
-          <input name="full_name_kz" class="form-input"></div>
-        <div class="form-group"><label class="form-label">ИИН</label>
-          <input name="iin" class="form-input" maxlength="12" pattern="\d{12}" title="12 цифр"></div>
-        <div class="form-group"><label class="form-label">Должность (рус.)</label>
-          <input name="position_ru" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Должность (каз.)</label>
-          <input name="position_kz" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Структурное подразделение</label>
-          <input name="department" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Телефон / Email</label>
-          <div style="display:flex;gap:8px">
-            <input name="phone" class="form-input" placeholder="+7...">
-            <input name="email" type="email" class="form-input" placeholder="email"></div></div>
-      </div>
-    </div>
+<!-- WORKFLOW STEPPER (как в Documentolog: 6 этапов) -->
+<div class="stepper" style="margin-bottom:28px;max-width:860px">
+  <div class="stepper-step"><div class="stepper-dot active">1</div><div class="stepper-label active">Создание</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">2</div><div class="stepper-label">Согласование</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">3</div><div class="stepper-label">Подпись</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">4</div><div class="stepper-label">Регистрация</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">5</div><div class="stepper-label">На исполнении</div></div>
+  <div class="stepper-line"></div>
+  <div class="stepper-step"><div class="stepper-dot pending">6</div><div class="stepper-label">Исполнен</div></div>
+</div>
 
-    <div class="form-section" style="margin:0">
-      <div class="form-section-header"><i class="ti ti-file-text"></i><span class="form-section-title">Условия приёма</span></div>
-      <div class="form-section-body">
-        <div class="form-group"><label class="form-label">Выход на работу (дата приёма)</label>
-          <input name="hire_date" type="date" class="form-input"></div>
-        <div class="form-group"><label class="form-label">График / вахта</label>
-          <select name="schedule" class="form-select">
-            <option value="">— выбрать —</option>
-            {% for s in schedules %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
-          </select></div>
-        <div class="form-group"><label class="form-label">Номер трудового договора</label>
-          <input name="contract_number" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Период договора (с — по)</label>
-          <div style="display:flex;gap:8px">
-            <input name="contract_date" type="date" class="form-input">
-            <input name="contract_end" type="date" class="form-input"></div></div>
-        <div class="form-group"><label class="form-label">Испытательный срок (мес.)</label>
-          <input name="probation_months" type="number" min="0" max="6" value="3" class="form-input" style="max-width:120px"></div>
-        <div class="form-group"><label class="form-label">Отпуск, дней в год</label>
-          <input name="vacation_entitled" type="number" min="0" value="24" class="form-input" style="max-width:120px"></div>
-        <div class="form-group"><label class="form-label">Основание</label>
-          <input name="basis" class="form-input" value="Заявление о приёме на работу"></div>
-      </div>
-    </div>
-  </div>
+<!-- TWO-COLUMN (структура Documentolog) -->
+<div class="form-grid-2" style="gap:28px;margin-bottom:28px">
 
-  <div class="form-section">
-    <div class="form-section-header"><i class="ti ti-route"></i><span class="form-section-title">Маршрут приказа</span></div>
+  <!-- ЛЕВАЯ: Регистрационные реквизиты -->
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-file-text"></i><span class="form-section-title">Регистрационные реквизиты</span></div>
     <div class="form-section-body">
-      <div class="form-grid-2" style="gap:22px">
-        <div>
-          <div class="form-group">
-            <label class="form-label">Подписывающий (ГД)<span class="req">*</span></label>
-            <select name="signatory_id" class="form-select">
-              <option value="">— выбрать —</option>
-              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Согласующие (параллельно)</label>
-            <select name="stage_reviewer[]" class="form-select" multiple size="6">
-              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
-            </select>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px">Ctrl/Cmd — несколько.</div>
-          </div>
+      <div class="form-group">
+        <label class="form-label">Вид приказа<span class="req">*</span></label>
+        <input type="text" class="form-input" value="Приказ о приёме на работу" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Индекс дела<span class="req">*</span></label>
+        <input type="hidden" name="case_index" id="case_index_input" value="">
+        <div onclick="openNomenclatureModal()" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-input);min-height:36px">
+          <span id="case_index_display" style="font-size:12px;color:var(--text-3);flex:1">— выбрать из номенклатуры дел —</span>
+          <i class="ti ti-books" style="font-size:14px;color:var(--red)"></i>
         </div>
-        <div>
-          <div class="form-group">
-            <label class="form-label">Ознакомляющиеся (сотрудник или его руководитель)</label>
-            <select name="acknowledge_ids[]" class="form-select" multiple size="6">
-              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
-            </select>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px">Получат приказ на ознакомление после регистрации.</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Вложения (заявление с визой — оригинал обязателен)</label>
-            <label for="attachments" class="btn"><i class="ti ti-upload"></i> Загрузить файлы
-              <input id="attachments" name="attachments" type="file" multiple
-                     accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display:none"></label>
-          </div>
-        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ф.И.О работника<span class="req">*</span></label>
+        <input name="full_name_ru" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ф.И.О (каз., при транскрипции)</label>
+        <input name="full_name_kz" class="form-input" placeholder="если написание отличается">
+      </div>
+      <div class="form-group">
+        <label class="form-label">На должность (рус)<span class="req">*</span></label>
+        <input name="position_ru" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">На должность (каз)<span class="req">*</span></label>
+        <input name="position_kz" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Структурное подразделение<span class="req">*</span></label>
+        <input name="department" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Выход на работу</label>
+        <input name="work_start" type="date" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Основание</label>
+        <input name="basis" class="form-input" value="Заявление о приёме на работу">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Примечание</label>
+        <textarea name="note" class="form-textarea" style="min-height:54px"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Вложение (заявление с визой — оригинал обязателен)</label>
+        <label for="attachments" class="btn"><i class="ti ti-upload"></i> Загрузить
+          <input id="attachments" name="attachments" type="file" multiple
+                 accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display:none"></label>
       </div>
     </div>
   </div>
 
-  <div style="font-size:11px;color:var(--text-3);margin-top:10px">
-    После подписи ГД приказ попадёт в «Журнал приказов» → регистрация вручную
-    (номер, дата — задним числом допустимо) → карточка сотрудника станет
-    «Действующий», приказ уйдёт в бухгалтерию и на ознакомление.
+  <!-- ПРАВАЯ: Реквизиты присвоенные отправителем (прием на работу) -->
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-user-check"></i><span class="form-section-title">Реквизиты присвоенные отправителем (приём на работу)</span></div>
+    <div class="form-section-body">
+      <div class="form-group">
+        <label class="form-label">Вид приёма<span class="req">*</span></label>
+        <select name="vid_priema" class="form-select" required>
+          <option value="">Не выбрано</option>
+          <option>Приём на работу</option>
+          <option>Приём на работу (вахтовый метод)</option>
+          <option>Приём по совместительству</option>
+          <option>Перевод</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Дата приёма<span class="req">*</span></label>
+        <input name="hire_date" type="date" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Период трудового договора<span class="req">*</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--text-3)">с</span>
+          <input name="contract_date" type="date" class="form-input">
+          <span style="font-size:12px;color:var(--text-3)">по</span>
+          <input name="contract_end" type="date" class="form-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Дата и номер трудового договора<span class="req">*</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--text-3)">от</span>
+          <input name="contract_signed" type="date" class="form-input">
+          <span style="font-size:12px;color:var(--text-3)">номер</span>
+          <input name="contract_number" class="form-input" placeholder="ТД-2026-…">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Испытательный срок (прописью)<span class="req">*</span></label>
+        <input name="probation_text" class="form-input" value="три месяца">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Заявление<span class="req">*</span></label>
+        <input name="statement" class="form-input" placeholder="№ / дата заявления (скан — во вложении)">
+      </div>
+
+      <div style="border-top:1px dashed var(--border);margin:16px 0 14px;padding-top:12px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)">Дополнительно (для карточки CIS)</div>
+      <div class="form-group">
+        <label class="form-label">ИИН</label>
+        <input name="iin" class="form-input" maxlength="12" pattern="\d{12}" title="12 цифр">
+      </div>
+      <div class="form-group">
+        <label class="form-label">График / вахта</label>
+        <select name="schedule" class="form-select">
+          <option value="">— выбрать —</option>
+          {% for s in schedules %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Отпуск, дней в год</label>
+        <input name="vacation_entitled" type="number" min="0" value="24" class="form-input" style="max-width:120px">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Телефон / Email</label>
+        <div style="display:flex;gap:8px">
+          <input name="phone" class="form-input" placeholder="+7…">
+          <input name="email" type="email" class="form-input" placeholder="email">
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- МАРШРУТ + ПОЛУЧАТЕЛИ (структура Documentolog) -->
+<div class="form-grid-2" style="gap:28px;margin-bottom:8px">
+
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-route"></i><span class="form-section-title">Маршрут документа</span></div>
+    <div class="form-section-body">
+      <div class="form-group" style="max-width:480px">
+        <label class="form-label">Подписывающий (ГД)<span class="req">*</span></label>
+        <input type="hidden" name="signatory_id" id="signatory_id" value="">
+        <div onclick="openStructure('signatory')" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-input);min-height:36px">
+          <span id="signatory_display" style="font-size:12px;color:var(--text-3);flex:1">— Выбрать —</span>
+          <i class="ti ti-sitemap" style="font-size:14px;color:var(--red)"></i>
+        </div>
+      </div>
+      <label class="form-label" style="margin:14px 0 8px;display:block">Согласующие:</label>
+      <div style="display:flex;gap:34px;align-items:center;justify-content:center;margin-bottom:12px">
+        <button type="button" onclick="addStage()"
+                style="background:none;border:none;color:var(--text-2);font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase;padding:4px 2px">Добавить этап</button>
+        <button type="button" onclick="clearRoute()"
+                style="background:none;border:none;color:var(--text-2);font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase;padding:4px 2px">Очистить маршрут</button>
+      </div>
+      <div id="stages-container"></div>
+    </div>
+  </div>
+
+  <div class="form-section" style="margin:0">
+    <div class="form-section-header"><i class="ti ti-users"></i><span class="form-section-title">Получатели</span></div>
+    <div class="form-section-body">
+      <div class="form-group">
+        <label class="form-label">Получатели (бухгалтерия и др.)<span class="req">*</span></label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:32px">
+          <div id="recipients-chips" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+          <button type="button" onclick="openStructure('recipients')" class="btn btn-sm"><i class="ti ti-user-plus"></i> Выбрать</button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Список ознакомления (сотрудник / его руководитель)<span class="req">*</span></label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:32px">
+          <div id="acknowledge-chips" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+          <button type="button" onclick="openStructure('acknowledge')" class="btn btn-sm"><i class="ti ti-user-plus"></i> Выбрать</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:6px">Уведомления уйдут после регистрации приказа кадровой службой.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="font-size:11px;color:var(--text-3);margin-top:6px">
+  Подпись ГД → «Журнал приказов» → регистрация вручную (№ и дата, задним числом допустимо) →
+  карточка «Действующий», приказ в бухгалтерию и на ознакомление.
+</div>
 </form>
+
+<!-- STRUCTURE (PEOPLE) MODAL -->
+<div id="structure-modal" class="modal">
+  <div class="modal-content" style="max-width:820px">
+    <div class="modal-header"><span class="modal-title">Структура</span><button type="button" class="modal-close" onclick="closeStructure()">×</button></div>
+    <div class="modal-body">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="structure-search" oninput="filterStructure()" placeholder="Найти..." class="form-input"></div>
+      <table class="data-table" style="width:100%">
+        <thead><tr><th style="width:30px"></th><th>Сокращенное имя</th><th>Должность</th><th>Подразделение</th></tr></thead>
+        <tbody id="structure-list">
+          {% for u in users %}
+          <tr class="structure-item" data-id="{{ u.id }}" data-name="{{ u.full_name }}" onclick="toggleStructure(this)">
+            <td><input type="checkbox" class="structure-cb" style="accent-color:var(--red)"></td>
+            <td style="font-weight:500"><i class="ti ti-user" style="font-size:13px;color:var(--text-3);margin-right:5px"></i>{{ u.full_name }}</td>
+            <td class="text-muted">{{ u.position_display }}</td>
+            <td class="text-muted">{{ u.department or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="confirmStructure()">Ок</button><button type="button" class="btn" onclick="closeStructure()">Отмена</button></div>
+  </div>
+</div>
+
+<!-- НОМЕНКЛАТУРА ДЕЛ MODAL -->
+<div id="nomenclature-modal" class="modal">
+  <div class="modal-content" style="max-width:900px">
+    <div class="modal-header"><span class="modal-title">Номенклатура дел</span><button type="button" class="modal-close" onclick="closeNomenclatureModal()">×</button></div>
+    <div class="modal-body">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)"><input type="text" id="nom-search" oninput="filterNomenclature()" placeholder="Поиск по индексу или наименованию..." class="form-input"></div>
+      <table class="data-table" style="width:100%">
+        <thead><tr><th style="width:150px">Дело</th><th style="width:210px">Подразделение</th><th>Заголовок дела</th></tr></thead>
+        <tbody id="nom-list">
+          {% set OKMTS = 'Отдел контрактов и материально-технического снабжения' %}
+          {% set CIS = '"CASPIAN INTEGRATED SERVICES"' %}
+          {% set NOMENCLATURE = [
+            ('03-01', OKMTS, 'PN - положения и инстуркции'),
+            ('03-02', OKMTS, 'Договоры'),
+            ('03-03', OKMTS, 'Требование на приобретение материалов'),
+            ('03-04', OKMTS, 'Заявка на покупку (РО)'),
+            ('03-05', OKMTS, 'Сравнительный анализ ценовых предложений'),
+            ('03-06', OKMTS, 'Реестр требований на приобретение материалов'),
+            ('03-07', OKMTS, 'Реестр договоров'),
+            ('03-08', OKMTS, 'Реестр заявок на покупку'),
+            ('03-09', OKMTS, 'Карточка договора'),
+            ('03-10', OKMTS, 'Техническое задание'),
+            ('Входящие документы', CIS, 'Входящие документы'),
+            ('Договоры', CIS, 'Договоры'),
+          ] %}
+          {% for delo, div, title in NOMENCLATURE %}
+          <tr class="nom-item" data-idx="{{ delo }}" onclick="pickNomenclature(this)">
+            <td style="font-weight:600">{{ delo }}</td><td class="text-muted">{{ div }}</td><td>{{ title }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn" onclick="closeNomenclatureModal()">Отмена</button></div>
+  </div>
+</div>
+
+<script>
+let structureTarget = null;
+let stageCount = 0;
+
+/* ── СТРУКТУРА (люди) ── */
+function openStructure(target) {
+  structureTarget = target;
+  document.querySelectorAll('.structure-cb').forEach(cb => cb.checked = false);
+  if (target === 'signatory') {
+    const cur = document.getElementById('signatory_id').value;
+    if (cur) { const it = document.querySelector(`.structure-item[data-id="${cur}"]`); if (it) it.querySelector('.structure-cb').checked = true; }
+  } else if (target === 'recipients' || target === 'acknowledge') {
+    const nm = target === 'recipients' ? 'recipient_ids[]' : 'acknowledge_ids[]';
+    document.querySelectorAll(`#${target}-chips input[name="${nm}"]`).forEach(inp => {
+      const it = document.querySelector(`.structure-item[data-id="${inp.value}"]`);
+      if (it) it.querySelector('.structure-cb').checked = true;
+    });
+  } else {
+    document.querySelectorAll(`#stage-people-${target} input[name^="stage_reviewer"]`).forEach(inp => {
+      const it = document.querySelector(`.structure-item[data-id="${inp.value}"]`);
+      if (it) it.querySelector('.structure-cb').checked = true;
+    });
+  }
+  document.getElementById('structure-modal').classList.add('active');
+  document.getElementById('structure-search').value = '';
+  filterStructure();
+}
+function closeStructure() { document.getElementById('structure-modal').classList.remove('active'); }
+function filterStructure() { const q=document.getElementById('structure-search').value.toLowerCase(); document.querySelectorAll('.structure-item').forEach(el=>{el.style.display=el.dataset.name.toLowerCase().includes(q)?'':'none';}); }
+function toggleStructure(el) {
+  const cb = el.querySelector('.structure-cb');
+  if (structureTarget === 'signatory') {
+    document.querySelectorAll('.structure-cb').forEach(c => c.checked = false);
+    cb.checked = true;
+  } else { cb.checked = !cb.checked; }
+}
+function chip(name, id, inputName) {
+  const t = document.createElement('span');
+  t.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:#FDECEA;color:var(--red);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:500';
+  t.innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${name} <input type="hidden" name="${inputName}" value="${id}">`;
+  return t;
+}
+function confirmStructure() {
+  const checked = [...document.querySelectorAll('.structure-cb:checked')].map(cb => cb.closest('.structure-item'));
+  if (structureTarget === 'signatory') {
+    if (checked.length) {
+      document.getElementById('signatory_id').value = checked[0].dataset.id;
+      const d = document.getElementById('signatory_display');
+      d.textContent = checked[0].dataset.name; d.style.color = 'var(--text-1)';
+    }
+  } else if (structureTarget === 'recipients' || structureTarget === 'acknowledge') {
+    const inputName = structureTarget === 'recipients' ? 'recipient_ids[]' : 'acknowledge_ids[]';
+    const c = document.getElementById(`${structureTarget}-chips`);
+    c.innerHTML = '';
+    checked.forEach(it => c.appendChild(chip(it.dataset.name, it.dataset.id, inputName)));
+  } else {
+    const c = document.getElementById(`stage-people-${structureTarget}`);
+    c.innerHTML = '';
+    checked.forEach(it => c.appendChild(chip(it.dataset.name, it.dataset.id, `stage_reviewer_${structureTarget}[]`)));
+  }
+  closeStructure();
+}
+
+/* ── ЭТАПЫ СОГЛАСОВАНИЯ (Documentolog-style) ── */
+function addStage() {
+  stageCount++;
+  const d = document.createElement('div');
+  d.id = 'stage-' + stageCount;
+  d.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md)';
+  d.innerHTML = `
+    <i class="ti ti-menu-2" style="font-size:13px;color:var(--text-3)"></i>
+    <span style="font-size:11px;font-weight:600;color:var(--text-2);min-width:16px">${stageCount}</span>
+    <input type="hidden" name="stage_no[]" value="${stageCount}">
+    <select name="stage_type[]" class="form-select" style="flex:0.5;font-size:11px;padding:6px 8px">
+      <option value="parallel">Параллельное</option>
+      <option value="sequential">Последовательное</option>
+    </select>
+    <div id="stage-people-${stageCount}" style="display:flex;flex-wrap:wrap;gap:4px;flex:1;min-height:28px"></div>
+    <button type="button" onclick="openStructure(${stageCount})" class="btn btn-sm">+ Выбрать</button>
+    <button type="button" onclick="document.getElementById('stage-${stageCount}').remove()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px">×</button>`;
+  document.getElementById('stages-container').appendChild(d);
+}
+function clearRoute() {
+  document.getElementById('stages-container').innerHTML = '';
+  stageCount = 0;
+  addStage();   /* Documentolog оставляет одну пустую параллельную строку */
+}
+
+/* ── НОМЕНКЛАТУРА ── */
+function openNomenclatureModal(){ document.getElementById('nomenclature-modal').classList.add('active'); document.getElementById('nom-search').value=''; filterNomenclature(); }
+function closeNomenclatureModal(){ document.getElementById('nomenclature-modal').classList.remove('active'); }
+function filterNomenclature(){ const q=document.getElementById('nom-search').value.toLowerCase(); document.querySelectorAll('.nom-item').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q)?'':'none';}); }
+function pickNomenclature(row){
+  document.getElementById('case_index_input').value = row.dataset.idx;
+  const d = document.getElementById('case_index_display');
+  d.textContent = row.dataset.idx + ' — ' + row.cells[2].textContent;
+  d.style.color = 'var(--text-1)';
+  closeNomenclatureModal();
+}
+
+window.addEventListener('load', function(){ if (!stageCount) addStage(); });
+</script>
 {% endblock %}

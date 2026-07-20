@@ -106,6 +106,16 @@ def hire_submit():
         action = 'draft'
         flash('Приказ сохранён как проект: не выбран подписывающий (ГД).', 'warning')
 
+    # испытательный срок: «три месяца» (прописью, как в Documentolog) +
+    # числовое значение для карточки, если удаётся разобрать
+    probation_text = (request.form.get('probation_text') or '').strip()
+    probation_months = None
+    for word, n in (('один', 1), ('два', 2), ('три', 3), ('четыре', 4),
+                    ('шесть', 6), ('1', 1), ('2', 2), ('3', 3), ('6', 6)):
+        if word in probation_text.lower():
+            probation_months = n
+            break
+
     emp = Employee(
         full_name_ru = full_name_ru[:160],
         full_name_kz = (request.form.get('full_name_kz') or '')[:160] or None,
@@ -117,7 +127,7 @@ def hire_submit():
         contract_number = (request.form.get('contract_number') or '')[:64] or None,
         contract_date   = _parse_date('contract_date'),
         contract_end    = _parse_date('contract_end'),
-        probation_months = request.form.get('probation_months', type=int),
+        probation_months = probation_months,
         schedule     = (request.form.get('schedule') or '')[:16] or None,
         status       = 'candidate',
         vacation_entitled = request.form.get('vacation_entitled', type=int) or 24,
@@ -132,6 +142,7 @@ def hire_submit():
         title      = f'О приёме на работу — {emp.full_name_ru}'[:256],
         purpose    = request.form.get('basis') or 'Заявление о приёме на работу',
         department = emp.department,
+        case_index = (request.form.get('case_index') or '')[:64] or None,
         author_id  = current_user.id,
         executor_id = current_user.id,
         status     = 'pending' if action == 'submit' else 'draft',
@@ -149,22 +160,30 @@ def hire_submit():
         fields_json = json.dumps({
             'full_name_kz': emp.full_name_kz, 'position_ru': emp.position_ru,
             'position_kz': emp.position_kz, 'schedule': emp.schedule,
+            'vid_priema': request.form.get('vid_priema'),
+            'work_start': request.form.get('work_start'),
             'contract_number': emp.contract_number,
-            'probation_months': emp.probation_months,
+            'contract_signed': request.form.get('contract_signed'),
+            'probation_text': probation_text,
+            'statement': request.form.get('statement'),
         }, ensure_ascii=False),
     )
     db.session.add(detail)
     db.session.flush()
     db.session.add(HROrderEmployee(detail_id=detail.id, employee_id=emp.id))
 
-    # Ознакомляющиеся (сам сотрудник или его руководитель — по ТЗ)
+    # Получатели (kind='execute', напр. бухгалтерия) и Список ознакомления
+    # (kind='acknowledge') — два отдельных поля, как в Documentolog.
     seen = set()
-    for rid in request.form.getlist('acknowledge_ids[]'):
-        if rid.strip().isdigit() and int(rid) not in seen \
-                and db.session.get(User, int(rid)):
-            seen.add(int(rid))
-            db.session.add(DocumentRecipient(document_id=doc.id, user_id=int(rid),
-                                             status='pending', kind='acknowledge'))
+    for field, kind in (('recipient_ids[]', 'execute'),
+                        ('acknowledge_ids[]', 'acknowledge')):
+        for rid in request.form.getlist(field):
+            if rid.strip().isdigit() and int(rid) not in seen \
+                    and db.session.get(User, int(rid)):
+                seen.add(int(rid))
+                db.session.add(DocumentRecipient(document_id=doc.id,
+                                                 user_id=int(rid),
+                                                 status='pending', kind=kind))
 
     _build_route(doc, action, signatory_id)
     _save_form_attachments(doc)
