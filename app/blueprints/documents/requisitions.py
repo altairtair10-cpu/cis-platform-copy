@@ -188,6 +188,12 @@ def submit_trebovanie_new():
     doc.generate_number()
     log_action('document_created', 'document', doc.id, details=doc.doc_number)
 
+    # Получатели (Documentolog parity): после подписи документ уходит им
+    # на исполнение. Пустой список допустим — тогда работает прежний цикл
+    # (approved → уведомление отделу закупок).
+    from .internal import _apply_recipients
+    _apply_recipients(doc)
+
     names = request.form.getlist('item_name[]')
     specs = request.form.getlist('item_spec[]')
     qtys  = request.form.getlist('item_qty[]')
