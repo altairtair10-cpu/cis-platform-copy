@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ emp.full_name_ru }}{% endblock %}
+{% block page_title %}Единая карточка сотрудника{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+
+  <div class="card" style="flex:1;min-width:340px">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-id-badge-2"></i></div>
+        <div class="card-title">{{ emp.full_name_ru }}</div>
+      </div>
+      <span class="pill {% if emp.status == 'active' %}pill-green{% elif emp.status == 'terminated' %}pill-red{% elif emp.status == 'candidate' %}pill-amber{% else %}pill-blue{% endif %}">
+        {{ emp.status_display }}</span>
+    </div>
+    <div class="card-body">
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        {% for label, val in [
+            ('ФИО (каз.)', emp.full_name_kz),
+            ('ИИН', emp.iin),
+            ('Должность', emp.position_ru),
+            ('Должность (каз.)', emp.position_kz),
+            ('Подразделение', emp.department),
+            ('Руководитель', emp.manager.full_name_ru if emp.manager else None),
+            ('Дата приёма', emp.hire_date.strftime('%d.%m.%Y') if emp.hire_date else None),
+            ('Стаж (дней)', emp.tenure_days),
+            ('График / вахта', emp.schedule),
+            ('Трудовой договор', emp.contract_number),
+            ('Договор от', emp.contract_date.strftime('%d.%m.%Y') if emp.contract_date else None),
+            ('Договор до', emp.contract_end.strftime('%d.%m.%Y') if emp.contract_end else None),
+            ('Испытательный срок (мес.)', emp.probation_months),
+            ('Отпуск положено (дней/год)', emp.vacation_entitled),
+            ('Телефон', emp.phone),
+            ('Email', emp.email),
+            ('Дата увольнения', emp.termination_date.strftime('%d.%m.%Y') if emp.termination_date else None),
+        ] %}
+        {% if val is not none and val != '' %}
+        <tr>
+          <td style="padding:6px 0;color:var(--text-3);width:220px;border-top:1px solid var(--border)">{{ label }}</td>
+          <td style="padding:6px 0;border-top:1px solid var(--border)">{{ val }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="flex:1.2;min-width:380px">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon"><i class="ti ti-clipboard-text"></i></div>
+        <div class="card-title">Приказы по сотруднику ({{ orders|length }})</div>
+      </div>
+    </div>
+    {% if orders %}
+    <table class="data-table">
+      <thead><tr><th>№ рег.</th><th>Вид</th><th>Категория</th><th>Дата</th><th>Статус</th></tr></thead>
+      <tbody>
+        {% for d in orders %}
+        <tr onclick="window.location='{{ url_for('documents.view', doc_id=d.document_id) }}'" style="cursor:pointer">
+          <td style="font-weight:500">{{ d.reg_number or d.document.doc_number }}</td>
+          <td>{{ d.kind_display }}</td>
+          <td class="text-muted">{{ d.category_display }}</td>
+          <td class="text-muted">{{ d.reg_date.strftime('%d.%m.%Y') if d.reg_date else '—' }}</td>
+          <td>
+            {% set st = d.document.status %}
+            <span class="pill {% if st in ('executed','approved') %}pill-green{% elif st == 'rejected' %}pill-red{% elif st == 'pending' %}pill-amber{% else %}pill-gray{% endif %}">
+              {% if d.reg_number %}Зарегистрирован{% elif st == 'approved' %}Ожидает регистрации
+              {% elif st == 'pending' %}На согласовании{% else %}{{ st }}{% endif %}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="card-body text-muted" style="font-size:12px">Приказов пока нет.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

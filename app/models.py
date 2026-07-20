@@ -127,6 +127,7 @@ DOC_TYPES = {
     'act':           'Акт',
     'incoming':      'Входящее письмо',
     'outgoing':      'Исходящее письмо',
+    'hr_order':      'Приказ (кадровый)',
 }
 
 DOC_STATUSES = {
@@ -223,6 +224,7 @@ class Document(db.Model):
             'act':          'АКТ',
             'incoming':     'ВХ',
             'outgoing':     'ИСХ',
+            'hr_order':     'ПР',
         }
         setting = DocNumberSetting.query.filter_by(doc_type=self.doc_type).first()
         prefix  = (setting.prefix.strip() if setting and setting.prefix and setting.prefix.strip()
@@ -285,6 +287,7 @@ class DocumentRecipient(db.Model):
     status      = db.Column(db.String(16), default='pending')   # pending / done
     done_at     = db.Column(db.DateTime, nullable=True)
     note        = db.Column(db.String(256), nullable=True)
+    kind        = db.Column(db.String(16), default='execute')   # execute / acknowledge
 
     user        = db.relationship('User', foreign_keys=[user_id])
 
@@ -383,6 +386,131 @@ class TransportRun(db.Model):
 
 
 # ── HR ────────────────────────────────────────────────────────────────────────
+
+# ── HR: ЕДИНАЯ КАРТОЧКА СОТРУДНИКА И ПРИКАЗЫ ─────────────────────────────────
+
+EMPLOYEE_SCHEDULES = ['5/2', '14/14', '15/15', '28/28']
+EMPLOYEE_STATUSES = {
+    'candidate':  'Кандидат (приём в процессе)',
+    'active':     'Действующий',
+    'on_leave':   'В отпуске',
+    'trip':       'В командировке',
+    'terminated': 'Уволен',
+}
+HR_ORDER_CATEGORIES = {
+    'ls':         'По личному составу',
+    'vacation':   'По отпускам',
+    'trip':       'По командировкам',
+    'production': 'Производственные',
+    'main':       'По основной деятельности',
+    'other':      'Прочие',
+}
+HR_ORDER_KINDS = {
+    'hire':            ('Приём на работу', 'ls'),
+    'transfer':        ('Перевод', 'ls'),
+    'salary':          ('Изменение заработной платы', 'ls'),
+    'combine':         ('Совмещение / замещение', 'ls'),
+    'vacation':        ('Ежегодный трудовой отпуск', 'vacation'),
+    'vacation_unpaid': ('Отпуск без сохранения з/п', 'vacation'),
+    'recall':          ('Отзыв из отпуска', 'vacation'),
+    'trip':            ('Командировка', 'trip'),
+    'overtime':        ('Работа в выходной / сверхурочно', 'production'),
+    'schedule':        ('Изменение графика / вахты', 'ls'),
+    'bonus':           ('Премирование', 'ls'),
+    'discipline':      ('Дисциплинарное взыскание', 'ls'),
+    'termination':     ('Увольнение', 'ls'),
+    'other':           ('Прочее', 'other'),
+}
+
+
+class Employee(db.Model):
+    """Единая карточка сотрудника. Отдельно от User: у сотрудника может не
+    быть аккаунта в системе (вахтовики и т.п.); user_id — связь при наличии."""
+    __tablename__ = 'employees'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    user_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    full_name_ru = db.Column(db.String(160), nullable=False)
+    full_name_kz = db.Column(db.String(160), nullable=True)
+    iin          = db.Column(db.String(12), nullable=True)
+    position_ru  = db.Column(db.String(160), nullable=True)
+    position_kz  = db.Column(db.String(160), nullable=True)
+    department   = db.Column(db.String(120), nullable=True)
+    manager_id   = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    hire_date    = db.Column(db.Date, nullable=True)
+    contract_number = db.Column(db.String(64), nullable=True)
+    contract_date   = db.Column(db.Date, nullable=True)
+    contract_end    = db.Column(db.Date, nullable=True)
+    probation_months = db.Column(db.Integer, nullable=True)
+    schedule     = db.Column(db.String(16), nullable=True)      # 5/2, 14/14, 15/15, 28/28
+    status       = db.Column(db.String(24), nullable=False, default='candidate')
+    vacation_entitled = db.Column(db.Integer, default=24)
+    termination_date  = db.Column(db.Date, nullable=True)
+    phone        = db.Column(db.String(32), nullable=True)
+    email        = db.Column(db.String(120), nullable=True)
+    notes        = db.Column(db.Text, nullable=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user     = db.relationship('User', foreign_keys=[user_id])
+    manager  = db.relationship('Employee', remote_side=[id])
+    order_links = db.relationship('HROrderEmployee', back_populates='employee',
+                                  lazy='dynamic')
+
+    @property
+    def status_display(self):
+        return EMPLOYEE_STATUSES.get(self.status, self.status)
+
+    @property
+    def tenure_days(self):
+        """Стаж в днях (от приёма до увольнения/сегодня)."""
+        if not self.hire_date:
+            return None
+        end = self.termination_date or datetime.utcnow().date()
+        return max(0, (end - self.hire_date).days)
+
+
+class HROrderDetail(db.Model):
+    """Кадровые атрибуты приказа (Document с doc_type='hr_order'):
+    категория, вид, ручная регистрация (№ и дата задним числом — требование
+    законодательства РК)."""
+    __tablename__ = 'hr_order_details'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    document_id  = db.Column(db.Integer, db.ForeignKey('documents.id'),
+                             nullable=False, unique=True)
+    category     = db.Column(db.String(24), nullable=False, default='ls')
+    order_kind   = db.Column(db.String(32), nullable=False, default='hire')
+    reg_number   = db.Column(db.String(32), nullable=True)   # «ЛС-128» — вручную
+    reg_date     = db.Column(db.Date, nullable=True)         # задним числом можно
+    effective_date = db.Column(db.Date, nullable=True)
+    fields_json  = db.Column(db.Text, nullable=True)         # гибкие поля вида
+
+    document  = db.relationship('Document', backref=db.backref('hr_detail', uselist=False))
+    employees = db.relationship('HROrderEmployee', back_populates='detail',
+                                lazy='dynamic')
+
+    @property
+    def kind_display(self):
+        return HR_ORDER_KINDS.get(self.order_kind, (self.order_kind, ''))[0]
+
+    @property
+    def category_display(self):
+        return HR_ORDER_CATEGORIES.get(self.category, self.category)
+
+
+class HROrderEmployee(db.Model):
+    """Связь приказа с сотрудниками (премирование и т.п. — несколько)."""
+    __tablename__ = 'hr_order_employees'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    detail_id   = db.Column(db.Integer, db.ForeignKey('hr_order_details.id'),
+                            nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'),
+                            nullable=False)
+
+    detail   = db.relationship('HROrderDetail', back_populates='employees')
+    employee = db.relationship('Employee', back_populates='order_links')
+
 
 class PTORequest(db.Model):
     __tablename__ = 'pto_requests'

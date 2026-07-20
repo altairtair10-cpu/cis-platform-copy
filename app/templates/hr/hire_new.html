@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Приём сотрудника{% endblock %}
+{% block page_title %}Приём сотрудника — приказ о приёме{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('hr.hire_submit') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div style="display:flex;gap:10px;margin-bottom:18px">
+    <button type="submit" name="action" value="submit" class="btn btn-primary">
+      <i class="ti ti-send"></i> Отправить на согласование</button>
+    <button type="submit" name="action" value="draft" class="btn">
+      <i class="ti ti-device-floppy"></i> Сохранить проект</button>
+    <a href="{{ url_for('hr.index') }}" class="btn">Отмена</a>
+  </div>
+
+  <div class="form-grid-2" style="gap:22px;margin-bottom:22px">
+    <div class="form-section" style="margin:0">
+      <div class="form-section-header"><i class="ti ti-user"></i><span class="form-section-title">Сотрудник (двуязычно — приказы на рус. и каз.)</span></div>
+      <div class="form-section-body">
+        <div class="form-group"><label class="form-label">ФИО (рус.)<span class="req">*</span></label>
+          <input name="full_name_ru" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">ФИО (каз.)</label>
+          <input name="full_name_kz" class="form-input"></div>
+        <div class="form-group"><label class="form-label">ИИН</label>
+          <input name="iin" class="form-input" maxlength="12" pattern="\d{12}" title="12 цифр"></div>
+        <div class="form-group"><label class="form-label">Должность (рус.)</label>
+          <input name="position_ru" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Должность (каз.)</label>
+          <input name="position_kz" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Структурное подразделение</label>
+          <input name="department" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Телефон / Email</label>
+          <div style="display:flex;gap:8px">
+            <input name="phone" class="form-input" placeholder="+7...">
+            <input name="email" type="email" class="form-input" placeholder="email"></div></div>
+      </div>
+    </div>
+
+    <div class="form-section" style="margin:0">
+      <div class="form-section-header"><i class="ti ti-file-text"></i><span class="form-section-title">Условия приёма</span></div>
+      <div class="form-section-body">
+        <div class="form-group"><label class="form-label">Выход на работу (дата приёма)</label>
+          <input name="hire_date" type="date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">График / вахта</label>
+          <select name="schedule" class="form-select">
+            <option value="">— выбрать —</option>
+            {% for s in schedules %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select></div>
+        <div class="form-group"><label class="form-label">Номер трудового договора</label>
+          <input name="contract_number" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Период договора (с — по)</label>
+          <div style="display:flex;gap:8px">
+            <input name="contract_date" type="date" class="form-input">
+            <input name="contract_end" type="date" class="form-input"></div></div>
+        <div class="form-group"><label class="form-label">Испытательный срок (мес.)</label>
+          <input name="probation_months" type="number" min="0" max="6" value="3" class="form-input" style="max-width:120px"></div>
+        <div class="form-group"><label class="form-label">Отпуск, дней в год</label>
+          <input name="vacation_entitled" type="number" min="0" value="24" class="form-input" style="max-width:120px"></div>
+        <div class="form-group"><label class="form-label">Основание</label>
+          <input name="basis" class="form-input" value="Заявление о приёме на работу"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header"><i class="ti ti-route"></i><span class="form-section-title">Маршрут приказа</span></div>
+    <div class="form-section-body">
+      <div class="form-grid-2" style="gap:22px">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Подписывающий (ГД)<span class="req">*</span></label>
+            <select name="signatory_id" class="form-select">
+              <option value="">— выбрать —</option>
+              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Согласующие (параллельно)</label>
+            <select name="stage_reviewer[]" class="form-select" multiple size="6">
+              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
+            </select>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px">Ctrl/Cmd — несколько.</div>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">Ознакомляющиеся (сотрудник или его руководитель)</label>
+            <select name="acknowledge_ids[]" class="form-select" multiple size="6">
+              {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }} — {{ u.position_display }}</option>{% endfor %}
+            </select>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px">Получат приказ на ознакомление после регистрации.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Вложения (заявление с визой — оригинал обязателен)</label>
+            <label for="attachments" class="btn"><i class="ti ti-upload"></i> Загрузить файлы
+              <input id="attachments" name="attachments" type="file" multiple
+                     accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display:none"></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text-3);margin-top:10px">
+    После подписи ГД приказ попадёт в «Журнал приказов» → регистрация вручную
+    (номер, дата — задним числом допустимо) → карточка сотрудника станет
+    «Действующий», приказ уйдёт в бухгалтерию и на ознакомление.
+  </div>
+</form>
+{% endblock %}

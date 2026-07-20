@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Журнал приказов{% endblock %}
+{% block page_title %}Журнал приказов (кадры){% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom:18px">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-alert-circle"></i></div>
+      <div class="card-title">Ожидают регистрации ({{ unregistered|length }})</div>
+    </div>
+  </div>
+  {% if unregistered %}
+  <table class="data-table">
+    <thead><tr><th>Приказ</th><th>Вид</th><th>Сотрудники</th>
+      <th style="width:340px">Регистрация (№ + дата, задним числом допустимо)</th></tr></thead>
+    <tbody>
+      {% for d in unregistered %}
+      <tr>
+        <td><a href="{{ url_for('documents.view', doc_id=d.document_id) }}" style="font-weight:500">{{ d.document.doc_number }}</a>
+          <div class="text-muted" style="font-size:11px">{{ d.document.title[:60] }}</div></td>
+        <td>{{ d.kind_display }}<div class="text-muted" style="font-size:11px">{{ d.category_display }}</div></td>
+        <td class="text-muted" style="font-size:11px">
+          {% for l in d.employees %}{{ l.employee.full_name_ru }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+        <td>
+          <form method="POST" action="{{ url_for('hr.register_order', doc_id=d.document_id) }}"
+                style="display:flex;gap:6px;align-items:center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input name="reg_number" class="form-input" placeholder="ЛС-128" required style="max-width:110px">
+            <input name="reg_date" type="date" class="form-input" required style="max-width:150px">
+            <button type="submit" class="btn btn-sm btn-primary">Зарегистрировать</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Нет приказов, ожидающих регистрации.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-book"></i></div>
+      <div class="card-title">Журнал ({{ registered|length }})</div>
+    </div>
+  </div>
+  {% if registered %}
+  <table class="data-table">
+    <thead><tr><th>№</th><th>Дата</th><th>Вид</th><th>Категория</th><th>Сотрудники</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for d in registered %}
+      <tr onclick="window.location='{{ url_for('documents.view', doc_id=d.document_id) }}'" style="cursor:pointer">
+        <td style="font-weight:600">{{ d.reg_number }}</td>
+        <td>{{ d.reg_date.strftime('%d.%m.%Y') if d.reg_date else '—' }}</td>
+        <td>{{ d.kind_display }}</td>
+        <td class="text-muted">{{ d.category_display }}</td>
+        <td class="text-muted" style="font-size:11px">
+          {% for l in d.employees %}{{ l.employee.full_name_ru }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+        <td>
+          {% set st = d.document.status %}
+          <span class="pill {% if st == 'executed' %}pill-green{% elif st == 'in_execution' %}pill-amber{% else %}pill-gray{% endif %}">
+            {% if st == 'executed' %}Исполнен{% elif st == 'in_execution' %}На ознакомлении{% else %}{{ st }}{% endif %}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Зарегистрированных приказов пока нет.</div>
+  {% endif %}
+</div>
+{% endblock %}

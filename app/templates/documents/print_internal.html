@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ doc.doc_number }}</title>
+<style>
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Times New Roman', Georgia, serif; color:#1a1a1a; background:#fff; margin:0; font-size:12pt; }
+  .toolbar { background:#f0f0f0; padding:10px 16px; text-align:center; }
+  .toolbar button { background:#1A5276; color:#fff; border:none; border-radius:4px; padding:9px 22px; font-size:14px; cursor:pointer; }
+  .page { max-width:820px; margin:0 auto; padding:40px 48px; }
+
+  /* letterhead — form-code table like Documentolog */
+  table.head { width:100%; border-collapse:collapse; }
+  table.head td { border:1px solid #333; padding:6px 10px; vertical-align:middle; }
+  .head .logo-cell { width:34%; text-align:center; }
+  .head .company { font-size:12pt; font-weight:bold; color:#1A5276; letter-spacing:.3px; }
+  .head .sub { font-size:8.5pt; color:#555; }
+  .head .doctype-cell { text-align:center; font-weight:bold; font-size:12pt; }
+  .head .code-cell { width:24%; font-size:9pt; padding:0; }
+  .head .code-cell div { padding:4px 8px; border-bottom:1px solid #333; text-align:center; }
+  .head .code-cell div:last-child { border-bottom:none; }
+  .head .code-cell .split { display:flex; padding:0; border-bottom:none }
+  .head .code-cell .split span { flex:1; padding:4px 8px; }
+  .head .code-cell .split span:first-child { border-right:1px solid #333; }
+
+  /* addressing block (кому / от), right aligned */
+  .address { margin:26px 0 0 auto; width:64%; font-size:11.5pt; line-height:1.45; }
+  .address .from { margin-top:8px; }
+
+  .doc-title { text-align:center; font-weight:bold; font-size:13pt; margin:30px 0 14px; }
+  .doc-subject { font-weight:bold; font-size:12pt; margin:0 0 16px; }
+
+  .doc-body { font-size:12pt; line-height:1.65; text-align:justify; }
+  .doc-body p { margin:0 0 10px; text-indent:1.25cm; }
+  .doc-body i, .doc-body em { color:#333; }
+  .doc-body table { border-collapse:collapse; width:100%; margin:10px 0; }
+  .doc-body td, .doc-body th { border:1px solid #999; padding:5px 8px; }
+
+  .doc-meta { font-size:10.5pt; margin-top:16px; color:#333; }
+
+  .sig-block { margin-top:46px; }
+  .sig-block .line { display:inline-block; width:300px; border-top:1.5px solid #333; margin-top:36px; padding-top:4px; font-size:10.5pt; text-align:center; }
+
+  .section-title { font-weight:bold; margin:34px 0 0; font-size:10.5pt; text-transform:uppercase; letter-spacing:.3px; color:#fff; background:#1A5276; padding:6px 10px; }
+  table.approvals { width:100%; border-collapse:collapse; font-size:9.5pt; }
+  table.approvals td, table.approvals th { border:1px solid #B9C7D3; padding:6px 8px; text-align:left; vertical-align:top; }
+  table.approvals th { background:#1A5276; color:#fff; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:10px; font-weight:bold; font-size:9pt; }
+  .pill-green { background:#EAF5EF; color:#1E6E3E; }
+  .pill-amber { background:#FEF5E7; color:#784212; }
+  .pill-red   { background:#FDECEA; color:#922B21; }
+  .pill-gray  { background:#F4F1EC; color:#5D5751; }
+
+  @media print {
+    .toolbar { display:none; }
+    .page { margin:0; padding:0; max-width:100%; }
+    @page { margin:1.8cm; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="window.print()">🖨 Печать / Сохранить в PDF</button>
+  </div>
+  <div class="page">
+
+    {% set TYPES = {'memo':'Служебная записка','order':'Приказ','act':'Акт','incoming':'Входящее письмо','outgoing':'Исходящее письмо'} %}
+    {% set type_label = TYPES.get(doc.doc_type, 'Внутренний документ') %}
+    {% set signatory = (approvals | selectattr('step','equalto',sig_step) | list | first) %}
+
+    <!-- LETTERHEAD (form code) -->
+    <table class="head">
+      <tr>
+        <td class="logo-cell">
+          <div class="company">CASPIAN INTEGRATED SERVICES</div>
+          <div class="sub">ТОО «Caspian Integrated Services»</div>
+        </td>
+        <td class="doctype-cell">{{ type_label }}</td>
+        <td class="code-cell">
+          <div>{{ doc.doc_number }}</div>
+          <div>{{ doc.created_at.strftime('%d.%m.%Y') }}</div>
+          <div>Рев 00</div>
+          <div class="split"><span>Стр. 1</span><span>из 1</span></div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- ADDRESSING -->
+    <div class="address">
+      {% if signatory %}
+      <div>{{ signatory.approver.position_display }}</div>
+      <div>ТОО «Caspian Integrated Services»</div>
+      <div>{{ signatory.approver.full_name }}</div>
+      {% endif %}
+      <div class="from">от {{ doc.author.position_display }} {{ doc.author.full_name }}</div>
+      {% if doc.author.department %}<div>{{ doc.author.department }}</div>{% endif %}
+    </div>
+
+    <!-- TITLE -->
+    <div class="doc-title">{{ type_label }}</div>
+
+    <!-- SUBJECT -->
+    {% if doc.purpose %}<div class="doc-subject">{{ doc.purpose }}</div>{% endif %}
+
+    <!-- BODY (sanitized on save) -->
+    <div class="doc-body">
+      {% if doc.body_html %}{{ doc.body_html | safe }}{% else %}<p>{{ doc.purpose or '' }}</p>{% endif %}
+    </div>
+
+    <!-- META -->
+    {% if doc.case_index or doc.needed_by %}
+    <div class="doc-meta">
+      {% if doc.case_index %}Индекс дела: {{ doc.case_index }}.&nbsp;&nbsp;{% endif %}
+      {% if doc.needed_by %}Срок исполнения: {{ doc.needed_by.strftime('%d.%m.%Y') }}.{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- SIGNATURE -->
+    <div class="sig-block">
+      <span class="line">{{ doc.author.full_name }}<br>(Автор / составил)</span>
+    </div>
+
+    <!-- APPROVAL SHEET -->
+    <div class="section-title">Лист согласования и утверждения</div>
+    {% if approvals %}
+    <table class="approvals">
+      <thead>
+        <tr>
+          <th style="width:34px">№</th>
+          <th>ФИО</th>
+          <th style="width:170px">Роль в маршруте</th>
+          <th style="width:120px">Статус</th>
+          <th style="width:110px">Дата решения</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appr in approvals %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ appr.approver.full_name }}</td>
+          <td>{% if appr.step == sig_step %}Утверждающий (подписал){% else %}Согласующий · этап {{ appr.step + 1 }}{% endif %}</td>
+          <td>
+            {% if appr.status == 'approved' %}<span class="pill pill-green">Согласован</span>
+            {% elif appr.status == 'rejected' %}<span class="pill pill-red">Отклонён</span>
+            {% elif appr.status == 'skipped' %}<span class="pill pill-gray">Не потребовалось</span>
+            {% else %}<span class="pill pill-amber">Ожидает</span>{% endif %}
+          </td>
+          <td>{{ appr.decided_at.strftime('%d.%m.%Y') if appr.decided_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="font-size:10pt;color:#555;margin-top:6px">Маршрут согласования не задан.</div>
+    {% endif %}
+
+  </div>
+</body>
+</html>
