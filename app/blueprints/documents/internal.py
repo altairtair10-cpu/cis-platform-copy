@@ -251,7 +251,8 @@ def update_internal(doc_id):
 def recipient_done(doc_id):
     """Получатель отмечает исполнение. Когда все отметили — документ «Исполнен»."""
     doc = Document.query.get_or_404(doc_id)
-    if doc.doc_type not in INTERNAL_DOC_TYPES or doc.status != 'in_execution':
+    if (doc.doc_type not in INTERNAL_DOC_TYPES + ('purchase_req',)
+            or doc.status != 'in_execution'):
         flash('Документ не находится на исполнении.', 'warning')
         return redirect(url_for('documents.view', doc_id=doc_id))
 

@@ -140,31 +140,34 @@ def approve(doc_id):
                                 title=f'Требование подписано: {doc.doc_number}',
                                 body=(doc.title or '')[:100],
                                 link=f'/documents/{doc.id}', is_read=False))
-                    if doc.doc_type in INTERNAL_DOC_TYPES:
-                        # подписанный внутренний документ регистрируется и
-                        # уходит получателям на исполнение
+                    if doc.doc_type in INTERNAL_DOC_TYPES or doc.doc_type == 'purchase_req':
+                        # подписанный документ регистрируется и уходит
+                        # получателям на исполнение (Documentolog-цикл).
+                        # Для требования без получателей сохраняется прежний
+                        # цикл: approved → уведомление отделу закупок (выше).
                         from app.models import DocumentRecipient
-                        doc.registered_at = datetime.utcnow()
                         recips = DocumentRecipient.query.filter_by(
                             document_id=doc.id).all()
-                        if recips:
-                            doc.status = 'in_execution'
-                            for r in recips:
-                                db.session.add(Notification(
-                                    user_id=r.user_id,
-                                    title=f'Документ на исполнение: {doc.doc_number}',
-                                    body=(doc.title or '')[:100],
-                                    link=f'/documents/{doc.id}', is_read=False))
-                        else:
-                            doc.status = 'executed'
-                        db.session.add(DocumentComment(
-                            document_id=doc.id, author_id=current_user.id,
-                            text=(f'Документ подписан и зарегистрирован '
-                                  f'({doc.doc_number}). '
-                                  + ('Отправлен получателям на исполнение.'
-                                     if recips else 'Получатели не указаны — '
-                                     'документ считается исполненным.')),
-                            is_system=True))
+                        if doc.doc_type in INTERNAL_DOC_TYPES or recips:
+                            doc.registered_at = datetime.utcnow()
+                            if recips:
+                                doc.status = 'in_execution'
+                                for r in recips:
+                                    db.session.add(Notification(
+                                        user_id=r.user_id,
+                                        title=f'Документ на исполнение: {doc.doc_number}',
+                                        body=(doc.title or '')[:100],
+                                        link=f'/documents/{doc.id}', is_read=False))
+                            else:
+                                doc.status = 'executed'
+                            db.session.add(DocumentComment(
+                                document_id=doc.id, author_id=current_user.id,
+                                text=(f'Документ подписан и зарегистрирован '
+                                      f'({doc.doc_number}). '
+                                      + ('Отправлен получателям на исполнение.'
+                                         if recips else 'Получатели не указаны — '
+                                         'документ считается исполненным.')),
+                                is_system=True))
 
         text = comment_text or f'Документ {"согласован" if action == "approve" else "отклонён"} пользователем {current_user.full_name}.'
         db.session.add(DocumentComment(
