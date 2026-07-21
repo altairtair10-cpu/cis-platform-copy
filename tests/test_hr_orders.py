@@ -116,7 +116,10 @@ def test_employee_card_restricted(client, app):
     # it_admin — в списке допущенных ролей
     assert client.get(f'/hr/employees/{emp_id}').status_code == 200
 
-    # механик — карточки закрыты
+    # механик — карточки закрыты. Сначала выходим: /auth/login при уже
+    # авторизованном пользователе просто редиректит (login_user не вызывается),
+    # поэтому без logout сессия осталась бы admin и проверка была бы ложной.
+    client.get('/auth/logout', follow_redirects=True)
     login(client, 'mech@test.kz', 'mechpass123')
     assert client.get(f'/hr/employees/{emp_id}').status_code == 403
 
