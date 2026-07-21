@@ -7,13 +7,23 @@
 
   <div class="card" style="flex:1;min-width:340px">
     <div class="card-header">
-      <div class="card-header-left">
-        <div class="card-icon"><i class="ti ti-id-badge-2"></i></div>
-        <div class="card-title">{{ emp.full_name_ru }}</div>
+      <div class="card-header-left" style="gap:12px">
+        <div class="avatar-circle" style="width:40px;height:40px;border-radius:50%;background:var(--accent-soft, #eef1ff);color:var(--accent, #4f5eff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">
+          {{ emp.initials }}</div>
+        <div>
+          <div class="card-title">{{ emp.full_name_ru }}</div>
+          {% if emp.position_ru %}<div class="text-muted" style="font-size:12px">{{ emp.position_ru }}</div>{% endif %}
+        </div>
       </div>
       <span class="pill {% if emp.status == 'active' %}pill-green{% elif emp.status == 'terminated' %}pill-red{% elif emp.status == 'candidate' %}pill-amber{% else %}pill-blue{% endif %}">
         {{ emp.status_display }}</span>
     </div>
+    {% if emp.tenure_display %}
+    <div class="card-body" style="padding-top:0;padding-bottom:0">
+      <div class="text-muted" style="font-size:12px;margin-bottom:4px">
+        <i class="ti ti-hourglass"></i> Стаж: <strong>{{ emp.tenure_display }}</strong></div>
+    </div>
+    {% endif %}
     <div class="card-body">
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         {% for label, val in [
@@ -24,8 +34,8 @@
             ('Подразделение', emp.department),
             ('Руководитель', emp.manager.full_name_ru if emp.manager else None),
             ('Дата приёма', emp.hire_date.strftime('%d.%m.%Y') if emp.hire_date else None),
-            ('Стаж (дней)', emp.tenure_days),
             ('График / вахта', emp.schedule),
+            ('Оклад', emp.salary_display),
             ('Трудовой договор', emp.contract_number),
             ('Договор от', emp.contract_date.strftime('%d.%m.%Y') if emp.contract_date else None),
             ('Договор до', emp.contract_end.strftime('%d.%m.%Y') if emp.contract_end else None),
@@ -52,6 +62,7 @@
         <div class="card-icon"><i class="ti ti-clipboard-text"></i></div>
         <div class="card-title">Приказы по сотруднику ({{ orders|length }})</div>
       </div>
+      <a href="{{ url_for('hr.order_picker') }}" class="btn btn-sm"><i class="ti ti-file-plus"></i> Новый приказ</a>
     </div>
     {% if orders %}
     <table class="data-table">

@@ -17,6 +17,23 @@
     <i class="ti ti-user-plus"></i> Приём сотрудника</a>
 </form>
 
+<div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-user-check"></i>Действующие</div>
+    <div class="kpi-value">{{ staff|selectattr('status', 'equalto', 'active')|list|length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-user-question"></i>Кандидаты</div>
+    <div class="kpi-value {% if staff|selectattr('status', 'equalto', 'candidate')|list|length > 0 %}warning{% endif %}">
+      {{ staff|selectattr('status', 'equalto', 'candidate')|list|length }}</div>
+    <div class="kpi-sub">До регистрации приказа</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><i class="ti ti-user-x"></i>Уволенные</div>
+    <div class="kpi-value">{{ staff|selectattr('status', 'equalto', 'terminated')|list|length }}</div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header">
     <div class="card-header-left">
@@ -33,10 +50,17 @@
     <tbody>
       {% for e in staff %}
       <tr onclick="window.location='{{ url_for('hr.employee_card', emp_id=e.id) }}'" style="cursor:pointer">
-        <td style="font-weight:500">{{ e.full_name_ru }}</td>
+        <td style="font-weight:500">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--accent-soft, #eef1ff);color:var(--accent, #4f5eff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex:none">
+              {{ e.initials }}</div>
+            <span>{{ e.full_name_ru }}</span>
+          </div>
+        </td>
         <td class="text-muted">{{ e.position_ru or '—' }}</td>
         <td class="text-muted">{{ e.department or '—' }}</td>
-        <td class="text-muted">{{ e.hire_date.strftime('%d.%m.%Y') if e.hire_date else '—' }}</td>
+        <td class="text-muted">{{ e.hire_date.strftime('%d.%m.%Y') if e.hire_date else '—' }}
+          {% if e.tenure_display %}<div style="font-size:10px">{{ e.tenure_display }}</div>{% endif %}</td>
         <td class="text-muted">{{ e.schedule or '—' }}</td>
         <td>
           <span class="pill {% if e.status == 'active' %}pill-green{% elif e.status == 'terminated' %}pill-red{% elif e.status == 'candidate' %}pill-amber{% else %}pill-blue{% endif %}">

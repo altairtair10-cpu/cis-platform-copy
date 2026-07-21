@@ -4,6 +4,12 @@
 
 {% block content %}
 
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+  <a href="{{ url_for('hr.order_picker') }}" class="btn btn-primary"><i class="ti ti-file-plus"></i> Новый приказ</a>
+  <a href="{{ url_for('hr.hire_new') }}" class="btn"><i class="ti ti-user-plus"></i> Приём сотрудника</a>
+  <a href="{{ url_for('hr.employees') }}" class="btn"><i class="ti ti-id-badge-2"></i> Карточки сотрудников</a>
+</div>
+
 <div class="card" style="margin-bottom:18px">
   <div class="card-header">
     <div class="card-header-left">
@@ -17,9 +23,14 @@
       <th style="width:340px">Регистрация (№ + дата, задним числом допустимо)</th></tr></thead>
     <tbody>
       {% for d in unregistered %}
-      <tr>
+      {% set days_wait = (now - d.document.created_at).days if d.document.created_at else 0 %}
+      <tr {% if days_wait >= 3 %}style="background:rgba(220,53,69,.06)"{% elif days_wait >= 1 %}style="background:rgba(255,193,7,.07)"{% endif %}>
         <td><a href="{{ url_for('documents.view', doc_id=d.document_id) }}" style="font-weight:500">{{ d.document.doc_number }}</a>
-          <div class="text-muted" style="font-size:11px">{{ d.document.title[:60] }}</div></td>
+          <div class="text-muted" style="font-size:11px">{{ d.document.title[:60] }}</div>
+          {% if days_wait >= 1 %}
+          <div style="font-size:10px;font-weight:600;margin-top:2px;color:{% if days_wait >= 3 %}#dc3545{% else %}#b8860b{% endif %}">
+            <i class="ti ti-clock-exclamation"></i> ждёт регистрации {{ days_wait }} дн.</div>
+          {% endif %}</td>
         <td>{{ d.kind_display }}<div class="text-muted" style="font-size:11px">{{ d.category_display }}</div></td>
         <td class="text-muted" style="font-size:11px">
           {% for l in d.employees %}{{ l.employee.full_name_ru }}{% if not loop.last %}, {% endif %}{% endfor %}</td>

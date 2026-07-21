@@ -23,6 +23,7 @@ from app.audit import log_action
 from app.blueprints.documents.helpers import (_build_route,
                                               _save_form_attachments,
                                               _notify_approvers)
+from .order_specs import ORDER_SPECS
 from . import hr
 
 # Кто видит карточки сотрудников (ограниченный список — требование кадровика:
@@ -42,6 +43,71 @@ def _parse_date(name):
         return datetime.strptime(raw, '%Y-%m-%d').date()
     except ValueError:
         return None
+
+
+def _parse_date_value(raw):
+    """Как _parse_date, но из готовой строки (значение из fields_json)."""
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return None
+
+
+def _to_int(raw):
+    try:
+        return int(str(raw).replace(' ', '').replace(' ', ''))
+    except (ValueError, TypeError):
+        return None
+
+
+# Активные сотрудники для выбора в приказ (все, кроме уволенных)
+def _pickable_employees():
+    return (Employee.query.filter(Employee.status != 'terminated')
+            .order_by(Employee.full_name_ru).all())
+
+
+def _apply_order_effect(detail, emp, reg_date):
+    """Эффект приказа на карточку сотрудника при регистрации.
+
+    Только «твёрдые» изменения состояния применяются автоматически;
+    премии/дисциплина/командировочные суммы и т.п. остаются записью в
+    приказе (fields_json) и видны в карточке, но не меняют мастер-данные.
+    """
+    import json as _json
+    fj = _json.loads(detail.fields_json or '{}')
+    kind = detail.order_kind
+
+    if kind == 'hire':
+        emp.status = 'active'
+        if detail.effective_date:
+            emp.hire_date = detail.effective_date
+    elif kind == 'transfer':
+        if fj.get('new_position_ru'):
+            emp.position_ru = fj['new_position_ru'][:160]
+        if fj.get('new_position_kz'):
+            emp.position_kz = fj['new_position_kz'][:160]
+        if fj.get('new_department'):
+            emp.department = fj['new_department'][:120]
+    elif kind == 'salary':
+        val = _to_int(fj.get('new_salary'))
+        if val is not None:
+            emp.current_salary = val
+    elif kind == 'schedule':
+        if fj.get('new_schedule'):
+            emp.schedule = fj['new_schedule'][:16]
+    elif kind in ('vacation', 'vacation_unpaid'):
+        emp.status = 'on_leave'
+    elif kind == 'recall':
+        if emp.status == 'on_leave':
+            emp.status = 'active'
+    elif kind == 'trip':
+        emp.status = 'trip'
+    elif kind == 'termination':
+        emp.status = 'terminated'
+        emp.termination_date = detail.effective_date or reg_date
+    # combine / bonus / discipline / overtime / other — запись без смены мастер-данных
 
 
 # ── СОТРУДНИКИ ────────────────────────────────────────────────────────────────
@@ -206,6 +272,118 @@ def hire_submit():
     return redirect(url_for('documents.view', doc_id=doc.id))
 
 
+# ── ОСТАЛЬНЫЕ КАДРОВЫЕ ПРИКАЗЫ (фаза 2) — единая форма по спецификации ───────
+
+@hr.route('/order/new')
+@login_required
+@requires_permission('hr')
+def order_picker():
+    """Витрина видов приказов, сгруппированных по категориям."""
+    groups = {}
+    for kind, spec in ORDER_SPECS.items():
+        groups.setdefault(spec['category'], []).append((kind, spec))
+    return render_template('hr/order_picker.html', groups=groups,
+                           categories=HR_ORDER_CATEGORIES)
+
+
+@hr.route('/order/<kind>/new', methods=['GET'])
+@login_required
+@requires_permission('hr')
+def order_new(kind):
+    spec = ORDER_SPECS.get(kind)
+    if spec is None:
+        abort(404)
+    users = User.query.filter_by(is_active=True)\
+                      .order_by(User.first_name, User.last_name).all()
+    return render_template('hr/order_new.html', kind=kind, spec=spec,
+                           users=users, employees=_pickable_employees())
+
+
+@hr.route('/order/<kind>/submit', methods=['POST'])
+@login_required
+@requires_permission('hr')
+def order_submit(kind):
+    spec = ORDER_SPECS.get(kind)
+    if spec is None:
+        abort(404)
+
+    action = request.form.get('action', 'draft')
+    signatory_id = request.form.get('signatory_id', type=int)
+    emp = db.session.get(Employee, request.form.get('employee_id', type=int) or 0)
+    if emp is None:
+        flash('Выберите сотрудника, к которому относится приказ.', 'warning')
+        return redirect(url_for('hr.order_new', kind=kind))
+    if action == 'submit' and not signatory_id:
+        action = 'draft'
+        flash('Приказ сохранён как проект: не выбран подписывающий (ГД).', 'warning')
+
+    # значения полей по спецификации → fields_json
+    fields = {}
+    for f in spec['fields']:
+        fields[f['name']] = (request.form.get(f['name']) or '').strip() or None
+
+    effective_date = _parse_date_value(fields.get(spec.get('effective_field')))
+
+    doc = Document(
+        doc_type   = 'hr_order',
+        title      = f'{spec["label"]} — {emp.full_name_ru}'[:256],
+        purpose    = fields.get('basis') or spec['label'],
+        department = emp.department,
+        case_index = (request.form.get('case_index') or '')[:64] or None,
+        author_id  = current_user.id,
+        executor_id = current_user.id,
+        status     = 'pending' if action == 'submit' else 'draft',
+        current_step = 0,
+    )
+    db.session.add(doc)
+    db.session.flush()
+    doc.generate_number()
+
+    detail = HROrderDetail(
+        document_id = doc.id,
+        category    = spec['category'],
+        order_kind  = kind,
+        effective_date = effective_date,
+        fields_json = json.dumps(fields, ensure_ascii=False),
+    )
+    db.session.add(detail)
+    db.session.flush()
+    db.session.add(HROrderEmployee(detail_id=detail.id, employee_id=emp.id))
+
+    # Получатели (исполнение) + Список ознакомления — как в приёме
+    seen = set()
+    for field, rkind in (('recipient_ids[]', 'execute'),
+                         ('acknowledge_ids[]', 'acknowledge')):
+        for rid in request.form.getlist(field):
+            if rid.strip().isdigit() and int(rid) not in seen \
+                    and db.session.get(User, int(rid)):
+                seen.add(int(rid))
+                db.session.add(DocumentRecipient(document_id=doc.id,
+                                                 user_id=int(rid),
+                                                 status='pending', kind=rkind))
+
+    _build_route(doc, action, signatory_id)
+    _save_form_attachments(doc)
+
+    db.session.add(DocumentComment(
+        document_id=doc.id, author_id=current_user.id,
+        text=(f'{spec["label"]} ({emp.full_name_ru}) '
+              f'{"отправлен на согласование" if action == "submit" else "сохранён как проект"} '
+              f'пользователем {current_user.full_name}.'),
+        is_system=True))
+    log_action('hr_order_created', 'document', doc.id,
+               details=f'{kind}:{emp.full_name_ru}')
+    db.session.commit()
+
+    if action == 'submit':
+        _notify_approvers(doc)
+        db.session.commit()
+
+    flash(f'{spec["label"]} {doc.doc_number} создан. '
+          f'После подписи ГД — регистрация в журнале приказов.', 'success')
+    return redirect(url_for('documents.view', doc_id=doc.id))
+
+
 # ── ЖУРНАЛ ПРИКАЗОВ + РУЧНАЯ РЕГИСТРАЦИЯ ─────────────────────────────────────
 
 @hr.route('/orders')
@@ -218,7 +396,7 @@ def orders():
                     if d.reg_number is None and d.document.status == 'approved']
     registered = [d for d in details if d.reg_number is not None]
     return render_template('hr/orders.html', unregistered=unregistered,
-                           registered=registered,
+                           registered=registered, now=datetime.utcnow(),
                            kinds=HR_ORDER_KINDS, categories=HR_ORDER_CATEGORIES)
 
 
@@ -244,16 +422,9 @@ def register_order(doc_id):
     detail.reg_date = reg_date
     doc.registered_at = datetime.utcnow()
 
-    # Кадровые эффекты по виду приказа
+    # Кадровые эффекты по виду приказа (единый диспетчер)
     for link in detail.employees.all():
-        emp = link.employee
-        if detail.order_kind == 'hire':
-            emp.status = 'active'
-            if detail.effective_date:
-                emp.hire_date = detail.effective_date
-        elif detail.order_kind == 'termination':
-            emp.status = 'terminated'
-            emp.termination_date = detail.effective_date or reg_date
+        _apply_order_effect(detail, link.employee, reg_date)
 
     # Обязательное правило: приказ направляется в бухгалтерию
     for acc in User.query.filter_by(role='accountant', is_active=True).all():

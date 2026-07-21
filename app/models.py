@@ -445,6 +445,7 @@ class Employee(db.Model):
     schedule     = db.Column(db.String(16), nullable=True)      # 5/2, 14/14, 15/15, 28/28
     status       = db.Column(db.String(24), nullable=False, default='candidate')
     vacation_entitled = db.Column(db.Integer, default=24)
+    current_salary = db.Column(db.Integer, nullable=True)   # оклад, целые тенге (без float)
     termination_date  = db.Column(db.Date, nullable=True)
     phone        = db.Column(db.String(32), nullable=True)
     email        = db.Column(db.String(120), nullable=True)
@@ -467,6 +468,33 @@ class Employee(db.Model):
             return None
         end = self.termination_date or datetime.utcnow().date()
         return max(0, (end - self.hire_date).days)
+
+    @property
+    def tenure_display(self):
+        """Стаж по-человечески: «2 г. 4 мес.» / «3 мес.» / «12 дн.»."""
+        d = self.tenure_days
+        if d is None:
+            return None
+        years, rem = divmod(d, 365)
+        months = rem // 30
+        parts = []
+        if years:
+            parts.append(f'{years} г.')
+        if months:
+            parts.append(f'{months} мес.')
+        return ' '.join(parts) if parts else f'{d} дн.'
+
+    @property
+    def initials(self):
+        words = (self.full_name_ru or '').split()
+        return ''.join(w[0] for w in words[:2]).upper() or '·'
+
+    @property
+    def salary_display(self):
+        """Оклад с разделителями: «450 000 ₸»."""
+        if self.current_salary is None:
+            return None
+        return f'{self.current_salary:,}'.replace(',', ' ') + ' ₸'
 
 
 class HROrderDetail(db.Model):
