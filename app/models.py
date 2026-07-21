@@ -445,6 +445,7 @@ class Employee(db.Model):
     schedule     = db.Column(db.String(16), nullable=True)      # 5/2, 14/14, 15/15, 28/28
     status       = db.Column(db.String(24), nullable=False, default='candidate')
     vacation_entitled = db.Column(db.Integer, default=24)
+    current_salary = db.Column(db.Integer, nullable=True)   # оклад, целые тенге (без float)
     termination_date  = db.Column(db.Date, nullable=True)
     phone        = db.Column(db.String(32), nullable=True)
     email        = db.Column(db.String(120), nullable=True)
@@ -487,6 +488,13 @@ class Employee(db.Model):
     def initials(self):
         words = (self.full_name_ru or '').split()
         return ''.join(w[0] for w in words[:2]).upper() or '·'
+
+    @property
+    def salary_display(self):
+        """Оклад с разделителями: «450 000 ₸»."""
+        if self.current_salary is None:
+            return None
+        return f'{self.current_salary:,}'.replace(',', ' ') + ' ₸'
 
 
 class HROrderDetail(db.Model):

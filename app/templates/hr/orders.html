@@ -4,6 +4,12 @@
 
 {% block content %}
 
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+  <a href="{{ url_for('hr.order_picker') }}" class="btn btn-primary"><i class="ti ti-file-plus"></i> Новый приказ</a>
+  <a href="{{ url_for('hr.hire_new') }}" class="btn"><i class="ti ti-user-plus"></i> Приём сотрудника</a>
+  <a href="{{ url_for('hr.employees') }}" class="btn"><i class="ti ti-id-badge-2"></i> Карточки сотрудников</a>
+</div>
+
 <div class="card" style="margin-bottom:18px">
   <div class="card-header">
     <div class="card-header-left">
