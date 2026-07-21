@@ -218,7 +218,7 @@ def orders():
                     if d.reg_number is None and d.document.status == 'approved']
     registered = [d for d in details if d.reg_number is not None]
     return render_template('hr/orders.html', unregistered=unregistered,
-                           registered=registered,
+                           registered=registered, now=datetime.utcnow(),
                            kinds=HR_ORDER_KINDS, categories=HR_ORDER_CATEGORIES)
 
 

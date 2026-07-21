@@ -468,6 +468,26 @@ class Employee(db.Model):
         end = self.termination_date or datetime.utcnow().date()
         return max(0, (end - self.hire_date).days)
 
+    @property
+    def tenure_display(self):
+        """Стаж по-человечески: «2 г. 4 мес.» / «3 мес.» / «12 дн.»."""
+        d = self.tenure_days
+        if d is None:
+            return None
+        years, rem = divmod(d, 365)
+        months = rem // 30
+        parts = []
+        if years:
+            parts.append(f'{years} г.')
+        if months:
+            parts.append(f'{months} мес.')
+        return ' '.join(parts) if parts else f'{d} дн.'
+
+    @property
+    def initials(self):
+        words = (self.full_name_ru or '').split()
+        return ''.join(w[0] for w in words[:2]).upper() or '·'
+
 
 class HROrderDetail(db.Model):
     """Кадровые атрибуты приказа (Document с doc_type='hr_order'):
