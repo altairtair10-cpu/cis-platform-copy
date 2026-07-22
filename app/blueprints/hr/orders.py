@@ -418,7 +418,8 @@ def order_submit(kind):
 @login_required
 @requires_permission('hr')
 def orders():
-    details = (HROrderDetail.query.join(Document)
+    details = (HROrderDetail.query
+               .join(Document, HROrderDetail.document_id == Document.id)
                .order_by(Document.created_at.desc()).all())
     unregistered = [d for d in details
                     if d.reg_number is None and d.document.status == 'approved']
@@ -435,7 +436,8 @@ def company_orders():
     """Все приказы компании (фаза 4), сгруппированные по категориям.
     Показываем зарегистрированные приказы — это официальный реестр."""
     sel_cat = request.args.get('category') or None
-    q = (HROrderDetail.query.join(Document)
+    q = (HROrderDetail.query
+         .join(Document, HROrderDetail.document_id == Document.id)
          .filter(HROrderDetail.reg_number.isnot(None)))
     if sel_cat:
         q = q.filter(HROrderDetail.category == sel_cat)
