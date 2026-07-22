@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}План адаптации{% endblock %}
-{% block page_title %}План адаптации — {{ emp.full_name_ru }}{% endblock %}
+{% block title %}{{ _('План адаптации') }}{% endblock %}
+{% block page_title %}{{ _('План адаптации') }} — {{ emp.full_name_ru }}{% endblock %}
 
 {% block content %}
 <form method="POST" action="{{ url_for('hr.adaptation_create', emp_id=emp.id) }}" style="max-width:640px">
@@ -8,9 +8,9 @@
   <div class="card">
     <div class="card-body">
       <div class="form-group">
-        <label class="form-label">Наставник</label>
+        <label class="form-label">{{ _('Наставник') }}</label>
         <select name="mentor_id" class="form-select">
-          <option value="">— выбрать —</option>
+          <option value="">{{ _('— выбрать —') }}</option>
           {% for u in users %}
           <option value="{{ u.id }}">{{ u.full_name }}{% if u.position_display %} — {{ u.position_display }}{% endif %}</option>
           {% endfor %}
@@ -18,24 +18,24 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
         <div class="form-group">
-          <label class="form-label">Начало адаптации</label>
+          <label class="form-label">{{ _('Начало адаптации') }}</label>
           <input name="start_date" type="date" class="form-input">
         </div>
         <div class="form-group">
-          <label class="form-label">Окончание испытательного срока</label>
+          <label class="form-label">{{ _('Окончание испытательного срока') }}</label>
           <input name="end_date" type="date" class="form-input">
         </div>
       </div>
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Контрольные точки (по одной в строке)</label>
+        <label class="form-label">{{ _('Контрольные точки (по одной в строке)') }}</label>
         <textarea name="items" class="form-textarea" style="min-height:120px"
-                  placeholder="Знакомство с командой&#10;Изучение внутренних документов&#10;Инструктаж по ОТ и ТБ&#10;Первое контрольное задание"></textarea>
+                  placeholder="{{ _('Знакомство с командой&#10;Изучение внутренних документов&#10;Инструктаж по ОТ и ТБ&#10;Первое контрольное задание') }}"></textarea>
       </div>
     </div>
   </div>
   <div style="margin-top:14px;display:flex;gap:8px">
-    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Создать план</button>
-    <a href="{{ url_for('hr.employee_card', emp_id=emp.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
+    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ _('Создать план') }}</button>
+    <a href="{{ url_for('hr.employee_card', emp_id=emp.id) }}" class="btn"><i class="ti ti-x"></i> {{ _('Отмена') }}</a>
   </div>
 </form>
 {% endblock %}

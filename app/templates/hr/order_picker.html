@@ -17,9 +17,9 @@
 {% if source %}
 <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent, #4f5eff)">
   <div class="card-body" style="font-size:12px">
-    <i class="ti ti-link"></i> Приказ будет создан <strong>на основании</strong>
-    документа <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>.
-    Выберите подходящий вид приказа ниже.
+    <i class="ti ti-link"></i> {{ _('Приказ будет создан на основании документа') }}
+    <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>.
+    {{ _('Выберите подходящий вид приказа ниже.') }}
   </div>
 </div>
 {% endif %}

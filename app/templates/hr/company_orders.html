@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Все приказы компании{% endblock %}
-{% block page_title %}Все приказы компании{% endblock %}
+{% block title %}{{ _('Все приказы компании') }}{% endblock %}
+{% block page_title %}{{ _('Все приказы компании') }}{% endblock %}
 
 {% block content %}
 <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-  <a href="{{ url_for('hr.orders') }}" class="btn"><i class="ti ti-book"></i> Журнал приказов</a>
-  <a href="{{ url_for('hr.order_picker') }}" class="btn btn-primary"><i class="ti ti-file-plus"></i> Новый приказ</a>
+  <a href="{{ url_for('hr.orders') }}" class="btn"><i class="ti ti-book"></i> {{ _('Журнал приказов') }}</a>
+  <a href="{{ url_for('hr.order_picker') }}" class="btn btn-primary"><i class="ti ti-file-plus"></i> {{ _('Новый приказ') }}</a>
 </div>
 
 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-  <a href="{{ url_for('hr.company_orders') }}" class="btn btn-sm {% if not sel_cat %}btn-primary{% endif %}">Все ({{ total }})</a>
+  <a href="{{ url_for('hr.company_orders') }}" class="btn btn-sm {% if not sel_cat %}btn-primary{% endif %}">{{ _('Все') }} ({{ total }})</a>
   {% for key, label in categories.items() %}
-  <a href="{{ url_for('hr.company_orders', category=key) }}" class="btn btn-sm {% if sel_cat == key %}btn-primary{% endif %}">{{ label }}</a>
+  <a href="{{ url_for('hr.company_orders', category=key) }}" class="btn btn-sm {% if sel_cat == key %}btn-primary{% endif %}">{{ _(label) }}</a>
   {% endfor %}
 </div>
 
@@ -21,23 +21,23 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-folder"></i></div>
-      <div class="card-title">{{ categories.get(cat_key, cat_key) }} ({{ details|length }})</div>
+      <div class="card-title">{{ _(categories.get(cat_key, cat_key)) }} ({{ details|length }})</div>
     </div>
   </div>
   <table class="data-table">
-    <thead><tr><th>№ рег.</th><th>Дата</th><th>Вид</th><th>Сотрудники</th><th>Статус</th></tr></thead>
+    <thead><tr><th>{{ _('№ рег.') }}</th><th>{{ _('Дата') }}</th><th>{{ _('Вид') }}</th><th>{{ _('Сотрудники') }}</th><th>{{ _('Статус') }}</th></tr></thead>
     <tbody>
       {% for d in details %}
       <tr onclick="window.location='{{ url_for('documents.view', doc_id=d.document_id) }}'" style="cursor:pointer">
         <td style="font-weight:600">{{ d.reg_number }}</td>
         <td class="text-muted">{{ d.reg_date.strftime('%d.%m.%Y') if d.reg_date else '—' }}</td>
-        <td>{{ d.kind_display }}</td>
+        <td>{{ _(d.kind_display) }}</td>
         <td class="text-muted" style="font-size:11px">
           {% for l in d.employees %}{{ l.employee.full_name_ru }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
         <td>
           {% set st = d.document.status %}
           <span class="pill {% if st == 'executed' %}pill-green{% elif st == 'in_execution' %}pill-amber{% else %}pill-gray{% endif %}">
-            {% if st == 'executed' %}Исполнен{% elif st == 'in_execution' %}На ознакомлении{% else %}{{ st }}{% endif %}</span>
+            {% if st == 'executed' %}{{ _('Исполнен') }}{% elif st == 'in_execution' %}{{ _('На ознакомлении') }}{% else %}{{ st }}{% endif %}</span>
         </td>
       </tr>
       {% endfor %}
@@ -46,6 +46,6 @@
 </div>
 {% endfor %}
 {% else %}
-<div class="card"><div class="card-body text-muted" style="font-size:12px">Зарегистрированных приказов нет.</div></div>
+<div class="card"><div class="card-body text-muted" style="font-size:12px">{{ _('Зарегистрированных приказов нет.') }}</div></div>
 {% endif %}
 {% endblock %}
