@@ -184,7 +184,32 @@ ORDER_SPECS = {
         ],
     },
 
+    'sick_leave': {
+        'label': 'Приказ о больничном листе',
+        'category': 'ls', 'icon': 'ti-heart-plus',
+        'effective_field': 'period_from',
+        'fields': [
+            {'name': 'sick_note_number', 'label': '№ больничного листа', 'type': 'text', 'required': True, 'half': True},
+            {'name': 'period_from', 'label': 'С', 'type': 'date', 'required': True, 'half': True},
+            {'name': 'period_to', 'label': 'По', 'type': 'date', 'required': True, 'half': True},
+            {'name': 'days', 'label': 'Дней', 'type': 'number', 'half': True},
+            _BASIS, _NOTE,
+        ],
+    },
+
     # ── ПРОЧЕЕ ───────────────────────────────────────────────────────────
+    'responsibility': {
+        'label': 'Приказ о назначении ответственного',
+        'category': 'other', 'icon': 'ti-shield-check',
+        'effective_field': 'effective_date',
+        'fields': [
+            {'name': 'responsible_for', 'label': 'За что назначается ответственным', 'type': 'text',
+             'required': True, 'placeholder': 'напр. «уборка склада»'},
+            {'name': 'effective_date', 'label': 'Дата', 'type': 'date', 'half': True},
+            {'name': 'until_date', 'label': 'До какой даты (если временно)', 'type': 'date', 'half': True},
+            _BASIS, _NOTE,
+        ],
+    },
     'other': {
         'label': 'Приказ (прочее)',
         'category': 'other', 'icon': 'ti-file-text',

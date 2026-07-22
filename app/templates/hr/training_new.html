@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Заявка на обучение{% endblock %}
+{% block page_title %}Обучение — {{ emp.full_name_ru }}{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('hr.training_create', emp_id=emp.id) }}" style="max-width:640px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card">
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Название обучения / курса<span class="req">*</span></label>
+        <input name="course_name" class="form-input" required placeholder="напр. «Промышленная безопасность»">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Провайдер / учебный центр</label>
+        <input name="provider" class="form-input">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
+        <div class="form-group">
+          <label class="form-label">Начало</label>
+          <input name="start_date" type="date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Окончание</label>
+          <input name="end_date" type="date" class="form-input">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Бюджет, ₸</label>
+        <input name="budget" type="number" class="form-input" style="max-width:200px" placeholder="целое число">
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px;display:flex;gap:8px">
+    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Создать заявку</button>
+    <a href="{{ url_for('hr.employee_card', emp_id=emp.id) }}" class="btn"><i class="ti ti-x"></i> Отмена</a>
+  </div>
+</form>
+{% endblock %}

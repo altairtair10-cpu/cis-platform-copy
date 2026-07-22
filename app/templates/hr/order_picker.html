@@ -14,6 +14,16 @@
   направляется в бухгалтерию.
 </div>
 
+{% if source %}
+<div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent, #4f5eff)">
+  <div class="card-body" style="font-size:12px">
+    <i class="ti ti-link"></i> Приказ будет создан <strong>на основании</strong>
+    документа <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>.
+    Выберите подходящий вид приказа ниже.
+  </div>
+</div>
+{% endif %}
+
 {% for cat_key, items in groups.items() %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-header">
@@ -25,7 +35,7 @@
   <div class="card-body">
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
       {% for kind, spec in items %}
-      <a href="{{ url_for('hr.order_new', kind=kind) }}"
+      <a href="{{ url_for('hr.order_new', kind=kind, source=source.id if source else None) }}"
          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-md);text-decoration:none;color:var(--text-1);background:var(--bg-input);transition:border-color .15s"
          onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
         <div style="width:38px;height:38px;border-radius:10px;background:#FDECEA;color:var(--red);display:flex;align-items:center;justify-content:center;flex:none">

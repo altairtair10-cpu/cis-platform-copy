@@ -104,10 +104,13 @@ def _apply_order_effect(detail, emp, reg_date):
             emp.status = 'active'
     elif kind == 'trip':
         emp.status = 'trip'
+    elif kind == 'sick_leave':
+        emp.status = 'sick_leave'
     elif kind == 'termination':
         emp.status = 'terminated'
         emp.termination_date = detail.effective_date or reg_date
-    # combine / bonus / discipline / overtime / other — запись без смены мастер-данных
+    # combine / bonus / discipline / overtime / responsibility / other — запись
+    # без смены мастер-данных (видны в карточке через таблицу приказов)
 
 
 # ── СОТРУДНИКИ ────────────────────────────────────────────────────────────────
@@ -282,8 +285,12 @@ def order_picker():
     groups = {}
     for kind, spec in ORDER_SPECS.items():
         groups.setdefault(spec['category'], []).append((kind, spec))
+    source = None
+    src_id = request.args.get('source', type=int)
+    if src_id:
+        source = db.session.get(Document, src_id)
     return render_template('hr/order_picker.html', groups=groups,
-                           categories=HR_ORDER_CATEGORIES)
+                           categories=HR_ORDER_CATEGORIES, source=source)
 
 
 @hr.route('/order/<kind>/new', methods=['GET'])
@@ -295,8 +302,17 @@ def order_new(kind):
         abort(404)
     users = User.query.filter_by(is_active=True)\
                       .order_by(User.first_name, User.last_name).all()
+    # Приказ «на основании» служебной записки / заявления (фазы 5–6)
+    source = None
+    prefill_emp_id = request.args.get('employee_id', type=int)
+    src_id = request.args.get('source', type=int)
+    if src_id:
+        source = db.session.get(Document, src_id)
+        if source is not None and source.related_employee_id and not prefill_emp_id:
+            prefill_emp_id = source.related_employee_id
     return render_template('hr/order_new.html', kind=kind, spec=spec,
-                           users=users, employees=_pickable_employees())
+                           users=users, employees=_pickable_employees(),
+                           source=source, prefill_emp_id=prefill_emp_id)
 
 
 @hr.route('/order/<kind>/submit', methods=['POST'])
@@ -339,16 +355,28 @@ def order_submit(kind):
     db.session.flush()
     doc.generate_number()
 
+    # Связь «на основании» — служебная записка / заявление (фазы 5–6)
+    source_document_id = request.form.get('source_document_id', type=int)
+    src = db.session.get(Document, source_document_id) if source_document_id else None
+
     detail = HROrderDetail(
         document_id = doc.id,
         category    = spec['category'],
         order_kind  = kind,
         effective_date = effective_date,
         fields_json = json.dumps(fields, ensure_ascii=False),
+        source_document_id = src.id if src is not None else None,
     )
     db.session.add(detail)
     db.session.flush()
     db.session.add(HROrderEmployee(detail_id=detail.id, employee_id=emp.id))
+
+    if src is not None:
+        db.session.add(DocumentComment(
+            document_id=src.id, author_id=current_user.id,
+            text=(f'На основании этого документа создан приказ '
+                  f'«{spec["label"]}» {doc.doc_number}.'),
+            is_system=True))
 
     # Получатели (исполнение) + Список ознакомления — как в приёме
     seen = set()
@@ -390,7 +418,8 @@ def order_submit(kind):
 @login_required
 @requires_permission('hr')
 def orders():
-    details = (HROrderDetail.query.join(Document)
+    details = (HROrderDetail.query
+               .join(Document, HROrderDetail.document_id == Document.id)
                .order_by(Document.created_at.desc()).all())
     unregistered = [d for d in details
                     if d.reg_number is None and d.document.status == 'approved']
@@ -398,6 +427,28 @@ def orders():
     return render_template('hr/orders.html', unregistered=unregistered,
                            registered=registered, now=datetime.utcnow(),
                            kinds=HR_ORDER_KINDS, categories=HR_ORDER_CATEGORIES)
+
+
+@hr.route('/orders/all')
+@login_required
+@requires_permission('hr')
+def company_orders():
+    """Все приказы компании (фаза 4), сгруппированные по категориям.
+    Показываем зарегистрированные приказы — это официальный реестр."""
+    sel_cat = request.args.get('category') or None
+    q = (HROrderDetail.query
+         .join(Document, HROrderDetail.document_id == Document.id)
+         .filter(HROrderDetail.reg_number.isnot(None)))
+    if sel_cat:
+        q = q.filter(HROrderDetail.category == sel_cat)
+    details = q.order_by(HROrderDetail.reg_date.desc(),
+                         HROrderDetail.id.desc()).all()
+    groups = {}
+    for d in details:
+        groups.setdefault(d.category, []).append(d)
+    return render_template('hr/company_orders.html', groups=groups,
+                           categories=HR_ORDER_CATEGORIES, sel_cat=sel_cat,
+                           total=len(details))
 
 
 @hr.route('/orders/<int:doc_id>/register', methods=['POST'])

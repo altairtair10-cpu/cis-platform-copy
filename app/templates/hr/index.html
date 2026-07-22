@@ -9,6 +9,14 @@
   <a href="{{ url_for('hr.order_picker') }}" class="btn"><i class="ti ti-file-plus"></i> {{ _('Создать приказ') }}</a>
   <a href="{{ url_for('hr.orders') }}" class="btn"><i class="ti ti-clipboard-text"></i> {{ _('Журнал приказов') }}</a>
 </div>
+<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  <a href="{{ url_for('hr.company_orders') }}" class="btn btn-sm"><i class="ti ti-folders"></i> {{ _('Все приказы компании') }}</a>
+  <a href="{{ url_for('hr.my_requests') }}" class="btn btn-sm"><i class="ti ti-file-description"></i> {{ _('Заявления') }}</a>
+  <a href="{{ url_for('hr.training_list') }}" class="btn btn-sm"><i class="ti ti-school"></i> {{ _('Обучение') }}</a>
+  <a href="{{ url_for('hr.attestation_list') }}" class="btn btn-sm"><i class="ti ti-certificate"></i> {{ _('Аттестация') }}</a>
+  <a href="{{ url_for('hr.talent_reserve') }}" class="btn btn-sm"><i class="ti ti-stars"></i> {{ _('Кадровый резерв') }}</a>
+  <a href="{{ url_for('hr.analytics') }}" class="btn btn-sm"><i class="ti ti-chart-pie"></i> {{ _('HR-аналитика') }}</a>
+</div>
 <div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
   <div class="kpi-card">
     <div class="kpi-label"><i class="ti ti-users"></i>{{ _('Сотрудников') }}</div>

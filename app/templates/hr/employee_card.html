@@ -3,6 +3,13 @@
 {% block page_title %}Единая карточка сотрудника{% endblock %}
 
 {% block content %}
+{% set plans = emp.adaptation_plans.all() %}
+{% set plan = plans[-1] if plans else None %}
+{% set trainings = emp.training_records.all() %}
+{% set attestations = emp.attestations.all() %}
+{% set offboarding = emp.offboarding_items.all() %}
+{% set kpis = emp.kpis.all() %}
+
 <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
 
   <div class="card" style="flex:1;min-width:340px">
@@ -11,19 +18,37 @@
         <div class="avatar-circle" style="width:40px;height:40px;border-radius:50%;background:var(--accent-soft, #eef1ff);color:var(--accent, #4f5eff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">
           {{ emp.initials }}</div>
         <div>
-          <div class="card-title">{{ emp.full_name_ru }}</div>
+          <div class="card-title">{{ emp.full_name_ru }}
+            {% if emp.in_talent_reserve %}<i class="ti ti-stars" style="color:#b8860b" title="В кадровом резерве"></i>{% endif %}</div>
           {% if emp.position_ru %}<div class="text-muted" style="font-size:12px">{{ emp.position_ru }}</div>{% endif %}
         </div>
       </div>
       <span class="pill {% if emp.status == 'active' %}pill-green{% elif emp.status == 'terminated' %}pill-red{% elif emp.status == 'candidate' %}pill-amber{% else %}pill-blue{% endif %}">
         {{ emp.status_display }}</span>
     </div>
-    {% if emp.tenure_display %}
     <div class="card-body" style="padding-top:0;padding-bottom:0">
+      {% if emp.tenure_display %}
       <div class="text-muted" style="font-size:12px;margin-bottom:4px">
         <i class="ti ti-hourglass"></i> Стаж: <strong>{{ emp.tenure_display }}</strong></div>
+      {% endif %}
+      {% if emp.vacation_summary %}
+      <div class="text-muted" style="font-size:12px;margin-bottom:8px">
+        <i class="ti ti-beach"></i> Отпуск: <strong>{{ emp.vacation_summary }}</strong></div>
+      {% endif %}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <form method="POST" action="{{ url_for('hr.reserve_toggle', emp_id=emp.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm"><i class="ti ti-stars"></i>
+            {% if emp.in_talent_reserve %}Убрать из резерва{% else %}В кадровый резерв{% endif %}</button>
+        </form>
+        {% if emp.status == 'terminated' and offboarding|length == 0 %}
+        <form method="POST" action="{{ url_for('hr.offboarding_start', emp_id=emp.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm"><i class="ti ti-clipboard-check"></i> Обходной лист</button>
+        </form>
+        {% endif %}
+      </div>
     </div>
-    {% endif %}
     <div class="card-body">
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         {% for label, val in [
@@ -90,4 +115,171 @@
   </div>
 
 </div>
+
+<!-- АДАПТАЦИЯ -->
+<div class="card" id="adaptation" style="margin-top:18px">
+  <div class="card-header">
+    <div class="card-header-left"><div class="card-icon"><i class="ti ti-rocket"></i></div>
+      <div class="card-title">Адаптация и онбординг</div></div>
+    <a href="{{ url_for('hr.adaptation_new', emp_id=emp.id) }}" class="btn btn-sm"><i class="ti ti-plus"></i> План адаптации</a>
+  </div>
+  {% if plan %}
+  {% set done, tot = plan.progress %}
+  <div class="card-body">
+    <div style="font-size:12px;margin-bottom:8px">
+      Наставник: <strong>{{ plan.mentor.full_name if plan.mentor else '—' }}</strong> ·
+      Срок: {{ plan.start_date.strftime('%d.%m.%Y') if plan.start_date else '—' }} — {{ plan.end_date.strftime('%d.%m.%Y') if plan.end_date else '—' }} ·
+      Статус: <span class="pill {% if plan.status == 'passed' %}pill-green{% elif plan.status == 'failed' %}pill-red{% else %}pill-amber{% endif %}">{{ plan.status_display }}</span>
+      · Прогресс: {{ done }}/{{ tot }}
+    </div>
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      {% for it in plan.items.all() %}
+      <tr>
+        <td style="padding:5px 0;border-top:1px solid var(--border)">
+          <form method="POST" action="{{ url_for('hr.adaptation_item_toggle', item_id=it.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm" style="padding:2px 8px">{% if it.done %}✓{% else %}○{% endif %}</button>
+          </form>
+          <span style="{% if it.done %}text-decoration:line-through;color:var(--text-3){% endif %}">{{ it.text }}</span>
+          {% if it.due_date %}<span class="text-muted"> · до {{ it.due_date.strftime('%d.%m.%Y') }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% if plan.status == 'active' %}
+    <form method="POST" action="{{ url_for('hr.adaptation_complete', plan_id=plan.id) }}" style="margin-top:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="result_note" class="form-input" placeholder="Заключение по итогам" style="max-width:280px">
+      <button name="result" value="passed" class="btn btn-sm btn-primary">Пройдена</button>
+      <button name="result" value="failed" class="btn btn-sm">Не пройдена</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">План адаптации не создан.</div>
+  {% endif %}
+</div>
+
+<!-- ОБУЧЕНИЕ И СЕРТИФИКАТЫ -->
+<div class="card" id="training" style="margin-top:18px">
+  <div class="card-header">
+    <div class="card-header-left"><div class="card-icon"><i class="ti ti-school"></i></div>
+      <div class="card-title">Обучение и сертификаты ({{ trainings|length }})</div></div>
+    <a href="{{ url_for('hr.training_new', emp_id=emp.id) }}" class="btn btn-sm"><i class="ti ti-plus"></i> Обучение</a>
+  </div>
+  {% if trainings %}
+  <table class="data-table">
+    <thead><tr><th>Обучение</th><th>Статус</th><th>Сертификат</th><th>Действует до</th><th></th></tr></thead>
+    <tbody>
+      {% for r in trainings %}
+      <tr>
+        <td style="font-weight:500">{{ r.course_name }}<div class="text-muted" style="font-size:11px">{{ r.provider or '' }}</div></td>
+        <td><span class="pill {% if r.status == 'completed' %}pill-green{% elif r.status == 'rejected' %}pill-red{% elif r.status == 'requested' %}pill-amber{% else %}pill-blue{% endif %}">{{ r.status_display }}</span></td>
+        <td class="text-muted">{{ r.cert_number or '—' }}</td>
+        <td style="{% if r.cert_expired %}color:#dc3545;font-weight:600{% endif %}">{{ r.cert_expires.strftime('%d.%m.%Y') if r.cert_expires else '—' }}</td>
+        <td>
+          <details>
+            <summary class="btn btn-sm" style="list-style:none">Сертификат</summary>
+            <form method="POST" action="{{ url_for('hr.training_certificate', rec_id=r.id) }}" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input name="cert_number" class="form-input" placeholder="№ сертификата" value="{{ r.cert_number or '' }}">
+              <label style="font-size:11px;color:var(--text-3)">Выдан</label>
+              <input name="cert_issued" type="date" class="form-input" value="{{ r.cert_issued.strftime('%Y-%m-%d') if r.cert_issued else '' }}">
+              <label style="font-size:11px;color:var(--text-3)">Действует до</label>
+              <input name="cert_expires" type="date" class="form-input" value="{{ r.cert_expires.strftime('%Y-%m-%d') if r.cert_expires else '' }}">
+              <input name="effectiveness" class="form-input" placeholder="Оценка эффективности" value="{{ r.effectiveness or '' }}">
+              <button class="btn btn-sm btn-primary">Сохранить</button>
+            </form>
+          </details>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Записей об обучении нет.</div>
+  {% endif %}
+</div>
+
+<!-- АТТЕСТАЦИЯ -->
+<div class="card" id="attestation" style="margin-top:18px">
+  <div class="card-header">
+    <div class="card-header-left"><div class="card-icon"><i class="ti ti-certificate"></i></div>
+      <div class="card-title">Аттестация ({{ attestations|length }})</div></div>
+    <a href="{{ url_for('hr.attestation_new', emp_id=emp.id) }}" class="btn btn-sm"><i class="ti ti-plus"></i> Аттестация</a>
+  </div>
+  {% if attestations %}
+  <table class="data-table">
+    <thead><tr><th>Дата</th><th>Протокол</th><th>Результат</th><th>Рекомендация</th><th>Повторно</th></tr></thead>
+    <tbody>
+      {% for a in attestations %}
+      <tr>
+        <td class="text-muted">{{ a.att_date.strftime('%d.%m.%Y') if a.att_date else '—' }}</td>
+        <td class="text-muted">{{ a.protocol_number or '—' }}</td>
+        <td>{{ a.result or '—' }}</td>
+        <td class="text-muted" style="font-size:11px">{{ (a.recommendation or '')[:60] }}</td>
+        <td class="text-muted">{{ a.recheck_date.strftime('%d.%m.%Y') if a.recheck_date else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Аттестаций нет.</div>
+  {% endif %}
+</div>
+
+<!-- KPI -->
+<div class="card" id="kpi" style="margin-top:18px">
+  <div class="card-header">
+    <div class="card-header-left"><div class="card-icon"><i class="ti ti-chart-bar"></i></div>
+      <div class="card-title">KPI и показатели ({{ kpis|length }})</div></div>
+  </div>
+  <div class="card-body">
+    {% if kpis %}
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      <tr><th style="text-align:left;padding:4px 0">Период</th><th style="text-align:left">Показатель</th><th style="text-align:left">Значение</th></tr>
+      {% for k in kpis %}
+      <tr>
+        <td style="padding:4px 0;border-top:1px solid var(--border)" class="text-muted">{{ k.period or '—' }}</td>
+        <td style="border-top:1px solid var(--border)">{{ k.metric }}</td>
+        <td style="border-top:1px solid var(--border);font-weight:500">{{ k.value or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    <form method="POST" action="{{ url_for('hr.kpi_add', emp_id=emp.id) }}" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="period" class="form-input" placeholder="Q1 2026" style="max-width:120px">
+      <input name="metric" class="form-input" placeholder="Показатель" required style="max-width:240px">
+      <input name="value" class="form-input" placeholder="Значение" style="max-width:120px">
+      <button class="btn btn-sm btn-primary">Добавить</button>
+    </form>
+  </div>
+</div>
+
+<!-- ОФФБОРДИНГ -->
+{% if offboarding %}
+<div class="card" id="offboarding" style="margin-top:18px">
+  <div class="card-header">
+    <div class="card-header-left"><div class="card-icon"><i class="ti ti-clipboard-check"></i></div>
+      <div class="card-title">Обходной лист (оффбординг)</div></div>
+  </div>
+  <div class="card-body">
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      {% for it in offboarding %}
+      <tr>
+        <td style="padding:5px 0;border-top:1px solid var(--border)">
+          <form method="POST" action="{{ url_for('hr.offboarding_toggle', item_id=it.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm" style="padding:2px 8px">{% if it.done %}✓{% else %}○{% endif %}</button>
+          </form>
+          <span style="{% if it.done %}text-decoration:line-through;color:var(--text-3){% endif %}">{{ it.text }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
