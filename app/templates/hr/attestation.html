@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Аттестация{% endblock %}
+{% block page_title %}Аттестация и оценка{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-certificate"></i></div>
+      <div class="card-title">Аттестации ({{ records|length }})</div>
+    </div>
+  </div>
+  {% if records %}
+  <table class="data-table">
+    <thead><tr><th>Сотрудник</th><th>Дата</th><th>Протокол</th><th>Результат</th><th>Повторно</th></tr></thead>
+    <tbody>
+      {% for r in records %}
+      <tr onclick="window.location='{{ url_for('hr.employee_card', emp_id=r.employee_id) }}#attestation'" style="cursor:pointer">
+        <td style="font-weight:500">{{ r.employee.full_name_ru }}</td>
+        <td class="text-muted">{{ r.att_date.strftime('%d.%m.%Y') if r.att_date else '—' }}</td>
+        <td class="text-muted">{{ r.protocol_number or '—' }}</td>
+        <td>{{ r.result or '—' }}</td>
+        <td class="text-muted">{{ r.recheck_date.strftime('%d.%m.%Y') if r.recheck_date else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Аттестаций пока нет. Добавьте их из карточки сотрудника.</div>
+  {% endif %}
+</div>
+{% endblock %}

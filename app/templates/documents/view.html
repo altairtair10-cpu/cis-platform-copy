@@ -92,6 +92,11 @@
         <button onclick="window.open('{{ url_for('documents.print_doc', doc_id=doc.id) }}', '_blank')" class="btn btn-sm">
           <i class="ti ti-printer"></i>{{ _('Печать') }}
         </button>
+        {% if doc.doc_type in ('memo', 'employee_request') and doc.status in ('approved', 'executed', 'in_execution') and current_user.can_access('hr') %}
+        <a href="{{ url_for('hr.order_picker', source=doc.id) }}" class="btn btn-sm btn-primary">
+          <i class="ti ti-file-plus"></i>{{ _('Создать приказ на основании') }}
+        </a>
+        {% endif %}
         {% if doc.status == 'pending' and current_user.role in ['it_admin','dept_head','director'] %}
         <div style="margin-left:auto;display:flex;gap:8px">
           <form method="POST" action="{{ url_for('documents.approve', doc_id=doc.id) }}" style="display:inline">

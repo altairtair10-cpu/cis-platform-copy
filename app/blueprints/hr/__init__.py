@@ -98,4 +98,10 @@ def pto_deny(req_id):
     return _decide_pto(req_id, 'deny')
 
 
-from . import orders  # noqa: E402,F401  (HR-приказы: приём, журнал, карточки)
+from . import orders       # noqa: E402,F401  (приём, журнал, карточки, приказы)
+from . import requests      # noqa: E402,F401  (фаза 6: заявления сотрудников)
+from . import adaptation    # noqa: E402,F401  (фаза 8: адаптация/онбординг)
+from . import training       # noqa: E402,F401  (фаза 9: обучение/сертификаты)
+from . import attestation   # noqa: E402,F401  (фаза 10: аттестация)
+from . import processes     # noqa: E402,F401  (фаза 11: резерв/оффбординг/KPI)
+from . import analytics     # noqa: E402,F401  (фаза 12: HR-аналитика)

@@ -5,6 +5,16 @@
 {% block content %}
 <form method="POST" action="{{ url_for('hr.order_submit', kind=kind) }}" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if source %}
+  <input type="hidden" name="source_document_id" value="{{ source.id }}">
+  <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent, #4f5eff)">
+    <div class="card-body" style="font-size:12px">
+      <i class="ti ti-link"></i> Приказ создаётся <strong>на основании</strong>
+      документа <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>
+      {% if source.purpose %}— {{ source.purpose[:80] }}{% endif %}
+    </div>
+  </div>
+  {% endif %}
 
 <!-- STICKY TOOLBAR -->
 <div style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--border);margin:-22px -22px 20px;padding:12px 22px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)">
@@ -44,7 +54,7 @@
         <select name="employee_id" class="form-select" required>
           <option value="">— выбрать сотрудника —</option>
           {% for e in employees %}
-          <option value="{{ e.id }}">{{ e.full_name_ru }}{% if e.position_ru %} — {{ e.position_ru }}{% endif %}</option>
+          <option value="{{ e.id }}"{% if prefill_emp_id and e.id == prefill_emp_id %} selected{% endif %}>{{ e.full_name_ru }}{% if e.position_ru %} — {{ e.position_ru }}{% endif %}</option>
           {% endfor %}
         </select>
         {% if not employees %}

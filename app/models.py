@@ -128,6 +128,15 @@ DOC_TYPES = {
     'incoming':      'Входящее письмо',
     'outgoing':      'Исходящее письмо',
     'hr_order':      'Приказ (кадровый)',
+    'employee_request': 'Заявление сотрудника',
+}
+
+# Виды заявлений сотрудника (self-service, фаза 6). Значение — человеко-читаемое.
+EMPLOYEE_REQUEST_KINDS = {
+    'leave':      'Заявление на отпуск',
+    'financial':  'Заявление на материальную помощь',
+    'data':       'Заявление о смене личных данных',
+    'other':      'Заявление (прочее)',
 }
 
 DOC_STATUSES = {
@@ -176,6 +185,8 @@ class Document(db.Model):
     case_index     = db.Column(db.String(64), nullable=True)    # индекс дела
     in_reply_to_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
     registered_at  = db.Column(db.DateTime, nullable=True)      # момент регистрации (после подписи)
+    sub_type       = db.Column(db.String(32), nullable=True)    # подвид (напр. вид заявления сотрудника)
+    related_employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)  # к кому относится (СЗ/заявление)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow,
                               onupdate=datetime.utcnow)
@@ -200,6 +211,7 @@ class Document(db.Model):
                                      backref=db.backref('replies', lazy='dynamic'))
     recipients     = db.relationship('DocumentRecipient', backref='document',
                                      lazy='dynamic', cascade='all, delete-orphan')
+    related_employee = db.relationship('Employee', foreign_keys=[related_employee_id])
 
     def assign_event_code(self):
         """Per-unit sequential code for defect acts: <unit_id>-ДА<n>."""
@@ -225,6 +237,7 @@ class Document(db.Model):
             'incoming':     'ВХ',
             'outgoing':     'ИСХ',
             'hr_order':     'ПР',
+            'employee_request': 'ЗАЯВ',
         }
         setting = DocNumberSetting.query.filter_by(doc_type=self.doc_type).first()
         prefix  = (setting.prefix.strip() if setting and setting.prefix and setting.prefix.strip()
@@ -391,11 +404,12 @@ class TransportRun(db.Model):
 
 EMPLOYEE_SCHEDULES = ['5/2', '14/14', '15/15', '28/28']
 EMPLOYEE_STATUSES = {
-    'candidate':  'Кандидат (приём в процессе)',
-    'active':     'Действующий',
-    'on_leave':   'В отпуске',
-    'trip':       'В командировке',
-    'terminated': 'Уволен',
+    'candidate':   'Кандидат (приём в процессе)',
+    'active':      'Действующий',
+    'on_leave':    'В отпуске',
+    'trip':        'В командировке',
+    'sick_leave':  'На больничном',
+    'terminated':  'Уволен',
 }
 HR_ORDER_CATEGORIES = {
     'ls':         'По личному составу',
@@ -419,6 +433,8 @@ HR_ORDER_KINDS = {
     'bonus':           ('Премирование', 'ls'),
     'discipline':      ('Дисциплинарное взыскание', 'ls'),
     'termination':     ('Увольнение', 'ls'),
+    'sick_leave':      ('Больничный лист', 'ls'),
+    'responsibility':  ('Назначение ответственного', 'other'),
     'other':           ('Прочее', 'other'),
 }
 
@@ -446,6 +462,7 @@ class Employee(db.Model):
     status       = db.Column(db.String(24), nullable=False, default='candidate')
     vacation_entitled = db.Column(db.Integer, default=24)
     current_salary = db.Column(db.Integer, nullable=True)   # оклад, целые тенге (без float)
+    in_talent_reserve = db.Column(db.Boolean, nullable=False, default=False)  # кадровый резерв (фаза 11)
     termination_date  = db.Column(db.Date, nullable=True)
     phone        = db.Column(db.String(32), nullable=True)
     email        = db.Column(db.String(120), nullable=True)
@@ -496,6 +513,37 @@ class Employee(db.Model):
             return None
         return f'{self.current_salary:,}'.replace(',', ' ') + ' ₸'
 
+    @property
+    def vacation_days_used(self):
+        """Сумма дней по зарегистрированным приказам «Ежегодный трудовой
+        отпуск» (без отпуска без сохранения з/п — он не расходует банк дней)."""
+        import json as _json
+        total = 0
+        for link in self.order_links:
+            d = link.detail
+            if d.order_kind == 'vacation' and d.reg_number:
+                try:
+                    fj = _json.loads(d.fields_json or '{}')
+                    total += int(fj.get('days') or 0)
+                except (ValueError, TypeError):
+                    pass
+        return total
+
+    @property
+    def vacation_days_remaining(self):
+        """Остаток = положено − использовано, не меньше 0."""
+        if self.vacation_entitled is None:
+            return None
+        return max(0, self.vacation_entitled - self.vacation_days_used)
+
+    @property
+    def vacation_summary(self):
+        """«24 / 10 / 14 дн.» — положено / использовано / остаток."""
+        if self.vacation_entitled is None:
+            return None
+        return (f'{self.vacation_entitled} / {self.vacation_days_used} / '
+                f'{self.vacation_days_remaining} дн. (положено/использовано/остаток)')
+
 
 class HROrderDetail(db.Model):
     """Кадровые атрибуты приказа (Document с doc_type='hr_order'):
@@ -512,8 +560,12 @@ class HROrderDetail(db.Model):
     reg_date     = db.Column(db.Date, nullable=True)         # задним числом можно
     effective_date = db.Column(db.Date, nullable=True)
     fields_json  = db.Column(db.Text, nullable=True)         # гибкие поля вида
+    # Приказ, созданный на основании служебной записки / заявления (фазы 5–6)
+    source_document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=True)
 
-    document  = db.relationship('Document', backref=db.backref('hr_detail', uselist=False))
+    document  = db.relationship('Document', foreign_keys=[document_id],
+                                backref=db.backref('hr_detail', uselist=False))
+    source_document = db.relationship('Document', foreign_keys=[source_document_id])
     employees = db.relationship('HROrderEmployee', back_populates='detail',
                                 lazy='dynamic')
 
@@ -538,6 +590,155 @@ class HROrderEmployee(db.Model):
 
     detail   = db.relationship('HROrderDetail', back_populates='employees')
     employee = db.relationship('Employee', back_populates='order_links')
+
+
+# ── ФАЗА 8: АДАПТАЦИЯ И ОНБОРДИНГ ─────────────────────────────────────────────
+
+class AdaptationPlan(db.Model):
+    """План адаптации нового сотрудника: наставник, срок, контрольные точки,
+    итог испытательного срока."""
+    __tablename__ = 'adaptation_plans'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    mentor_id   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    start_date  = db.Column(db.Date, nullable=True)
+    end_date    = db.Column(db.Date, nullable=True)     # окончание испытательного срока
+    status      = db.Column(db.String(16), nullable=False, default='active')  # active/passed/failed
+    result_note = db.Column(db.Text, nullable=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', foreign_keys=[employee_id],
+                               backref=db.backref('adaptation_plans', lazy='dynamic'))
+    mentor   = db.relationship('User', foreign_keys=[mentor_id])
+    items    = db.relationship('AdaptationItem', backref='plan',
+                               lazy='dynamic', cascade='all, delete-orphan')
+
+    STATUS_DISPLAY = {'active': 'В процессе', 'passed': 'Пройдена',
+                      'failed': 'Не пройдена'}
+
+    @property
+    def status_display(self):
+        return self.STATUS_DISPLAY.get(self.status, self.status)
+
+    @property
+    def progress(self):
+        """(выполнено, всего) по контрольным точкам."""
+        items = self.items.all()
+        done = sum(1 for i in items if i.done)
+        return done, len(items)
+
+
+class AdaptationItem(db.Model):
+    """Контрольная точка / задача плана адаптации."""
+    __tablename__ = 'adaptation_items'
+
+    id        = db.Column(db.Integer, primary_key=True)
+    plan_id   = db.Column(db.Integer, db.ForeignKey('adaptation_plans.id'), nullable=False)
+    text      = db.Column(db.String(256), nullable=False)
+    due_date  = db.Column(db.Date, nullable=True)
+    done      = db.Column(db.Boolean, nullable=False, default=False)
+    done_at   = db.Column(db.DateTime, nullable=True)
+
+
+# ── ФАЗА 9: ОБУЧЕНИЕ И РАЗВИТИЕ (+ СЕРТИФИКАТЫ) ──────────────────────────────
+
+class TrainingRecord(db.Model):
+    """Обучение сотрудника: заявка → согласование бюджета → обучение →
+    сертификат (со сроком действия)."""
+    __tablename__ = 'training_records'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    employee_id  = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    course_name  = db.Column(db.String(256), nullable=False)
+    provider     = db.Column(db.String(160), nullable=True)
+    start_date   = db.Column(db.Date, nullable=True)
+    end_date     = db.Column(db.Date, nullable=True)
+    budget       = db.Column(db.Integer, nullable=True)   # целые тенге
+    status       = db.Column(db.String(16), nullable=False, default='requested')
+    # requested / approved / in_progress / completed / rejected
+    cert_number  = db.Column(db.String(64), nullable=True)
+    cert_issued  = db.Column(db.Date, nullable=True)
+    cert_expires = db.Column(db.Date, nullable=True)
+    effectiveness = db.Column(db.String(160), nullable=True)  # оценка эффективности
+    expiry_notified_at = db.Column(db.DateTime, nullable=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', foreign_keys=[employee_id],
+                               backref=db.backref('training_records', lazy='dynamic'))
+
+    STATUS_DISPLAY = {'requested': 'Заявка', 'approved': 'Согласовано',
+                      'in_progress': 'Обучается', 'completed': 'Завершено',
+                      'rejected': 'Отклонено'}
+
+    @property
+    def status_display(self):
+        return self.STATUS_DISPLAY.get(self.status, self.status)
+
+    @property
+    def budget_display(self):
+        if self.budget is None:
+            return None
+        return f'{self.budget:,}'.replace(',', ' ') + ' ₸'
+
+    @property
+    def cert_expired(self):
+        if not self.cert_expires:
+            return False
+        return self.cert_expires < datetime.utcnow().date()
+
+
+# ── ФАЗА 10: АТТЕСТАЦИЯ И ОЦЕНКА ─────────────────────────────────────────────
+
+class Attestation(db.Model):
+    """Аттестация сотрудника: комиссия → протокол → результат → рекомендация."""
+    __tablename__ = 'attestations'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    employee_id  = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    att_date     = db.Column(db.Date, nullable=True)
+    commission   = db.Column(db.Text, nullable=True)     # состав комиссии (текст)
+    protocol_number = db.Column(db.String(64), nullable=True)
+    result       = db.Column(db.String(32), nullable=True)   # соответствует / не соответствует / условно
+    recommendation = db.Column(db.Text, nullable=True)
+    recheck_date = db.Column(db.Date, nullable=True)     # дата повторной проверки при необходимости
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', foreign_keys=[employee_id],
+                               backref=db.backref('attestations', lazy='dynamic'))
+
+
+# ── ФАЗА 11: HR-ПРОЦЕССЫ (оффбординг, KPI) ───────────────────────────────────
+
+class OffboardingItem(db.Model):
+    """Пункт чек-листа увольнения (обходной лист): сдача пропуска, техники,
+    передача дел и т.п. Привязан к сотруднику."""
+    __tablename__ = 'offboarding_items'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    text        = db.Column(db.String(256), nullable=False)
+    done        = db.Column(db.Boolean, nullable=False, default=False)
+    done_at     = db.Column(db.DateTime, nullable=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', foreign_keys=[employee_id],
+                               backref=db.backref('offboarding_items', lazy='dynamic'))
+
+
+class EmployeeKpi(db.Model):
+    """Показатель эффективности сотрудника за период (фаза 11, упрощённо)."""
+    __tablename__ = 'employee_kpis'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    period      = db.Column(db.String(32), nullable=True)   # «Q1 2026» и т.п.
+    metric      = db.Column(db.String(160), nullable=False)
+    value       = db.Column(db.String(64), nullable=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', foreign_keys=[employee_id],
+                               backref=db.backref('kpis', lazy='dynamic'))
 
 
 class PTORequest(db.Model):

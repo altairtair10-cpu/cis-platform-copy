@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Обучение{% endblock %}
+{% block page_title %}Обучение и развитие{% endblock %}
+
+{% block content %}
+{% if expiring %}
+<div class="card" style="margin-bottom:18px;border-left:3px solid #dc3545">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-alert-triangle"></i></div>
+      <div class="card-title">Истекающие сертификаты ({{ expiring|length }})</div>
+    </div>
+  </div>
+  <table class="data-table">
+    <thead><tr><th>Сотрудник</th><th>Обучение</th><th>Сертификат</th><th>Действует до</th></tr></thead>
+    <tbody>
+      {% for r in expiring %}
+      <tr>
+        <td style="font-weight:500">{{ r.employee.full_name_ru }}</td>
+        <td>{{ r.course_name }}</td>
+        <td class="text-muted">{{ r.cert_number or '—' }}</td>
+        <td style="color:{% if r.cert_expired %}#dc3545{% else %}#b8860b{% endif %};font-weight:600">
+          {{ r.cert_expires.strftime('%d.%m.%Y') if r.cert_expires else '—' }}
+          {% if r.cert_expired %} (истёк){% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-icon"><i class="ti ti-school"></i></div>
+      <div class="card-title">Все записи об обучении ({{ records|length }})</div>
+    </div>
+  </div>
+  {% if records %}
+  <table class="data-table">
+    <thead><tr><th>Сотрудник</th><th>Обучение</th><th>Провайдер</th><th>Бюджет</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for r in records %}
+      <tr onclick="window.location='{{ url_for('hr.employee_card', emp_id=r.employee_id) }}#training'" style="cursor:pointer">
+        <td style="font-weight:500">{{ r.employee.full_name_ru }}</td>
+        <td>{{ r.course_name }}</td>
+        <td class="text-muted">{{ r.provider or '—' }}</td>
+        <td class="text-muted">{{ r.budget_display or '—' }}</td>
+        <td><span class="pill {% if r.status == 'completed' %}pill-green{% elif r.status == 'rejected' %}pill-red{% elif r.status == 'requested' %}pill-amber{% else %}pill-blue{% endif %}">{{ r.status_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="card-body text-muted" style="font-size:12px">Записей об обучении пока нет. Добавьте их из карточки сотрудника.</div>
+  {% endif %}
+</div>
+{% endblock %}
