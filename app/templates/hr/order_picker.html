@@ -1,17 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Новый приказ{% endblock %}
-{% block page_title %}Создать кадровый приказ{% endblock %}
+{% block title %}{{ _('Новый приказ') }}{% endblock %}
+{% block page_title %}{{ _('Создать кадровый приказ') }}{% endblock %}
 
 {% block content %}
 <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
   <a href="{{ url_for('hr.index') }}" class="btn"><i class="ti ti-arrow-left"></i> HR</a>
-  <a href="{{ url_for('hr.orders') }}" class="btn"><i class="ti ti-book"></i> Журнал приказов</a>
+  <a href="{{ url_for('hr.orders') }}" class="btn"><i class="ti ti-book"></i> {{ _('Журнал приказов') }}</a>
 </div>
 
 <div style="font-size:12px;color:var(--text-3);margin-bottom:18px">
-  Выберите вид приказа. Приказ проходит согласование и подпись ГД, затем регистрируется
-  в журнале (№ и дата — вручную, задним числом допустимо), после чего вступает в силу и
-  направляется в бухгалтерию.
+  {{ _('Выберите вид приказа. Приказ проходит согласование и подпись ГД, затем регистрируется в журнале (№ и дата — вручную, задним числом допустимо), после чего вступает в силу и направляется в бухгалтерию.') }}
 </div>
 
 {% if source %}
@@ -29,7 +27,7 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-folder"></i></div>
-      <div class="card-title">{{ categories.get(cat_key, cat_key) }}</div>
+      <div class="card-title">{{ _(categories.get(cat_key, cat_key)) }}</div>
     </div>
   </div>
   <div class="card-body">
@@ -40,7 +38,7 @@
          onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
         <div style="width:38px;height:38px;border-radius:10px;background:#FDECEA;color:var(--red);display:flex;align-items:center;justify-content:center;flex:none">
           <i class="ti {{ spec.icon }}" style="font-size:18px"></i></div>
-        <div style="font-size:13px;font-weight:500;line-height:1.3">{{ spec.label }}</div>
+        <div style="font-size:13px;font-weight:500;line-height:1.3">{{ _(spec.label) }}</div>
       </a>
       {% endfor %}
     </div>
@@ -52,14 +50,14 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-user-plus"></i></div>
-      <div class="card-title">Приём на работу</div>
+      <div class="card-title">{{ _('Приём на работу') }}</div>
     </div>
   </div>
   <div class="card-body">
     <a href="{{ url_for('hr.hire_new') }}" class="btn btn-primary">
-      <i class="ti ti-user-plus"></i> Приказ о приёме сотрудника</a>
+      <i class="ti ti-user-plus"></i> {{ _('Приказ о приёме сотрудника') }}</a>
     <div style="font-size:11px;color:var(--text-3);margin-top:8px">
-      Приём создаёт новую карточку сотрудника. Остальные приказы применяются к уже существующей карточке.</div>
+      {{ _('Приём создаёт новую карточку сотрудника. Остальные приказы применяются к уже существующей карточке.') }}</div>
   </div>
 </div>
 {% endblock %}

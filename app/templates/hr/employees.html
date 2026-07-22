@@ -1,35 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Сотрудники{% endblock %}
-{% block page_title %}Карточки сотрудников{% endblock %}
+{% block title %}{{ _('Сотрудники') }}{% endblock %}
+{% block page_title %}{{ _('Карточки сотрудников') }}{% endblock %}
 
 {% block content %}
 <form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
   <input type="text" name="q" value="{{ q or '' }}" class="form-input"
-         placeholder="Поиск: ФИО, должность..." style="max-width:320px">
+         placeholder="{{ _('Поиск: ФИО, должность...') }}" style="max-width:320px">
   <select name="status" class="form-select" style="max-width:220px" onchange="this.form.submit()">
-    <option value="">Статус: все</option>
+    <option value="">{{ _('Статус: все') }}</option>
     {% for k, v in statuses.items() %}
-    <option value="{{ k }}" {% if sel_status == k %}selected{% endif %}>{{ v }}</option>
+    <option value="{{ k }}" {% if sel_status == k %}selected{% endif %}>{{ _(v) }}</option>
     {% endfor %}
   </select>
-  <button type="submit" class="btn btn-sm">Найти</button>
+  <button type="submit" class="btn btn-sm">{{ _('Найти') }}</button>
   <a href="{{ url_for('hr.hire_new') }}" class="btn btn-primary" style="margin-left:auto">
-    <i class="ti ti-user-plus"></i> Приём сотрудника</a>
+    <i class="ti ti-user-plus"></i> {{ _('Приём сотрудника') }}</a>
 </form>
 
 <div class="kpi-grid kpi-grid-3" style="margin-bottom:14px">
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-user-check"></i>Действующие</div>
+    <div class="kpi-label"><i class="ti ti-user-check"></i>{{ _('Действующие') }}</div>
     <div class="kpi-value">{{ staff|selectattr('status', 'equalto', 'active')|list|length }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-user-question"></i>Кандидаты</div>
+    <div class="kpi-label"><i class="ti ti-user-question"></i>{{ _('Кандидаты') }}</div>
     <div class="kpi-value {% if staff|selectattr('status', 'equalto', 'candidate')|list|length > 0 %}warning{% endif %}">
       {{ staff|selectattr('status', 'equalto', 'candidate')|list|length }}</div>
-    <div class="kpi-sub">До регистрации приказа</div>
+    <div class="kpi-sub">{{ _('До регистрации приказа') }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label"><i class="ti ti-user-x"></i>Уволенные</div>
+    <div class="kpi-label"><i class="ti ti-user-x"></i>{{ _('Уволенные') }}</div>
     <div class="kpi-value">{{ staff|selectattr('status', 'equalto', 'terminated')|list|length }}</div>
   </div>
 </div>
@@ -38,14 +38,14 @@
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-id-badge-2"></i></div>
-      <div class="card-title">Единые карточки ({{ staff|length }})</div>
+      <div class="card-title">{{ _('Единые карточки') }} ({{ staff|length }})</div>
     </div>
   </div>
   {% if staff %}
   <table class="data-table">
     <thead>
-      <tr><th>ФИО</th><th>Должность</th><th>Подразделение</th>
-          <th>Дата приёма</th><th>График</th><th>Статус</th></tr>
+      <tr><th>{{ _('ФИО') }}</th><th>{{ _('Должность') }}</th><th>{{ _('Подразделение') }}</th>
+          <th>{{ _('Дата приёма') }}</th><th>{{ _('График') }}</th><th>{{ _('Статус') }}</th></tr>
     </thead>
     <tbody>
       {% for e in staff %}
@@ -64,7 +64,7 @@
         <td class="text-muted">{{ e.schedule or '—' }}</td>
         <td>
           <span class="pill {% if e.status == 'active' %}pill-green{% elif e.status == 'terminated' %}pill-red{% elif e.status == 'candidate' %}pill-amber{% else %}pill-blue{% endif %}">
-            {{ e.status_display }}</span>
+            {{ _(e.status_display) }}</span>
         </td>
       </tr>
       {% endfor %}
@@ -72,8 +72,8 @@
   </table>
   {% else %}
   <div class="card-body" style="text-align:center;padding:44px 20px">
-    <div style="font-size:13px;color:var(--text-2);margin-bottom:12px">Карточек пока нет — начните с приёма сотрудника.</div>
-    <a href="{{ url_for('hr.hire_new') }}" class="btn btn-primary"><i class="ti ti-user-plus"></i> Приём сотрудника</a>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:12px">{{ _('Карточек пока нет — начните с приёма сотрудника.') }}</div>
+    <a href="{{ url_for('hr.hire_new') }}" class="btn btn-primary"><i class="ti ti-user-plus"></i> {{ _('Приём сотрудника') }}</a>
   </div>
   {% endif %}
 </div>

@@ -1868,3 +1868,494 @@ msgstr "Choose the appropriate order type below."
 
 msgid "Создать приказ на основании"
 msgstr "Create order based on this"
+
+# --- HR module full i18n (phase 1-2 screens) ---
+
+msgid "Вид перевода"
+msgstr "Transfer type"
+
+msgid "Единые карточки"
+msgstr "Unified cards"
+
+msgid "Доплата, %"
+msgstr "Extra pay, %"
+
+msgid "Временный"
+msgstr "Temporary"
+
+msgid "сумма / расчёт"
+msgstr "amount / calculation"
+
+msgid "номер"
+msgstr "number"
+
+msgid "Количество часов"
+msgstr "Number of hours"
+
+msgid "Последовательное"
+msgstr "Sequential"
+
+msgid "Заявление о приёме на работу"
+msgstr "Employment application"
+
+msgid "Приказ"
+msgstr "Order"
+
+msgid "Дней"
+msgstr "Days"
+
+msgid "График"
+msgstr "Schedule"
+
+msgid "Список ознакомления (сотрудник / руководитель)"
+msgstr "Review list (employee / manager)"
+
+msgid "Приказ о дисциплинарном взыскании"
+msgstr "Disciplinary action order"
+
+msgid "Поиск: ФИО, должность..."
+msgstr "Search: name, position..."
+
+msgid "Номенклатура дел"
+msgstr "Case nomenclature"
+
+msgid "Структура"
+msgstr "Structure"
+
+msgid "Заявление"
+msgstr "Application"
+
+msgid "Сумма премии, ₸"
+msgstr "Bonus amount, ₸"
+
+msgid "Приказ о назначении ответственного"
+msgstr "Assign-responsible order"
+
+msgid "Компенсация за неисп. отпуск"
+msgstr "Compensation for unused leave"
+
+msgid "Телефон / Email"
+msgstr "Phone / Email"
+
+msgid "Пункт назначения"
+msgstr "Destination"
+
+msgid "Вид приёма"
+msgstr "Hiring type"
+
+msgid "или % от оклада"
+msgstr "or % of salary"
+
+msgid "Ф.И.О работника"
+msgstr "Employee full name"
+
+msgid "ждёт регистрации"
+msgstr "awaiting registration"
+
+msgid "Выбрать"
+msgstr "Select"
+
+msgid "Сокращенное имя"
+msgstr "Short name"
+
+msgid "Приказ о командировании"
+msgstr "Business trip order"
+
+msgid "За что"
+msgstr "Reason"
+
+msgid "Приказ о премировании"
+msgstr "Bonus order"
+
+msgid "Суточные / расходы"
+msgstr "Per diem / expenses"
+
+msgid "Дополнительно (для карточки CIS)"
+msgstr "Additional (for the CIS card)"
+
+msgid "от"
+msgstr "of"
+
+msgid "дн."
+msgstr "days"
+
+msgid "Реквизиты приказа"
+msgstr "Order details"
+
+msgid "Ок"
+msgstr "OK"
+
+msgid "Приказ о приёме на работу"
+msgstr "Hiring order"
+
+msgid "С"
+msgstr "From"
+
+msgid "Создать кадровый приказ"
+msgstr "Create HR order"
+
+msgid "Подписывающий (ГД)"
+msgstr "Signatory (Director)"
+
+msgid "три месяца"
+msgstr "three months"
+
+msgid "Нет приказов, ожидающих регистрации."
+msgstr "No orders awaiting registration."
+
+msgid "Отпускные"
+msgstr "Leave pay"
+
+msgid "За что назначается ответственным"
+msgstr "What they are made responsible for"
+
+msgid "Тема приказа"
+msgstr "Order subject"
+
+msgid "Регистрация"
+msgstr "Registration"
+
+msgid "Новая должность (каз)"
+msgstr "New position (KZ)"
+
+msgid "Бухгалтерия уведомляется автоматически при регистрации любого приказа."
+msgstr "Accounting is notified automatically when any order is registered."
+
+msgid "Выговор"
+msgstr "Reprimand"
+
+msgid "Приказ о совмещении / замещении"
+msgstr "Combining / substitution order"
+
+msgid "Цель командировки"
+msgstr "Trip purpose"
+
+msgid "Вид приказа"
+msgstr "Order type"
+
+msgid "Согласование"
+msgstr "Approval"
+
+msgid "Заголовок дела"
+msgstr "Case title"
+
+msgid "Истечение срока договора"
+msgstr "Contract expiry"
+
+msgid "Подпись"
+msgstr "Signature"
+
+msgid "Приказ об отпуске без сохранения з/п"
+msgstr "Unpaid leave order"
+
+msgid "с"
+msgstr "from"
+
+msgid "Статус: все"
+msgstr "Status: all"
+
+msgid "Не выбрано"
+msgstr "Not selected"
+
+msgid "Реквизиты присвоенные отправителем (приём на работу)"
+msgstr "Details assigned by sender (hiring)"
+
+msgid "Уведомления уйдут после регистрации приказа кадровой службой."
+msgstr "Notifications will be sent after HR registers the order."
+
+msgid "оформите приём"
+msgstr "process a hire"
+
+msgid "До регистрации приказа"
+msgstr "Before order registration"
+
+msgid "Журнал приказов (кадры)"
+msgstr "Orders journal (HR)"
+
+msgid "Период по"
+msgstr "Period to"
+
+msgid "напр. 03-01"
+msgstr "e.g. 03-01"
+
+msgid "Основание увольнения"
+msgstr "Termination grounds"
+
+msgid "Приказ о работе в выходной / сверхурочно"
+msgstr "Weekend / overtime work order"
+
+msgid "Подпись ГД → «Журнал приказов» → регистрация вручную (№ и дата, задним числом допустимо) → карточка «Действующий», приказ в бухгалтерию и на ознакомление."
+msgstr "Director's signature → “Orders journal” → manual registration (No. and date, back-dating allowed) → card becomes “Active”, order sent to accounting and for review."
+
+msgid "напр. «уборка склада»"
+msgstr "e.g. “warehouse cleanup”"
+
+msgid "— выбрать из номенклатуры дел —"
+msgstr "— choose from case nomenclature —"
+
+msgid "Компенсация"
+msgstr "Compensation"
+
+msgid "Неиспользованных дней"
+msgstr "Unused days"
+
+msgid "Дата перевода"
+msgstr "Transfer date"
+
+msgid "Выход на работу"
+msgstr "Start of work"
+
+msgid "Дата и номер трудового договора"
+msgstr "Employment contract date and number"
+
+msgid "по"
+msgstr "to"
+
+msgid "Очистить маршрут"
+msgstr "Clear route"
+
+msgid "Дата вступления в силу"
+msgstr "Effective date"
+
+msgid "Новый оклад, ₸"
+msgstr "New salary, ₸"
+
+msgid "Структурное подразделение"
+msgstr "Structural unit"
+
+msgid "Приказ об изменении заработной платы"
+msgstr "Salary change order"
+
+msgid "— выбрать сотрудника —"
+msgstr "— select employee —"
+
+msgid "Приказ об отзыве из отпуска"
+msgstr "Recall-from-leave order"
+
+msgid "Ф.И.О (каз., при транскрипции)"
+msgstr "Full name (KZ, if transcribed)"
+
+msgid "Новый график / вахта"
+msgstr "New schedule / rotation"
+
+msgid "Целое число в тенге (без копеек)"
+msgstr "Whole number in tenge (no kopecks)"
+
+msgid "Причина (производственная необходимость)"
+msgstr "Reason (operational necessity)"
+
+msgid "По"
+msgstr "To"
+
+msgid "Совмещаемая должность"
+msgstr "Combined position"
+
+msgid "Сохранить проект"
+msgstr "Save draft"
+
+msgid "По инициативе работодателя"
+msgstr "At employer's initiative"
+
+msgid "Календарных дней"
+msgstr "Calendar days"
+
+msgid "Другой день отдыха (отгул)"
+msgstr "Another day off"
+
+msgid "Кандидаты"
+msgstr "Candidates"
+
+msgid "Параметры приказа"
+msgstr "Order parameters"
+
+msgid "Получатели"
+msgstr "Recipients"
+
+msgid "Вложение (заявление с визой — оригинал обязателен)"
+msgstr "Attachment (endorsed application — original required)"
+
+msgid "Новая должность (рус)"
+msgstr "New position (RU)"
+
+msgid "Индекс дела"
+msgstr "Case index"
+
+msgid "Приём на работу (вахтовый метод)"
+msgstr "Hiring (rotational method)"
+
+msgid "Приказ о больничном листе"
+msgstr "Sick-leave order"
+
+msgid "Журнал"
+msgstr "Journal"
+
+msgid "Новое подразделение"
+msgstr "New department"
+
+msgid "Период с"
+msgstr "Period from"
+
+msgid "Мера взыскания"
+msgstr "Disciplinary measure"
+
+msgid "Приём сотрудника"
+msgstr "Hire employee"
+
+msgid "№ / дата заявления (скан — во вложении)"
+msgstr "No. / application date (scan attached)"
+
+msgid "Вложение (заявление / служебная записка / оригинал)"
+msgstr "Attachment (application / memo / original)"
+
+msgid "Добавить этап"
+msgstr "Add stage"
+
+msgid "Обстоятельства"
+msgstr "Circumstances"
+
+msgid "Постоянный"
+msgstr "Permanent"
+
+msgid "Отпуск, дней в год"
+msgstr "Leave, days per year"
+
+msgid "Проект · Версия 1"
+msgstr "Draft · Version 1"
+
+msgid "Регистрация (№ + дата, задним числом допустимо)"
+msgstr "Registration (No. + date, back-dating allowed)"
+
+msgid "если написание отличается"
+msgstr "if the spelling differs"
+
+msgid "Иное"
+msgstr "Other"
+
+msgid "Ожидают регистрации"
+msgstr "Awaiting registration"
+
+msgid "По собственному желанию"
+msgstr "Voluntary resignation"
+
+msgid "Найти..."
+msgstr "Search..."
+
+msgid "Основание"
+msgstr "Basis"
+
+msgid "Выберите вид приказа. Приказ проходит согласование и подпись ГД, затем регистрируется в журнале (№ и дата — вручную, задним числом допустимо), после чего вступает в силу и направляется в бухгалтерию."
+msgstr "Choose the order type. The order goes through approval and the director's signature, then is registered in the journal (No. and date entered manually, back-dating allowed), after which it takes effect and is sent to accounting."
+
+msgid "Карточки сотрудников"
+msgstr "Employee cards"
+
+msgid "Период трудового договора"
+msgstr "Employment contract period"
+
+msgid "Приказ о ежегодном трудовом отпуске"
+msgstr "Annual leave order"
+
+msgid "Нет карточек сотрудников. Сначала"
+msgstr "No employee cards. First"
+
+msgid "заявление / служебная записка / № и дата"
+msgstr "application / memo / No. and date"
+
+msgid "— Выбрать —"
+msgstr "— Select —"
+
+msgid "12 цифр"
+msgstr "12 digits"
+
+msgid "Приказ об изменении графика / вахты"
+msgstr "Schedule / rotation change order"
+
+msgid "Приказ об увольнении"
+msgstr "Termination order"
+
+msgid "Приказ о переводе"
+msgstr "Transfer order"
+
+msgid "Зарегистрировать"
+msgstr "Register"
+
+msgid "Оплата в повышенном размере"
+msgstr "Increased-rate pay"
+
+msgid "Зарегистрированных приказов пока нет."
+msgstr "No registered orders yet."
+
+msgid "На должность (каз)"
+msgstr "To position (KZ)"
+
+msgid "Уволенные"
+msgstr "Terminated"
+
+msgid "Приказ о приёме сотрудника"
+msgstr "Employee hiring order"
+
+msgid "кол-во дней / сумма"
+msgstr "number of days / amount"
+
+msgid "Отпуск по"
+msgstr "Leave to"
+
+msgid "Дата выхода из отпуска"
+msgstr "Return-from-leave date"
+
+msgid "Дата проступка"
+msgstr "Incident date"
+
+msgid "Приём по совместительству"
+msgstr "Hiring as secondary job"
+
+msgid "Получатели (бухгалтерия и др.)"
+msgstr "Recipients (accounting, etc.)"
+
+msgid "Карточек пока нет — начните с приёма сотрудника."
+msgstr "No cards yet — start by hiring an employee."
+
+msgid "Строгий выговор"
+msgstr "Severe reprimand"
+
+msgid "Список ознакомления (сотрудник / его руководитель)"
+msgstr "Review list (employee / their manager)"
+
+msgid "На должность (рус)"
+msgstr "To position (RU)"
+
+msgid "Действующие"
+msgstr "Active"
+
+msgid "Отпуск с"
+msgstr "Leave from"
+
+msgid "До какой даты (если временно)"
+msgstr "Until date (if temporary)"
+
+msgid "Замечание"
+msgstr "Remark"
+
+msgid "Дата работы"
+msgstr "Work date"
+
+msgid "№ больничного листа"
+msgstr "Sick-leave certificate No."
+
+msgid "Поиск по индексу или наименованию..."
+msgstr "Search by index or name..."
+
+msgid "Приказ (прочее)"
+msgstr "Order (other)"
+
+msgid "По соглашению сторон"
+msgstr "By mutual agreement"
+
+msgid "Приём создаёт новую карточку сотрудника. Остальные приказы применяются к уже существующей карточке."
+msgstr "Hiring creates a new employee card. Other orders apply to an existing card."
+
+msgid "Испытательный срок (прописью)"
+msgstr "Probation period (in words)"
+
+msgid "Дело"
+msgstr "Case"
