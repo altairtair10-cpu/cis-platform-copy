@@ -9,8 +9,8 @@
   <input type="hidden" name="source_document_id" value="{{ source.id }}">
   <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent, #4f5eff)">
     <div class="card-body" style="font-size:12px">
-      <i class="ti ti-link"></i> Приказ создаётся <strong>на основании</strong>
-      документа <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>
+      <i class="ti ti-link"></i> {{ _('Приказ создаётся на основании документа') }}
+      <a href="{{ url_for('documents.view', doc_id=source.id) }}">{{ source.doc_number }}</a>
       {% if source.purpose %}— {{ source.purpose[:80] }}{% endif %}
     </div>
   </div>

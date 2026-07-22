@@ -1332,3 +1332,539 @@ msgstr "Save view"
 msgid "Название вида (например: «Мои ПО на оплате»)"
 msgstr "View name (e.g. "My POs awaiting payment")"
 
+
+# --- HR roadmap phases 3-12 (auto-added) ---
+
+msgid "HR-аналитика"
+msgstr "HR Analytics"
+
+msgid "KPI и показатели"
+msgstr "KPI & metrics"
+
+msgid "Адаптация и онбординг"
+msgstr "Adaptation & onboarding"
+
+msgid "Аттестации"
+msgstr "Attestations"
+
+msgid "Аттестаций нет."
+msgstr "No attestations."
+
+msgid "Аттестаций пока нет. Добавьте их из карточки сотрудника."
+msgstr "No attestations yet. Add them from the employee card."
+
+msgid "Аттестация"
+msgstr "Attestation"
+
+msgid "Аттестация и оценка"
+msgstr "Attestation & evaluation"
+
+msgid "Бюджет"
+msgstr "Budget"
+
+msgid "Бюджет, ₸"
+msgstr "Budget, ₸"
+
+msgid "В кадровом резерве"
+msgstr "In talent reserve"
+
+msgid "В кадровый резерв"
+msgstr "Add to talent reserve"
+
+msgid "В командировке"
+msgstr "On business trip"
+
+msgid "В отпуске"
+msgstr "On leave"
+
+msgid "В резерве пока никого нет. Отметьте сотрудника в его карточке кнопкой «В кадровый резерв»."
+msgstr "The talent reserve is empty. Mark an employee from their card with “Add to talent reserve”."
+
+msgid "Вид заявления"
+msgstr "Request type"
+
+msgid "Вложение (необязательно)"
+msgstr "Attachment (optional)"
+
+msgid "Возвращено"
+msgstr "Returned"
+
+msgid "Все"
+msgstr "All"
+
+msgid "Все записи об обучении"
+msgstr "All training records"
+
+msgid "Все приказы компании"
+msgstr "All company orders"
+
+msgid "Всего сотрудников"
+msgstr "Total employees"
+
+msgid "Вы ещё не подавали заявлений."
+msgstr "You haven't submitted any requests yet."
+
+msgid "Выдан"
+msgstr "Issued"
+
+msgid "График / вахта"
+msgstr "Schedule / rotation"
+
+msgid "Дата аттестации"
+msgstr "Attestation date"
+
+msgid "Дата начала (для отпуска)"
+msgstr "Start date (for leave)"
+
+msgid "Дата повторной проверки (если требуется)"
+msgstr "Re-check date (if required)"
+
+msgid "Дата приёма"
+msgstr "Hire date"
+
+msgid "Дата увольнения"
+msgstr "Termination date"
+
+msgid "Действует до"
+msgstr "Valid until"
+
+msgid "До"
+msgstr "Until"
+
+msgid "Добавить"
+msgstr "Add"
+
+msgid "Договор до"
+msgstr "Contract until"
+
+msgid "Договор от"
+msgstr "Contract from"
+
+msgid "Должность"
+msgstr "Position"
+
+msgid "Должность (каз.)"
+msgstr "Position (KZ)"
+
+msgid "Дополнительная информация"
+msgstr "Additional information"
+
+msgid "Единая карточка сотрудника"
+msgstr "Unified employee card"
+
+msgid "Журнал приказов"
+msgstr "Orders journal"
+
+msgid "Заключение по итогам"
+msgstr "Final conclusion"
+
+msgid "Записей об обучении нет."
+msgstr "No training records."
+
+msgid "Записей об обучении пока нет. Добавьте их из карточки сотрудника."
+msgstr "No training records yet. Add them from the employee card."
+
+msgid "Зарегистрирован"
+msgstr "Registered"
+
+msgid "Зарегистрированных приказов нет."
+msgstr "No registered orders."
+
+msgid "Заявка на обучение"
+msgstr "Training request"
+
+msgid "Заявление уйдёт вашему руководителю на согласование. После согласования кадровая служба оформит соответствующий приказ."
+msgstr "The request will go to your manager for approval. After approval, HR will issue the corresponding order."
+
+msgid "Заявления"
+msgstr "Requests"
+
+msgid "Заявления сотрудников"
+msgstr "Employee requests"
+
+msgid "Знакомство с командой&#10;Изучение внутренних документов&#10;Инструктаж по ОТ и ТБ&#10;Первое контрольное задание"
+msgstr "Meet the team&#10;Study internal documents&#10;Safety briefing&#10;First checkpoint task"
+
+msgid "Значение"
+msgstr "Value"
+
+msgid "ИИН"
+msgstr "IIN"
+
+msgid "Испытательный срок (мес.)"
+msgstr "Probation (months)"
+
+msgid "Истекающие сертификаты"
+msgstr "Expiring certificates"
+
+msgid "Кадровый резерв"
+msgstr "Talent reserve"
+
+msgid "Контрольные точки (по одной в строке)"
+msgstr "Checkpoints (one per line)"
+
+msgid "Мои заявления"
+msgstr "My requests"
+
+msgid "На больничном"
+msgstr "On sick leave"
+
+msgid "На испытательном"
+msgstr "On probation"
+
+msgid "На ознакомлении"
+msgstr "Under review"
+
+msgid "Название обучения / курса"
+msgstr "Training / course name"
+
+msgid "Наставник"
+msgstr "Mentor"
+
+msgid "Наставник:"
+msgstr "Mentor:"
+
+msgid "Начало адаптации"
+msgstr "Adaptation start"
+
+msgid "Не пройдена"
+msgstr "Not passed"
+
+msgid "Нет истекающих сертификатов."
+msgstr "No expiring certificates."
+
+msgid "Нет предстоящих аттестаций."
+msgstr "No upcoming attestations."
+
+msgid "Новый приказ"
+msgstr "New order"
+
+msgid "Обучение"
+msgstr "Training"
+
+msgid "Обучение и развитие"
+msgstr "Training & development"
+
+msgid "Обучение и сертификаты"
+msgstr "Training & certificates"
+
+msgid "Обходной лист"
+msgstr "Offboarding checklist"
+
+msgid "Обходной лист (оффбординг)"
+msgstr "Offboarding checklist"
+
+msgid "Ожидает регистрации"
+msgstr "Awaiting registration"
+
+msgid "Оклад"
+msgstr "Salary"
+
+msgid "Окончание испытательного срока"
+msgstr "Probation end date"
+
+msgid "Открыть"
+msgstr "Open"
+
+msgid "Отпуск положено (дней/год)"
+msgstr "Leave entitled (days/year)"
+
+msgid "Отпуск:"
+msgstr "Leave:"
+
+msgid "Оценка эффективности"
+msgstr "Effectiveness rating"
+
+msgid "Период"
+msgstr "Period"
+
+msgid "План адаптации"
+msgstr "Adaptation plan"
+
+msgid "План адаптации не создан."
+msgstr "No adaptation plan created."
+
+msgid "Повторно"
+msgstr "Re-check"
+
+msgid "Подано"
+msgstr "Submitted"
+
+msgid "Подать"
+msgstr "Submit"
+
+msgid "Подать заявление"
+msgstr "Submit a request"
+
+msgid "Подробности (необязательно)"
+msgstr "Details (optional)"
+
+msgid "Показатель"
+msgstr "Metric"
+
+msgid "Председатель, члены комиссии"
+msgstr "Chair, commission members"
+
+msgid "Предстоящие аттестации"
+msgstr "Upcoming attestations"
+
+msgid "Приказов пока нет."
+msgstr "No orders yet."
+
+msgid "Приказы по сотруднику"
+msgstr "Orders for this employee"
+
+msgid "Приёмы за год"
+msgstr "Hires (year)"
+
+msgid "Провайдер"
+msgstr "Provider"
+
+msgid "Провайдер / учебный центр"
+msgstr "Provider / training center"
+
+msgid "Прогресс:"
+msgstr "Progress:"
+
+msgid "Пройдена"
+msgstr "Passed"
+
+msgid "Протокол"
+msgstr "Protocol"
+
+msgid "Резерв пуст."
+msgstr "Reserve is empty."
+
+msgid "Результат"
+msgstr "Result"
+
+msgid "Рекомендация"
+msgstr "Recommendation"
+
+msgid "Руководитель"
+msgstr "Manager"
+
+msgid "Сертификат"
+msgstr "Certificate"
+
+msgid "Согласованы — можно создать приказ"
+msgstr "Approved — order can be created"
+
+msgid "Создать заявку"
+msgstr "Create request"
+
+msgid "Создать план"
+msgstr "Create plan"
+
+msgid "Создать приказ"
+msgstr "Create order"
+
+msgid "Состав комиссии"
+msgstr "Commission members"
+
+msgid "Срок:"
+msgstr "Term:"
+
+msgid "Стаж"
+msgstr "Tenure"
+
+msgid "Стаж:"
+msgstr "Tenure:"
+
+msgid "Статус:"
+msgstr "Status:"
+
+msgid "Суть"
+msgstr "Summary"
+
+msgid "Суть заявления"
+msgstr "Request summary"
+
+msgid "Текучесть"
+msgstr "Turnover"
+
+msgid "Телефон"
+msgstr "Phone"
+
+msgid "Трудовой договор"
+msgstr "Employment contract"
+
+msgid "Убрать из резерва"
+msgstr "Remove from reserve"
+
+msgid "Увольнения за год"
+msgstr "Terminations (year)"
+
+msgid "ФИО (каз.)"
+msgstr "Full name (KZ)"
+
+msgid "действующих:"
+msgstr "active:"
+
+msgid "дн. (положено / использовано / остаток)"
+msgstr "days (entitled / used / remaining)"
+
+msgid "до"
+msgstr "until"
+
+msgid "истёк"
+msgstr "expired"
+
+msgid "напр. «Промышленная безопасность»"
+msgstr "e.g. “Industrial safety”"
+
+msgid "напр. «Прошу предоставить отпуск с ... по ...»"
+msgstr "e.g. “I request leave from ... to ...”"
+
+msgid "целое число"
+msgstr "whole number"
+
+msgid "— выбрать —"
+msgstr "— select —"
+
+msgid "№"
+msgstr "No."
+
+msgid "№ протокола"
+msgstr "Protocol No."
+
+msgid "№ рег."
+msgstr "Reg. No."
+
+msgid "№ сертификата"
+msgstr "Certificate No."
+
+msgid "По личному составу"
+msgstr "Personnel"
+
+msgid "По отпускам"
+msgstr "Leave"
+
+msgid "По командировкам"
+msgstr "Business trips"
+
+msgid "Производственные"
+msgstr "Production"
+
+msgid "По основной деятельности"
+msgstr "Main activity"
+
+msgid "Прочие"
+msgstr "Other"
+
+msgid "Приём на работу"
+msgstr "Hiring"
+
+msgid "Перевод"
+msgstr "Transfer"
+
+msgid "Изменение заработной платы"
+msgstr "Salary change"
+
+msgid "Совмещение / замещение"
+msgstr "Combining / substitution"
+
+msgid "Ежегодный трудовой отпуск"
+msgstr "Annual leave"
+
+msgid "Отпуск без сохранения з/п"
+msgstr "Unpaid leave"
+
+msgid "Отзыв из отпуска"
+msgstr "Recall from leave"
+
+msgid "Командировка"
+msgstr "Business trip"
+
+msgid "Работа в выходной / сверхурочно"
+msgstr "Weekend / overtime work"
+
+msgid "Изменение графика / вахты"
+msgstr "Schedule / rotation change"
+
+msgid "Премирование"
+msgstr "Bonus"
+
+msgid "Дисциплинарное взыскание"
+msgstr "Disciplinary action"
+
+msgid "Увольнение"
+msgstr "Termination"
+
+msgid "Больничный лист"
+msgstr "Sick leave"
+
+msgid "Назначение ответственного"
+msgstr "Assign responsible person"
+
+msgid "Прочее"
+msgstr "Other"
+
+msgid "Кандидат (приём в процессе)"
+msgstr "Candidate (hiring in progress)"
+
+msgid "Действующий"
+msgstr "Active"
+
+msgid "Уволен"
+msgstr "Terminated"
+
+msgid "Заявление на отпуск"
+msgstr "Leave request"
+
+msgid "Заявление на материальную помощь"
+msgstr "Financial aid request"
+
+msgid "Заявление о смене личных данных"
+msgstr "Personal data change request"
+
+msgid "Заявление (прочее)"
+msgstr "Request (other)"
+
+msgid "Заявка"
+msgstr "Requested"
+
+msgid "Обучается"
+msgstr "In training"
+
+msgid "В процессе"
+msgstr "In progress"
+
+msgid "Соответствует занимаемой должности"
+msgstr "Meets the position requirements"
+
+msgid "Условно соответствует"
+msgstr "Conditionally meets"
+
+msgid "Не соответствует занимаемой должности"
+msgstr "Does not meet the position requirements"
+
+msgid "Сдача пропуска"
+msgstr "Return access pass"
+
+msgid "Сдача техники (ноутбук, телефон, СИЗ)"
+msgstr "Return equipment (laptop, phone, PPE)"
+
+msgid "Передача дел и документов"
+msgstr "Handover of files and documents"
+
+msgid "Закрытие доступов в системах"
+msgstr "Revoke system access"
+
+msgid "Обходной лист подписан бухгалтерией"
+msgstr "Clearance signed by accounting"
+
+msgid "Окончательный расчёт"
+msgstr "Final settlement"
+
+msgid "Приказ создаётся на основании документа"
+msgstr "This order is being created based on document"
+
+msgid "Приказ будет создан на основании документа"
+msgstr "The order will be created based on document"
+
+msgid "Выберите подходящий вид приказа ниже."
+msgstr "Choose the appropriate order type below."
+
+msgid "Создать приказ на основании"
+msgstr "Create order based on this"

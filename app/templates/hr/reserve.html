@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Кадровый резерв{% endblock %}
-{% block page_title %}Кадровый резерв{% endblock %}
+{% block title %}{{ _('Кадровый резерв') }}{% endblock %}
+{% block page_title %}{{ _('Кадровый резерв') }}{% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="card-header">
     <div class="card-header-left">
       <div class="card-icon"><i class="ti ti-stars"></i></div>
-      <div class="card-title">В кадровом резерве ({{ staff|length }})</div>
+      <div class="card-title">{{ _('В кадровом резерве') }} ({{ staff|length }})</div>
     </div>
   </div>
   {% if staff %}
   <table class="data-table">
-    <thead><tr><th>ФИО</th><th>Должность</th><th>Подразделение</th><th>Стаж</th></tr></thead>
+    <thead><tr><th>{{ _('ФИО') }}</th><th>{{ _('Должность') }}</th><th>{{ _('Подразделение') }}</th><th>{{ _('Стаж') }}</th></tr></thead>
     <tbody>
       {% for e in staff %}
       <tr onclick="window.location='{{ url_for('hr.employee_card', emp_id=e.id) }}'" style="cursor:pointer">
@@ -26,7 +26,7 @@
   </table>
   {% else %}
   <div class="card-body text-muted" style="font-size:12px">
-    В резерве пока никого нет. Отметьте сотрудника в его карточке кнопкой «В кадровый резерв».</div>
+    {{ _('В резерве пока никого нет. Отметьте сотрудника в его карточке кнопкой «В кадровый резерв».') }}</div>
   {% endif %}
 </div>
 {% endblock %}
